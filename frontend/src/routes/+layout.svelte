@@ -5,7 +5,7 @@
 <div class="app">
 	<header>
 		<nav>
-			<a href="/" class="logo">voto.vc</a>
+			<a href="/" class="logo"><span class="logo-flag"><span class="logo-text">voto.vc</span></span></a>
 			<div class="nav-links">
 				<a href="/questionario">Questionário</a>
 				<a href="/sobre">Sobre</a>
@@ -52,10 +52,27 @@
 	}
 
 	.logo {
-		font-size: 1.5rem;
-		font-weight: 700;
-		color: #2563eb;
 		text-decoration: none;
+		display: flex;
+		align-items: center;
+	}
+
+	.logo-flag {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: linear-gradient(to right, #009C3B 33.33%, #FFDF00 33.33%, #FFDF00 66.66%, #002776 66.66%);
+		border-radius: 4px;
+		padding: 0.42rem 0.84rem;
+		line-height: 1;
+	}
+
+	.logo-text {
+		font-size: 1.96rem;
+		font-weight: 800;
+		color: white;
+		letter-spacing: 0.03em;
+		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 	}
 
 	.nav-links {

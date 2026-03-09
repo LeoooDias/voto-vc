@@ -1,6 +1,17 @@
 """Transform raw API data from Câmara and Senado into unified model-ready dicts."""
 
 
+def _normalize_sexo(valor: str | None) -> str | None:
+    if not valor:
+        return None
+    valor = valor.strip().upper()
+    if valor.startswith("M"):
+        return "M"
+    if valor.startswith("F"):
+        return "F"
+    return valor[0] if valor else None
+
+
 def normalize_deputado(raw: dict) -> dict:
     return {
         "id_externo": f"camara_{raw['id']}",
@@ -8,7 +19,7 @@ def normalize_deputado(raw: dict) -> dict:
         "nome_civil": raw.get("nome", raw.get("nomeCivil", "")),
         "nome_parlamentar": raw.get("nome", ""),
         "cpf": raw.get("cpf"),
-        "sexo": raw.get("sexo"),
+        "sexo": _normalize_sexo(raw.get("sexo")),
         "uf": raw.get("siglaUf", ""),
         "foto_url": raw.get("urlFoto"),
         "email": raw.get("email"),
@@ -26,7 +37,7 @@ def normalize_senador(raw: dict) -> dict:
         "casa": "senado",
         "nome_civil": identidade.get("NomeCompletoParlamentar", ""),
         "nome_parlamentar": identidade.get("NomeParlamentar", ""),
-        "sexo": identidade.get("SexoParlamentar", ""),
+        "sexo": _normalize_sexo(identidade.get("SexoParlamentar")),
         "uf": mandato.get("UfParlamentar", identidade.get("UfParlamentar", "")),
         "foto_url": identidade.get("UrlFotoParlamentar"),
         "email": identidade.get("EmailParlamentar"),
@@ -53,7 +64,7 @@ def normalize_votacao_camara(raw: dict) -> dict:
         "casa": "camara",
         "data": raw.get("dataHoraRegistro") or raw.get("data"),
         "descricao": raw.get("descricao"),
-        "resultado": raw.get("aprovacao"),
+        "resultado": str(raw.get("aprovacao", "")) if raw.get("aprovacao") is not None else None,
         "dados_brutos": raw,
     }
 

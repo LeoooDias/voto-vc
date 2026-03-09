@@ -40,6 +40,7 @@ class BaseAPIClient:
         items_key: str = "itens",
         items_per_page: int = 100,
         data_path: str = "dados",
+        max_pages: int | None = None,
     ) -> list[dict]:
         """Fetch all pages from a paginated endpoint."""
         params = params or {}
@@ -59,6 +60,8 @@ class BaseAPIClient:
             logger.info(f"Fetched page {page}: {len(items)} items (total: {len(all_items)})")
 
             if len(items) < items_per_page:
+                break
+            if max_pages and page >= max_pages:
                 break
             page += 1
 

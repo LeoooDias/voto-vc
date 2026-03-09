@@ -27,6 +27,13 @@ class CamaraClient(BaseAPIClient):
             params["dataFim"] = data_fim
         return await self.get_paginated("votacoes", params=params)
 
+    async def fetch_votacoes_recent(self, max_pages: int = 10) -> list[dict]:
+        """Fetch recent votações without date filter, ordered by most recent."""
+        params = {"ordem": "DESC", "ordenarPor": "dataHoraRegistro"}
+        return await self.get_paginated(
+            "votacoes", params=params, items_per_page=100, max_pages=max_pages,
+        )
+
     async def fetch_votos(self, votacao_id: str) -> list[dict]:
         data = await self.get(f"votacoes/{votacao_id}/votos")
         return data.get("dados", [])
