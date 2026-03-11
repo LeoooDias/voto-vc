@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { api } from '$lib/api';
-	import { items, respostas, currentIndex } from '$lib/stores/questionario';
+	import { items, respostas, currentIndex, selectedUf } from '$lib/stores/questionario';
 	import type { QuestionarioItem, RespostaItem } from '$lib/types';
 	import { goto } from '$app/navigation';
 	import { get } from 'svelte/store';
@@ -9,6 +9,37 @@
 	const MIN_RESPOSTAS = 10;
 	const META_RESPOSTAS = 20;
 
+	const UFS = [
+		{ sigla: 'AC', nome: 'Acre' },
+		{ sigla: 'AL', nome: 'Alagoas' },
+		{ sigla: 'AP', nome: 'Amapá' },
+		{ sigla: 'AM', nome: 'Amazonas' },
+		{ sigla: 'BA', nome: 'Bahia' },
+		{ sigla: 'CE', nome: 'Ceará' },
+		{ sigla: 'DF', nome: 'Distrito Federal' },
+		{ sigla: 'ES', nome: 'Espírito Santo' },
+		{ sigla: 'GO', nome: 'Goiás' },
+		{ sigla: 'MA', nome: 'Maranhão' },
+		{ sigla: 'MT', nome: 'Mato Grosso' },
+		{ sigla: 'MS', nome: 'Mato Grosso do Sul' },
+		{ sigla: 'MG', nome: 'Minas Gerais' },
+		{ sigla: 'PA', nome: 'Pará' },
+		{ sigla: 'PB', nome: 'Paraíba' },
+		{ sigla: 'PR', nome: 'Paraná' },
+		{ sigla: 'PE', nome: 'Pernambuco' },
+		{ sigla: 'PI', nome: 'Piauí' },
+		{ sigla: 'RJ', nome: 'Rio de Janeiro' },
+		{ sigla: 'RN', nome: 'Rio Grande do Norte' },
+		{ sigla: 'RS', nome: 'Rio Grande do Sul' },
+		{ sigla: 'RO', nome: 'Rondônia' },
+		{ sigla: 'RR', nome: 'Roraima' },
+		{ sigla: 'SC', nome: 'Santa Catarina' },
+		{ sigla: 'SP', nome: 'São Paulo' },
+		{ sigla: 'SE', nome: 'Sergipe' },
+		{ sigla: 'TO', nome: 'Tocantins' }
+	];
+
+	let uf = $state(get(selectedUf));
 	let loaded = $state(false);
 	let currentItems: QuestionarioItem[] = $state([]);
 	let idx = $state(0);
@@ -16,17 +47,28 @@
 	let canFinish = $derived(answeredCount >= MIN_RESPOSTAS);
 	let reachedMeta = $derived(answeredCount >= META_RESPOSTAS);
 
-	onMount(async () => {
+	function escolherUf(sigla: string) {
+		uf = sigla;
+		selectedUf.set(sigla);
+		loadQuestions();
+	}
+
+	async function loadQuestions() {
 		try {
 			const data = await api.get<QuestionarioItem[]>('/questionario/items?n_items=50');
 			items.set(data);
 			currentItems = data;
-			// Restore progress if returning
 			const existing = get(respostas);
 			answeredCount = existing.filter((r) => r.voto !== 'pular').length;
 			loaded = true;
 		} catch (e) {
 			console.error('Failed to load questionnaire:', e);
+		}
+	}
+
+	onMount(async () => {
+		if (uf) {
+			await loadQuestions();
 		}
 	});
 
@@ -83,7 +125,20 @@
 	<title>Questionário — voto.vc</title>
 </svelte:head>
 
-{#if !loaded}
+{#if !uf}
+	<div class="uf-selector">
+		<h1>De qual estado você é?</h1>
+		<p class="uf-subtitle">Vamos mostrar parlamentares do seu estado</p>
+		<div class="uf-grid">
+			{#each UFS as estado}
+				<button class="uf-btn" onclick={() => escolherUf(estado.sigla)}>
+					<span class="uf-sigla">{estado.sigla}</span>
+					<span class="uf-nome">{estado.nome}</span>
+				</button>
+			{/each}
+		</div>
+	</div>
+{:else if !loaded}
 	<div class="loading">Carregando proposições...</div>
 {:else if currentItems.length === 0}
 	<div class="empty">Nenhuma proposição disponível no momento.</div>
@@ -344,5 +399,57 @@
 		padding: 4rem;
 		color: #6b7280;
 		font-size: 1.125rem;
+	}
+
+	.uf-selector {
+		max-width: 700px;
+		margin: 0 auto;
+		text-align: center;
+	}
+
+	.uf-selector h1 {
+		color: #1a1a2e;
+		margin-bottom: 0.25rem;
+	}
+
+	.uf-subtitle {
+		color: #6b7280;
+		margin-bottom: 2rem;
+	}
+
+	.uf-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+		gap: 0.5rem;
+	}
+
+	.uf-btn {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.75rem 1rem;
+		background: white;
+		border: 1px solid #e5e7eb;
+		border-radius: 10px;
+		cursor: pointer;
+		transition: border-color 0.2s, background 0.2s;
+		text-align: left;
+	}
+
+	.uf-btn:hover {
+		border-color: #2563eb;
+		background: #eff6ff;
+	}
+
+	.uf-sigla {
+		font-weight: 700;
+		color: #2563eb;
+		font-size: 1rem;
+		min-width: 1.75rem;
+	}
+
+	.uf-nome {
+		color: #374151;
+		font-size: 0.85rem;
 	}
 </style>

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { api } from '$lib/api';
-	import { respostas } from '$lib/stores/questionario';
+	import { respostas, selectedUf } from '$lib/stores/questionario';
 	import { resultados, loading } from '$lib/stores/resultado';
 	import type { MatchResult } from '$lib/types';
 	import { goto } from '$app/navigation';
@@ -22,8 +22,10 @@
 
 		loading.set(true);
 		try {
+			const uf = get(selectedUf);
 			const data = await api.post<MatchResult[]>('/matching/calcular', {
-				respostas: userRespostas
+				respostas: userRespostas,
+				uf: uf || undefined
 			});
 			resultados.set(data);
 		} catch (e) {
