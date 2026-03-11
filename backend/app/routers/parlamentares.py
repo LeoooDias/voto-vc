@@ -57,6 +57,10 @@ async def obter_parlamentar(parlamentar_id: int, db: AsyncSession = Depends(get_
             Proposicao.numero,
             Proposicao.ano,
             Proposicao.ementa,
+            Proposicao.resumo_cidadao,
+            Proposicao.descricao_detalhada,
+            Proposicao.tema,
+            Proposicao.id_externo,
         )
         .join(Votacao, VotoParlamentar.votacao_id == Votacao.id)
         .outerjoin(Proposicao, Votacao.proposicao_id == Proposicao.id)
@@ -66,8 +70,13 @@ async def obter_parlamentar(parlamentar_id: int, db: AsyncSession = Depends(get_
     )
     votos_result = await db.execute(votos_query)
 
+    substantive_types = {"PL", "PEC", "MPV", "PLP", "PDL", "MIP"}
     votos_history = []
     for row in votos_result.all():
+        id_externo = row[12]
+        url_camara = None
+        if id_externo and id_externo.startswith("camara_prop_"):
+            url_camara = f"https://www.camara.leg.br/proposicoesWeb/fichadetramitacao?idProposicao={id_externo.replace('camara_prop_', '')}"
         votos_history.append({
             "voto": row[0].value,
             "partido_na_epoca": row[1],
@@ -78,6 +87,11 @@ async def obter_parlamentar(parlamentar_id: int, db: AsyncSession = Depends(get_
             "proposicao_numero": row[6],
             "proposicao_ano": row[7],
             "proposicao_ementa": (row[8][:150] + "...") if row[8] and len(row[8]) > 150 else row[8],
+            "resumo_cidadao": row[9],
+            "descricao_detalhada": row[10],
+            "tema": row[11],
+            "url_camara": url_camara,
+            "substantiva": row[5] in substantive_types if row[5] else False,
         })
 
     # Vote stats
@@ -98,6 +112,7 @@ async def obter_parlamentar(parlamentar_id: int, db: AsyncSession = Depends(get_
         "nome_civil": parlamentar.nome_civil,
         "casa": parlamentar.casa.value,
         "uf": parlamentar.uf,
+        "sexo": parlamentar.sexo,
         "foto_url": parlamentar.foto_url,
         "partido": {"sigla": parlamentar.partido.sigla, "nome": parlamentar.partido.nome} if parlamentar.partido else None,
         "legislatura_atual": parlamentar.legislatura_atual,

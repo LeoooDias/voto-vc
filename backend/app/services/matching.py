@@ -129,6 +129,7 @@ async def ranking_parlamentares(
                 "partido": p.partido.sigla if p.partido else None,
                 "uf": p.uf,
                 "casa": p.casa.value,
+                "sexo": p.sexo,
                 "foto_url": p.foto_url,
                 "score": round(score, 1),
                 "votos_comparados": n_votos,

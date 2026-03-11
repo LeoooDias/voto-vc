@@ -9,6 +9,7 @@
 		nome_civil: string;
 		casa: string;
 		uf: string;
+		sexo: string | null;
 		foto_url: string | null;
 		partido: { sigla: string; nome: string } | null;
 		legislatura_atual: boolean;
@@ -26,10 +27,27 @@
 		proposicao_numero: number | null;
 		proposicao_ano: number | null;
 		proposicao_ementa: string | null;
+		resumo_cidadao: string | null;
+		descricao_detalhada: string | null;
+		tema: string | null;
+		url_camara: string | null;
+		substantiva: boolean;
 	}
 
 	let parlamentar: ParlamentarDetail | null = $state(null);
 	let error = $state(false);
+	let expandedId: number | null = $state(null);
+	let soSubstantivas = $state(false);
+
+	let votosVisiveis = $derived(
+		soSubstantivas
+			? (parlamentar?.votos ?? []).filter((v) => v.substantiva)
+			: (parlamentar?.votos ?? [])
+	);
+
+	let countSubstantivas = $derived(
+		(parlamentar?.votos ?? []).filter((v) => v.substantiva).length
+	);
 
 	onMount(async () => {
 		try {
@@ -39,6 +57,11 @@
 			error = true;
 		}
 	});
+
+	function toggleExpand(proposicaoId: number | null) {
+		if (!proposicaoId) return;
+		expandedId = expandedId === proposicaoId ? null : proposicaoId;
+	}
 
 	function votoLabel(voto: string): string {
 		const map: Record<string, string> = {
@@ -66,6 +89,26 @@
 			return '';
 		}
 	}
+
+	const temaInfo: Record<string, { label: string; cor: string }> = {
+		economia: { label: 'Economia', cor: '#2563EB' },
+		tributacao: { label: 'Tributação', cor: '#7C3AED' },
+		saude: { label: 'Saúde', cor: '#DC2626' },
+		educacao: { label: 'Educação', cor: '#EA580C' },
+		'meio-ambiente': { label: 'Meio Ambiente', cor: '#16A34A' },
+		seguranca: { label: 'Segurança', cor: '#475569' },
+		'direitos-humanos': { label: 'Direitos Humanos', cor: '#DB2777' },
+		trabalho: { label: 'Trabalho', cor: '#CA8A04' },
+		agricultura: { label: 'Agricultura', cor: '#65A30D' },
+		defesa: { label: 'Defesa', cor: '#0F766E' },
+		tecnologia: { label: 'Tecnologia', cor: '#6366F1' },
+		corrupcao: { label: 'Transparência', cor: '#B91C1C' },
+		previdencia: { label: 'Previdência', cor: '#78716C' },
+		habitacao: { label: 'Habitação', cor: '#0891B2' },
+		transporte: { label: 'Transporte', cor: '#F59E0B' },
+		cultura: { label: 'Cultura', cor: '#A855F7' },
+		geral: { label: 'Legislação', cor: '#6B7280' }
+	};
 </script>
 
 <svelte:head>
@@ -86,7 +129,7 @@
 				<h1>{parlamentar.nome_parlamentar}</h1>
 				<p class="meta">
 					{parlamentar.partido?.sigla ?? 'Sem partido'} · {parlamentar.uf} ·
-					{parlamentar.casa === 'camara' ? 'Deputado(a) Federal' : 'Senador(a)'}
+					{parlamentar.casa === 'camara' ? (parlamentar.sexo === 'F' ? 'Deputada Federal' : 'Deputado Federal') : (parlamentar.sexo === 'F' ? 'Senadora' : 'Senador')}
 				</p>
 				{#if parlamentar.nome_civil !== parlamentar.nome_parlamentar}
 					<p class="nome-civil">{parlamentar.nome_civil}</p>
@@ -110,21 +153,65 @@
 
 		{#if parlamentar.votos.length > 0}
 			<div class="historico">
-				<h2>Histórico de votações</h2>
-				{#each parlamentar.votos as voto}
-					<div class="voto-card">
-						<span class="voto-badge {votoClass(voto.voto)}">{votoLabel(voto.voto)}</span>
-						<div class="voto-info">
-							{#if voto.proposicao_tipo}
-								<span class="voto-tipo">{voto.proposicao_tipo} {voto.proposicao_numero}/{voto.proposicao_ano}</span>
-							{/if}
-							<p class="voto-ementa">
-								{voto.proposicao_ementa ?? voto.descricao_votacao ?? 'Sem descrição'}
-							</p>
-							{#if voto.data}
-								<span class="voto-data">{formatDate(voto.data)}</span>
+				<div class="historico-header">
+					<h2>Histórico de votações</h2>
+					{#if countSubstantivas > 0 && countSubstantivas < parlamentar.votos.length}
+						<label class="filter-toggle">
+							<input type="checkbox" bind:checked={soSubstantivas} />
+							Só proposições substantivas ({countSubstantivas})
+						</label>
+					{/if}
+				</div>
+
+				{#each votosVisiveis as voto}
+					{@const hasDetails = voto.substantiva && (voto.resumo_cidadao || voto.descricao_detalhada)}
+					{@const isExpanded = expandedId === voto.proposicao_id}
+					<div
+						class="voto-card"
+						class:expandable={hasDetails}
+						class:expanded={isExpanded}
+						onclick={() => hasDetails && toggleExpand(voto.proposicao_id)}
+						onkeydown={(e) => e.key === 'Enter' && hasDetails && toggleExpand(voto.proposicao_id)}
+						role={hasDetails ? 'button' : undefined}
+						tabindex={hasDetails ? 0 : undefined}
+					>
+						<div class="voto-main">
+							<span class="voto-badge {votoClass(voto.voto)}">{votoLabel(voto.voto)}</span>
+							<div class="voto-info">
+								<div class="voto-top">
+									{#if voto.proposicao_tipo}
+										<span class="voto-tipo">{voto.proposicao_tipo} {voto.proposicao_numero}/{voto.proposicao_ano}</span>
+									{/if}
+									{#if voto.tema}
+										{@const info = temaInfo[voto.tema] ?? temaInfo.geral}
+										<span class="tema-tag" style="background: {info.cor}1a; color: {info.cor}; border-color: {info.cor}33">{info.label}</span>
+									{/if}
+								</div>
+								<p class="voto-ementa">
+									{voto.proposicao_ementa ?? voto.descricao_votacao ?? 'Sem descrição'}
+								</p>
+								{#if voto.data}
+									<span class="voto-data">{formatDate(voto.data)}</span>
+								{/if}
+							</div>
+							{#if hasDetails}
+								<span class="expand-icon" class:open={isExpanded}>▾</span>
 							{/if}
 						</div>
+
+						{#if isExpanded}
+							<div class="voto-details">
+								{#if voto.resumo_cidadao}
+									<p class="detail-resumo">{voto.resumo_cidadao}</p>
+								{/if}
+								{#if voto.descricao_detalhada}
+									<p class="detail-descricao">{voto.descricao_detalhada}</p>
+								{/if}
+								{#if voto.url_camara}
+									<a href={voto.url_camara} target="_blank" rel="noopener" class="link-camara" onclick={(e) => e.stopPropagation()}>Ver na Câmara</a>
+								{/if}
+							</div>
+						{/if}
 					</div>
 				{/each}
 			</div>
@@ -176,11 +263,15 @@
 	h2 {
 		color: #1a1a2e;
 		font-size: 1.125rem;
-		margin-bottom: 1rem;
+		margin: 0;
 	}
 
 	.stats {
 		margin-bottom: 2rem;
+	}
+
+	.stats h2 {
+		margin-bottom: 1rem;
 	}
 
 	.stats-grid {
@@ -213,15 +304,54 @@
 	.stat-item.voto-nao .stat-count { color: #dc2626; }
 	.stat-item.voto-outro .stat-count { color: #6b7280; }
 
-	.voto-card {
+	.historico-header {
 		display: flex;
-		gap: 1rem;
-		align-items: flex-start;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 1rem;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+	}
+
+	.filter-toggle {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		font-size: 0.8rem;
+		color: #6b7280;
+		cursor: pointer;
+		user-select: none;
+	}
+
+	.filter-toggle input {
+		accent-color: #2563eb;
+	}
+
+	.voto-card {
 		background: white;
 		border: 1px solid #e5e7eb;
 		border-radius: 12px;
 		padding: 1rem;
 		margin-bottom: 0.5rem;
+		transition: border-color 0.2s;
+	}
+
+	.voto-card.expandable {
+		cursor: pointer;
+	}
+
+	.voto-card.expandable:hover {
+		border-color: #93c5fd;
+	}
+
+	.voto-card.expanded {
+		border-color: #2563eb;
+	}
+
+	.voto-main {
+		display: flex;
+		gap: 1rem;
+		align-items: flex-start;
 	}
 
 	.voto-badge {
@@ -238,6 +368,13 @@
 
 	.voto-info { flex: 1; }
 
+	.voto-top {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		flex-wrap: wrap;
+	}
+
 	.voto-tipo {
 		font-size: 0.8rem;
 		font-weight: 600;
@@ -245,6 +382,14 @@
 		background: #eff6ff;
 		padding: 0.1rem 0.5rem;
 		border-radius: 4px;
+	}
+
+	.tema-tag {
+		padding: 0.1rem 0.5rem;
+		border-radius: 20px;
+		font-size: 0.7rem;
+		font-weight: 600;
+		border: 1px solid;
 	}
 
 	.voto-ementa {
@@ -257,6 +402,49 @@
 	.voto-data {
 		font-size: 0.8rem;
 		color: #9ca3af;
+	}
+
+	.expand-icon {
+		color: #9ca3af;
+		font-size: 1rem;
+		transition: transform 0.2s;
+		flex-shrink: 0;
+		margin-top: 0.25rem;
+	}
+
+	.expand-icon.open {
+		transform: rotate(180deg);
+	}
+
+	.voto-details {
+		margin-top: 1rem;
+		padding-top: 1rem;
+		border-top: 1px solid #f3f4f6;
+	}
+
+	.detail-resumo {
+		font-size: 1rem;
+		color: #1a1a2e;
+		line-height: 1.6;
+		margin: 0 0 0.75rem;
+		font-weight: 500;
+	}
+
+	.detail-descricao {
+		font-size: 0.9rem;
+		color: #374151;
+		line-height: 1.6;
+		margin: 0 0 0.75rem;
+	}
+
+	.link-camara {
+		color: #2563eb;
+		font-size: 0.8rem;
+		text-decoration: none;
+	}
+
+	.link-camara:hover {
+		text-decoration: underline;
 	}
 
 	.back {

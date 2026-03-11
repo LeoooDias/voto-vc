@@ -1,5 +1,23 @@
 """Transform raw API data from Câmara and Senado into unified model-ready dicts."""
 
+# Prepositions and articles that stay lowercase in Brazilian names
+_LOWERCASE_PARTS = {"de", "da", "do", "dos", "das", "e", "di", "del"}
+
+
+def normalize_nome(nome: str) -> str:
+    """Title-case a Brazilian name, keeping prepositions lowercase."""
+    if not nome:
+        return nome
+    parts = nome.strip().split()
+    result = []
+    for i, part in enumerate(parts):
+        lower = part.lower()
+        if i > 0 and lower in _LOWERCASE_PARTS:
+            result.append(lower)
+        else:
+            result.append(part.capitalize())
+    return " ".join(result)
+
 
 def _normalize_sexo(valor: str | None) -> str | None:
     if not valor:
@@ -16,8 +34,8 @@ def normalize_deputado(raw: dict) -> dict:
     return {
         "id_externo": f"camara_{raw['id']}",
         "casa": "camara",
-        "nome_civil": raw.get("nome", raw.get("nomeCivil", "")),
-        "nome_parlamentar": raw.get("nome", ""),
+        "nome_civil": normalize_nome(raw.get("nome", raw.get("nomeCivil", ""))),
+        "nome_parlamentar": normalize_nome(raw.get("nome", "")),
         "cpf": raw.get("cpf"),
         "sexo": _normalize_sexo(raw.get("sexo")),
         "uf": raw.get("siglaUf", ""),
@@ -35,8 +53,8 @@ def normalize_senador(raw: dict) -> dict:
     return {
         "id_externo": f"senado_{identidade.get('CodigoParlamentar', '')}",
         "casa": "senado",
-        "nome_civil": identidade.get("NomeCompletoParlamentar", ""),
-        "nome_parlamentar": identidade.get("NomeParlamentar", ""),
+        "nome_civil": normalize_nome(identidade.get("NomeCompletoParlamentar", "")),
+        "nome_parlamentar": normalize_nome(identidade.get("NomeParlamentar", "")),
         "sexo": _normalize_sexo(identidade.get("SexoParlamentar")),
         "uf": mandato.get("UfParlamentar", identidade.get("UfParlamentar", "")),
         "foto_url": identidade.get("UrlFotoParlamentar"),

@@ -59,7 +59,7 @@
 					<div class="info">
 						<div class="nome">{result.nome}</div>
 						<div class="meta">
-							{result.partido ?? 'Sem partido'} · {result.uf} · {result.casa === 'camara' ? 'Deputado(a)' : 'Senador(a)'}
+							{result.partido ?? 'Sem partido'} · {result.uf} · {result.casa === 'camara' ? (result.sexo === 'F' ? 'Deputada' : 'Deputado') : (result.sexo === 'F' ? 'Senadora' : 'Senador')}
 						</div>
 					</div>
 					<div class="score" class:high={result.score >= 70} class:mid={result.score >= 40 && result.score < 70} class:low={result.score < 40}>

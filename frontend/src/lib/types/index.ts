@@ -21,6 +21,7 @@ export interface MatchResult {
 	partido: string | null;
 	uf: string;
 	casa: string;
+	sexo: string | null;
 	foto_url: string | null;
 	score: number;
 	votos_comparados: number;
