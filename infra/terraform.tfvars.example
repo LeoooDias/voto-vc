@@ -1,0 +1,6 @@
+aws_region   = "us-east-1"
+environment  = "production"
+domain       = "voto.vc"
+instance_type = "t4g.small"
+db_password  = "CHANGE_ME_strong_password_here"
+ssh_public_key = "ssh-ed25519 AAAA... your-key-here"

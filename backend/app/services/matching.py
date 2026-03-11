@@ -46,13 +46,19 @@ async def ranking_parlamentares(
         if prop_id:
             parlamentar_votos.setdefault(vp.parlamentar_id, []).append((prop_id, vp.voto))
 
-    # Calculate scores
+    # Calculate scores — one vote per proposição (use majority vote if multiple votações)
     scores: list[tuple[int, float, int]] = []
     for parl_id, voto_list in parlamentar_votos.items():
         total_score = 0.0
         total_weight = 0.0
 
+        # Group by proposição — if multiple votações, take the most common vote
+        prop_votes: dict[int, list[TipoVoto]] = {}
         for prop_id, tipo_voto in voto_list:
+            prop_votes.setdefault(prop_id, []).append(tipo_voto)
+
+        props_compared = 0
+        for prop_id, votos_for_prop in prop_votes.items():
             if prop_id not in user_votes:
                 continue
             user_voto, peso = user_votes[prop_id]
@@ -60,24 +66,35 @@ async def ranking_parlamentares(
             if user_voto.value == "pular":
                 continue
 
+            # Use first substantive vote (Sim/Nao) for this proposição
+            parl_vote = None
+            for v in votos_for_prop:
+                if v in (TipoVoto.SIM, TipoVoto.NAO):
+                    parl_vote = v
+                    break
+            if parl_vote is None:
+                continue
+
             total_weight += peso
+            props_compared += 1
 
             # Agreement: both sim or both nao
-            if (user_voto.value == "sim" and tipo_voto == TipoVoto.SIM) or (
-                user_voto.value == "nao" and tipo_voto == TipoVoto.NAO
+            if (user_voto.value == "sim" and parl_vote == TipoVoto.SIM) or (
+                user_voto.value == "nao" and parl_vote == TipoVoto.NAO
             ):
                 total_score += peso
             # Disagreement
-            elif (user_voto.value == "sim" and tipo_voto == TipoVoto.NAO) or (
-                user_voto.value == "nao" and tipo_voto == TipoVoto.SIM
+            elif (user_voto.value == "sim" and parl_vote == TipoVoto.NAO) or (
+                user_voto.value == "nao" and parl_vote == TipoVoto.SIM
             ):
                 total_score -= peso
-            # Abstention/absence: neutral (0)
 
-        if total_weight > 0:
+        # Require minimum number of proposições compared
+        min_compared = max(3, len(user_votes) // 4)
+        if total_weight > 0 and props_compared >= min_compared:
             # Normalize to 0-100
             normalized = ((total_score / total_weight) + 1) * 50
-            scores.append((parl_id, normalized, len(voto_list)))
+            scores.append((parl_id, normalized, props_compared))
 
     # Sort by score descending
     scores.sort(key=lambda x: x[1], reverse=True)

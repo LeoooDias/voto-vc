@@ -1,10 +1,12 @@
-from fastapi import APIRouter, Depends
-from sqlalchemy import select
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from app.database import get_db
 from app.models.parlamentar import Parlamentar
+from app.models.proposicao import Proposicao
+from app.models.votacao import Votacao, VotoParlamentar
 
 router = APIRouter()
 
@@ -39,4 +41,66 @@ async def obter_parlamentar(parlamentar_id: int, db: AsyncSession = Depends(get_
         .where(Parlamentar.id == parlamentar_id)
     )
     result = await db.execute(query)
-    return result.scalar_one_or_none()
+    parlamentar = result.scalar_one_or_none()
+    if not parlamentar:
+        raise HTTPException(status_code=404, detail="Parlamentar não encontrado")
+
+    # Get voting history with proposição details
+    votos_query = (
+        select(
+            VotoParlamentar.voto,
+            VotoParlamentar.partido_na_epoca,
+            Votacao.data,
+            Votacao.descricao,
+            Proposicao.id,
+            Proposicao.tipo,
+            Proposicao.numero,
+            Proposicao.ano,
+            Proposicao.ementa,
+        )
+        .join(Votacao, VotoParlamentar.votacao_id == Votacao.id)
+        .outerjoin(Proposicao, Votacao.proposicao_id == Proposicao.id)
+        .where(VotoParlamentar.parlamentar_id == parlamentar_id)
+        .order_by(Votacao.data.desc())
+        .limit(100)
+    )
+    votos_result = await db.execute(votos_query)
+
+    votos_history = []
+    for row in votos_result.all():
+        votos_history.append({
+            "voto": row[0].value,
+            "partido_na_epoca": row[1],
+            "data": row[2].isoformat() if row[2] else None,
+            "descricao_votacao": row[3],
+            "proposicao_id": row[4],
+            "proposicao_tipo": row[5],
+            "proposicao_numero": row[6],
+            "proposicao_ano": row[7],
+            "proposicao_ementa": (row[8][:150] + "...") if row[8] and len(row[8]) > 150 else row[8],
+        })
+
+    # Vote stats
+    stats_query = (
+        select(
+            VotoParlamentar.voto,
+            func.count(VotoParlamentar.id),
+        )
+        .where(VotoParlamentar.parlamentar_id == parlamentar_id)
+        .group_by(VotoParlamentar.voto)
+    )
+    stats_result = await db.execute(stats_query)
+    stats = {row[0].value: row[1] for row in stats_result.all()}
+
+    return {
+        "id": parlamentar.id,
+        "nome_parlamentar": parlamentar.nome_parlamentar,
+        "nome_civil": parlamentar.nome_civil,
+        "casa": parlamentar.casa.value,
+        "uf": parlamentar.uf,
+        "foto_url": parlamentar.foto_url,
+        "partido": {"sigla": parlamentar.partido.sigla, "nome": parlamentar.partido.nome} if parlamentar.partido else None,
+        "legislatura_atual": parlamentar.legislatura_atual,
+        "stats": stats,
+        "votos": votos_history,
+    }

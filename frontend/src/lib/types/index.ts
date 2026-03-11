@@ -4,7 +4,9 @@ export interface QuestionarioItem {
 	numero: number;
 	ano: number;
 	resumo: string;
-	ementa_simplificada: string | null;
+	descricao_detalhada: string | null;
+	tema: string;
+	url_camara: string | null;
 }
 
 export interface RespostaItem {

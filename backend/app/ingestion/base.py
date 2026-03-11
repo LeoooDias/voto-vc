@@ -12,24 +12,25 @@ class BaseAPIClient:
     def __init__(self, base_url: str, delay_between_requests: float = 0.5):
         self.base_url = base_url.rstrip("/")
         self.delay = delay_between_requests
-        self.client = httpx.AsyncClient(timeout=30.0)
 
     async def close(self):
-        await self.client.aclose()
+        pass  # no persistent client to close
 
-    async def get(self, path: str, params: dict | None = None, retries: int = 3) -> dict:
+    async def get(self, path: str, params: dict | None = None, retries: int = 5) -> dict:
         url = f"{self.base_url}/{path.lstrip('/')}"
         for attempt in range(retries):
             try:
                 await asyncio.sleep(self.delay)
-                response = await self.client.get(url, params=params)
-                response.raise_for_status()
-                return response.json()
+                async with httpx.AsyncClient(timeout=60.0) as client:
+                    response = await client.get(url, params=params)
+                    response.raise_for_status()
+                    return response.json()
             except (httpx.HTTPStatusError, httpx.RequestError) as e:
-                logger.warning(f"Request failed (attempt {attempt + 1}/{retries}): {e}")
+                wait = min(2 ** (attempt + 1), 60)
+                logger.warning(f"Request failed (attempt {attempt + 1}/{retries}), retry in {wait}s: {e}")
                 if attempt == retries - 1:
                     raise
-                await asyncio.sleep(2**attempt)
+                await asyncio.sleep(wait)
         return {}  # unreachable but satisfies type checker
 
     async def get_paginated(

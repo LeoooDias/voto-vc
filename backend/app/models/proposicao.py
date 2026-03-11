@@ -17,6 +17,8 @@ class Proposicao(Base, TimestampMixin):
     ementa: Mapped[str] = mapped_column(Text)
     ementa_simplificada: Mapped[str | None] = mapped_column(Text)
     resumo_cidadao: Mapped[str | None] = mapped_column(Text)
+    descricao_detalhada: Mapped[str | None] = mapped_column(Text)
+    tema: Mapped[str | None] = mapped_column(String(50))
     url_inteiro_teor: Mapped[str | None] = mapped_column(String(500))
     situacao: Mapped[str | None] = mapped_column(String(100))
     relevancia_score: Mapped[float | None]

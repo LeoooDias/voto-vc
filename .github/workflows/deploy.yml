@@ -1,0 +1,51 @@
+name: Deploy to AWS
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Sync code to server
+        run: |
+          rsync -avz --delete \
+            --exclude='.git' \
+            --exclude='node_modules' \
+            --exclude='.venv' \
+            --exclude='__pycache__' \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            . ec2-user@${{ secrets.SERVER_IP }}:/opt/votovc/app/
+
+      - name: Build and deploy
+        run: |
+          ssh -i ~/.ssh/deploy_key ec2-user@${{ secrets.SERVER_IP }} << 'EOF'
+            cd /opt/votovc/app
+
+            # Build production images
+            docker build -f Dockerfile.backend.prod -t votovc-backend:latest .
+            docker build -f Dockerfile.frontend.prod -t votovc-frontend:latest .
+
+            # Update compose to use local images
+            cd /opt/votovc
+
+            # Stop old containers (keep db running)
+            docker compose stop backend frontend nginx 2>/dev/null || true
+            docker compose rm -f backend frontend nginx 2>/dev/null || true
+
+            # Start everything
+            docker compose up -d
+
+            echo "Deploy complete!"
+            docker compose ps
+          EOF

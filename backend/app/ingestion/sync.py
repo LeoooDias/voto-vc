@@ -129,7 +129,7 @@ async def sync_votacoes_camara(db: AsyncSession, camara: CamaraClient, max_pages
 
         # Try to get/create proposição
         proposicao_id = None
-        prop_uri = vot_raw.get("uriProposicaoPrincipal") or vot_raw.get("uri", "")
+        prop_uri = vot_raw.get("uriProposicaoObjeto") or ""
         prop_id_match = prop_uri.rstrip("/").split("/")[-1] if "proposicoes" in prop_uri else None
 
         if prop_id_match and prop_id_match.isdigit():
@@ -152,7 +152,7 @@ async def sync_votacoes_camara(db: AsyncSession, camara: CamaraClient, max_pages
                             casa_origem="camara",
                             tipo=prop_raw.get("siglaTipo", ""),
                             numero=prop_raw.get("numero", 0),
-                            ano=prop_raw.get("ano", ano),
+                            ano=prop_raw.get("ano", 0),
                             ementa=ementa,
                             ementa_simplificada=ementa[:200] if len(ementa) > 200 else None,
                             resumo_cidadao=ementa,  # placeholder — ideally human-written
@@ -221,7 +221,7 @@ async def sync_votacoes_camara(db: AsyncSession, camara: CamaraClient, max_pages
             logger.info(f"Synced {synced} votações...")
 
     await db.commit()
-    logger.info(f"Finished syncing {synced} new votações for {ano}")
+    logger.info(f"Finished syncing {synced} new votações")
 
     # Compute relevância scores for proposições
     await compute_relevancia(db)
