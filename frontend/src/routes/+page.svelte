@@ -3,7 +3,7 @@
 </svelte:head>
 
 <div class="hero">
-	<h1>seja representado</h1>
+	<h1>Descubra quem vota como você.</h1>
 	<p class="subtitle">
 		Responda a proposições reais do Congresso Nacional e veja quais parlamentares
 		mais se alinham com seus pontos de vista. Baseado em dados públicos, com

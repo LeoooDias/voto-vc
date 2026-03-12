@@ -10,6 +10,32 @@ router = APIRouter()
 SUBSTANTIVE_TYPES = {"PL", "PEC", "MPV", "PLP", "PDL", "MIP"}
 
 
+def _build_filters(
+    tema: str | None,
+    tipo: str | None,
+    ano: int | None,
+    substantiva: bool | None,
+    busca: str | None,
+):
+    conditions = []
+    if ano:
+        conditions.append(Proposicao.ano == ano)
+    if tipo:
+        conditions.append(Proposicao.tipo == tipo.upper())
+    if tema:
+        conditions.append(Proposicao.tema == tema)
+    if substantiva is True:
+        conditions.append(Proposicao.tipo.in_(SUBSTANTIVE_TYPES))
+    elif substantiva is False:
+        conditions.append(Proposicao.tipo.notin_(SUBSTANTIVE_TYPES))
+    if busca:
+        conditions.append(
+            Proposicao.ementa.ilike(f"%{busca}%")
+            | Proposicao.resumo_cidadao.ilike(f"%{busca}%")
+        )
+    return conditions
+
+
 @router.get("/")
 async def listar_proposicoes(
     tema: str | None = None,
@@ -21,22 +47,18 @@ async def listar_proposicoes(
     itens: int = 50,
     db: AsyncSession = Depends(get_db),
 ):
+    conditions = _build_filters(tema, tipo, ano, substantiva, busca)
+
+    # Total count
+    count_q = select(func.count(Proposicao.id))
+    for c in conditions:
+        count_q = count_q.where(c)
+    total = (await db.execute(count_q)).scalar() or 0
+
+    # Page data
     query = select(Proposicao)
-    if ano:
-        query = query.where(Proposicao.ano == ano)
-    if tipo:
-        query = query.where(Proposicao.tipo == tipo.upper())
-    if tema:
-        query = query.where(Proposicao.tema == tema)
-    if substantiva is True:
-        query = query.where(Proposicao.tipo.in_(SUBSTANTIVE_TYPES))
-    elif substantiva is False:
-        query = query.where(Proposicao.tipo.notin_(SUBSTANTIVE_TYPES))
-    if busca:
-        query = query.where(
-            Proposicao.ementa.ilike(f"%{busca}%")
-            | Proposicao.resumo_cidadao.ilike(f"%{busca}%")
-        )
+    for c in conditions:
+        query = query.where(c)
     query = (
         query.order_by(Proposicao.ano.desc(), Proposicao.id.desc())
         .offset((pagina - 1) * itens)
@@ -45,22 +67,29 @@ async def listar_proposicoes(
     result = await db.execute(query)
     props = result.scalars().all()
 
-    return [
-        {
-            "id": p.id,
-            "tipo": p.tipo,
-            "numero": p.numero,
-            "ano": p.ano,
-            "ementa": (
-                (p.ementa[:150] + "...") if p.ementa and len(p.ementa) > 150
-                else p.ementa
-            ),
-            "resumo_cidadao": p.resumo_cidadao,
-            "tema": p.tema,
-            "substantiva": p.tipo in SUBSTANTIVE_TYPES,
-        }
-        for p in props
-    ]
+    return {
+        "total": total,
+        "paginas": (total + itens - 1) // itens,
+        "items": [
+            {
+                "id": p.id,
+                "id_externo": p.id_externo,
+                "tipo": p.tipo,
+                "numero": p.numero,
+                "ano": p.ano,
+                "ementa": (
+                    (p.ementa[:150] + "...")
+                    if p.ementa and len(p.ementa) > 150
+                    else p.ementa
+                ),
+                "resumo_cidadao": p.resumo_cidadao,
+                "descricao_detalhada": p.descricao_detalhada,
+                "tema": p.tema,
+                "substantiva": p.tipo in SUBSTANTIVE_TYPES,
+            }
+            for p in props
+        ],
+    }
 
 
 @router.get("/filtros")
