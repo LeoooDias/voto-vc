@@ -159,14 +159,14 @@
 			{#if filtros}
 				<select bind:value={filtroTema} onchange={applyFilter}>
 					<option value="">Todos os temas</option>
-					{#each filtros.temas as t}
+					{#each filtros.temas.toSorted((a, b) => (temaInfo[a.valor]?.label ?? a.valor).localeCompare(temaInfo[b.valor]?.label ?? b.valor, 'pt-BR')) as t}
 						{@const info = temaInfo[t.valor]}
 						<option value={t.valor}>{info?.label ?? t.valor} ({t.count})</option>
 					{/each}
 				</select>
 				<select bind:value={filtroTipo} onchange={applyFilter}>
 					<option value="">Todos os tipos</option>
-					{#each filtros.tipos as t}
+					{#each filtros.tipos.toSorted((a, b) => a.valor.localeCompare(b.valor)) as t}
 						<option value={t.valor}>{t.valor} ({t.count})</option>
 					{/each}
 				</select>

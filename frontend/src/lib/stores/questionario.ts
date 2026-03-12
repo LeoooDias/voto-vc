@@ -8,7 +8,7 @@ export const selectedUf = writable<string>('');
 
 export async function salvarResposta(resposta: RespostaItem): Promise<void> {
 	try {
-		await fetch('/api/questionario/responder', {
+		await fetch('/api/vote/responder', {
 			method: 'POST',
 			credentials: 'include',
 			headers: { 'Content-Type': 'application/json' },
@@ -21,7 +21,7 @@ export async function salvarResposta(resposta: RespostaItem): Promise<void> {
 
 export async function carregarRespostas(): Promise<RespostaItem[]> {
 	try {
-		const res = await fetch('/api/questionario/respostas', {
+		const res = await fetch('/api/vote/respostas', {
 			credentials: 'include'
 		});
 		if (res.ok) {

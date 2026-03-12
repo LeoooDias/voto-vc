@@ -86,7 +86,7 @@
 
 	async function loadQuestions() {
 		try {
-			const data = await api.get<QuestionarioItem[]>('/questionario/items?n_items=50');
+			const data = await api.get<QuestionarioItem[]>('/vote/items?n_items=50');
 
 			// Se logado, carregar respostas salvas do DB
 			const user = get(authUser);
@@ -184,7 +184,7 @@
 </script>
 
 <svelte:head>
-	<title>Questionário — voto.vc</title>
+	<title>Vote — voto.vc</title>
 </svelte:head>
 
 {#if !uf}
@@ -213,7 +213,7 @@
 		</div>
 		<div class="counter-row">
 			<p class="answered">
-				{answeredCount} respondida{answeredCount !== 1 ? 's' : ''}
+				{answeredCount} voto{answeredCount !== 1 ? 's' : ''}
 				{#if tierLabel}
 					<span class="tier-badge">{tierLabel}</span>
 				{:else}
@@ -234,8 +234,8 @@
 			</div>
 		{:else if canFinish}
 			<div class="meta-banner ready">
-				Já dá pra ver seu perfil! Mas quanto mais você responder, mais preciso fica.
-				<button class="btn-resultado" onclick={verResultado}>Ver resultado parcial</button>
+				Seu perfil Básico está pronto. Continue votando para aumentar a precisão.
+				<button class="btn-resultado" onclick={verResultado}>Ver perfil</button>
 			</div>
 		{/if}
 
@@ -444,6 +444,9 @@
 		font-weight: 600;
 		cursor: pointer;
 		transition: transform 0.1s, opacity 0.2s;
+		white-space: nowrap;
+		flex: 1;
+		min-width: 0;
 	}
 
 	.btn:hover {

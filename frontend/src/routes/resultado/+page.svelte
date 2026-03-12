@@ -3,22 +3,24 @@
 	import { api } from '$lib/api';
 	import { respostas, selectedUf, carregarRespostas } from '$lib/stores/questionario';
 	import { authUser } from '$lib/stores/auth';
-	import { resultados, loading } from '$lib/stores/resultado';
-	import type { MatchResult } from '$lib/types';
+	import { resultados, resultadosPartidos, loading } from '$lib/stores/resultado';
+	import type { MatchResult, PartidoMatchResult, MatchResponse } from '$lib/types';
 	import { goto } from '$app/navigation';
 	import { get } from 'svelte/store';
 
-	let results: MatchResult[] = $state([]);
+	let parlResults: MatchResult[] = $state([]);
+	let partidoResults: PartidoMatchResult[] = $state([]);
 	let isLoading = $state(true);
 	let totalRespostas = $state(0);
+	let tab: 'parlamentares' | 'partidos' = $state('parlamentares');
 
-	resultados.subscribe((v) => (results = v));
+	resultados.subscribe((v) => (parlResults = v));
+	resultadosPartidos.subscribe((v) => (partidoResults = v));
 	loading.subscribe((v) => (isLoading = v));
 
 	onMount(async () => {
 		let userRespostas = get(respostas);
 
-		// Se logado e sem respostas no store, tentar do DB
 		if (userRespostas.length === 0 && get(authUser)) {
 			const saved = await carregarRespostas();
 			if (saved.length > 0) {
@@ -37,11 +39,12 @@
 		loading.set(true);
 		try {
 			const uf = get(selectedUf);
-			const data = await api.post<MatchResult[]>('/matching/calcular', {
+			const data = await api.post<MatchResponse>('/matching/calcular', {
 				respostas: userRespostas,
 				uf: uf || undefined
 			});
-			resultados.set(data);
+			resultados.set(data.parlamentares);
+			resultadosPartidos.set(data.partidos);
 		} catch (e) {
 			console.error('Failed to calculate matching:', e);
 		} finally {
@@ -56,32 +59,66 @@
 
 {#if isLoading}
 	<div class="loading">Calculando seu alinhamento...</div>
-{:else if results.length === 0}
+{:else if parlResults.length === 0 && partidoResults.length === 0}
 	<div class="empty">
 		<p>Não foi possível calcular o alinhamento.</p>
 		<a href="/questionario">Tentar novamente</a>
 	</div>
 {:else}
 	<div class="resultado">
-		<h1>Seus parlamentares mais alinhados</h1>
-		<p class="subtitle">Baseado nas suas {totalRespostas} respostas</p>
+		<h1>Seu alinhamento político</h1>
+		<p class="subtitle">Baseado nos seus {totalRespostas} votos</p>
 
-		<div class="lista">
-			{#each results as result, i}
-				<a href="/parlamentar/{result.parlamentar_id}" class="parlamentar-card">
-					<span class="rank">#{i + 1}</span>
-					<div class="info">
-						<div class="nome">{result.nome}</div>
-						<div class="meta">
-							{result.partido ?? 'Sem partido'} · {result.uf} · {result.casa === 'camara' ? (result.sexo === 'F' ? 'Deputada' : 'Deputado') : (result.sexo === 'F' ? 'Senadora' : 'Senador')}
+		<div class="tabs">
+			<button
+				class="tab"
+				class:active={tab === 'parlamentares'}
+				onclick={() => tab = 'parlamentares'}
+			>
+				Parlamentares
+			</button>
+			<button
+				class="tab"
+				class:active={tab === 'partidos'}
+				onclick={() => tab = 'partidos'}
+			>
+				Partidos
+			</button>
+		</div>
+
+		{#if tab === 'parlamentares'}
+			<div class="lista">
+				{#each parlResults as result, i}
+					<a href="/parlamentar/{result.parlamentar_id}" class="parlamentar-card">
+						<span class="rank">#{i + 1}</span>
+						<div class="info">
+							<div class="nome">{result.nome}</div>
+							<div class="meta">
+								{result.partido ?? 'Sem partido'} · {result.uf} · {result.casa === 'camara' ? (result.sexo === 'F' ? 'Deputada' : 'Deputado') : (result.sexo === 'F' ? 'Senadora' : 'Senador')}
+							</div>
+						</div>
+						<div class="score" class:high={result.score >= 70} class:mid={result.score >= 40 && result.score < 70} class:low={result.score < 40}>
+							{result.score}%
+						</div>
+					</a>
+				{/each}
+			</div>
+		{:else}
+			<div class="lista">
+				{#each partidoResults as result, i}
+					<div class="partido-card">
+						<span class="rank">#{i + 1}</span>
+						<div class="info">
+							<div class="nome">{result.sigla}</div>
+							<div class="meta">{result.nome} · {result.parlamentares_comparados} parlamentar{result.parlamentares_comparados !== 1 ? 'es' : ''}</div>
+						</div>
+						<div class="score" class:high={result.score >= 70} class:mid={result.score >= 40 && result.score < 70} class:low={result.score < 40}>
+							{result.score}%
 						</div>
 					</div>
-					<div class="score" class:high={result.score >= 70} class:mid={result.score >= 40 && result.score < 70} class:low={result.score < 40}>
-						{result.score}%
-					</div>
-				</a>
-			{/each}
-		</div>
+				{/each}
+			</div>
+		{/if}
 
 		{#if !$authUser}
 			<div class="cta-section">
@@ -100,21 +137,51 @@
 
 	h1 {
 		text-align: center;
-		color: #1a1a2e;
+		color: var(--text-primary);
 	}
 
 	.subtitle {
 		text-align: center;
-		color: #9ca3af;
-		margin-bottom: 2rem;
+		color: var(--text-secondary);
+		margin-bottom: 1.5rem;
 	}
 
-	.parlamentar-card {
+	.tabs {
+		display: flex;
+		gap: 0;
+		margin-bottom: 1.5rem;
+		border-bottom: 2px solid var(--border);
+	}
+
+	.tab {
+		flex: 1;
+		padding: 0.75rem 1rem;
+		background: none;
+		border: none;
+		border-bottom: 2px solid transparent;
+		margin-bottom: -2px;
+		font-size: 1rem;
+		font-weight: 600;
+		color: var(--text-secondary);
+		cursor: pointer;
+		transition: color 0.2s, border-color 0.2s;
+	}
+
+	.tab:hover {
+		color: var(--text-primary);
+	}
+
+	.tab.active {
+		color: var(--link);
+		border-bottom-color: var(--link);
+	}
+
+	.parlamentar-card, .partido-card {
 		display: flex;
 		align-items: center;
 		gap: 1rem;
-		background: white;
-		border: 1px solid #e5e7eb;
+		background: var(--bg-card);
+		border: 1px solid var(--border);
 		border-radius: 12px;
 		padding: 1rem 1.5rem;
 		margin-bottom: 0.75rem;
@@ -123,12 +190,12 @@
 		transition: border-color 0.2s;
 	}
 
-	.parlamentar-card:hover {
-		border-color: #2563eb;
+	.parlamentar-card:hover, .partido-card:hover {
+		border-color: var(--border-hover);
 	}
 
 	.rank {
-		color: #9ca3af;
+		color: var(--text-secondary);
 		font-weight: 700;
 		font-size: 1.125rem;
 		min-width: 2.5rem;
@@ -140,12 +207,12 @@
 
 	.nome {
 		font-weight: 600;
-		color: #1a1a2e;
+		color: var(--text-primary);
 	}
 
 	.meta {
 		font-size: 0.875rem;
-		color: #6b7280;
+		color: var(--text-secondary);
 		margin-top: 0.25rem;
 	}
 
@@ -154,28 +221,21 @@
 		font-weight: 700;
 	}
 
-	.high {
-		color: #16a34a;
-	}
-
-	.mid {
-		color: #ca8a04;
-	}
-
-	.low {
-		color: #dc2626;
-	}
+	.high { color: #16a34a; }
+	.mid { color: #ca8a04; }
+	.low { color: #dc2626; }
 
 	.cta-section {
 		text-align: center;
 		margin-top: 3rem;
 		padding: 2rem;
-		background: #eff6ff;
+		background: var(--bg-card);
+		border: 1px solid var(--border);
 		border-radius: 16px;
 	}
 
 	.cta-section p {
-		color: #4b5563;
+		color: var(--text-secondary);
 		margin-bottom: 1rem;
 	}
 
@@ -189,11 +249,10 @@
 		font-weight: 600;
 	}
 
-	.loading,
-	.empty {
+	.loading, .empty {
 		text-align: center;
 		padding: 4rem;
-		color: #6b7280;
+		color: var(--text-secondary);
 		font-size: 1.125rem;
 	}
 </style>

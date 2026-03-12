@@ -7,7 +7,7 @@ from app.core.deps import get_optional_user
 from app.database import get_db
 from app.models.base import VotoUsuario
 from app.models.usuario import RespostaUsuario, Usuario
-from app.services.matching import ranking_parlamentares
+from app.services.matching import ranking_parlamentares, ranking_partidos
 
 router = APIRouter()
 
@@ -49,10 +49,15 @@ async def calcular(
             for r in db_respostas
         ]
 
-    resultados = await ranking_parlamentares(
+    parlamentares, partidos = await ranking_parlamentares(
+        db,
+        respostas=respostas,
+        casa=request.casa,
+        uf=request.uf,
+    ), await ranking_partidos(
         db,
         respostas=respostas,
         casa=request.casa,
         uf=request.uf,
     )
-    return resultados
+    return {"parlamentares": parlamentares, "partidos": partidos}

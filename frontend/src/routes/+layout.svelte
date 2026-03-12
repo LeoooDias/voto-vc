@@ -23,7 +23,7 @@
 			<a href="/" class="logo"><span class="logo-flag"><span class="logo-text">voto.vc</span></span></a>
 			<div class="nav-right">
 				<div class="nav-links">
-					<a href="/questionario">Questionário</a>
+					<a href="/questionario">Vote</a>
 					{#if perfilEnabled}
 						<a href="/resultado">Perfil</a>
 					{:else}

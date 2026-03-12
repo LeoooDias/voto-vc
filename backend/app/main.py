@@ -30,7 +30,7 @@ app.add_middleware(
 app.include_router(parlamentares.router, prefix="/api/parlamentares", tags=["parlamentares"])
 app.include_router(partidos.router, prefix="/api/partidos", tags=["partidos"])
 app.include_router(proposicoes.router, prefix="/api/proposicoes", tags=["proposicoes"])
-app.include_router(questionario.router, prefix="/api/questionario", tags=["questionario"])
+app.include_router(questionario.router, prefix="/api/vote", tags=["vote"])
 app.include_router(matching.router, prefix="/api/matching", tags=["matching"])
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 

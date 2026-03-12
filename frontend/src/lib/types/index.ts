@@ -27,6 +27,19 @@ export interface MatchResult {
 	votos_comparados: number;
 }
 
+export interface PartidoMatchResult {
+	partido_id: number;
+	sigla: string;
+	nome: string;
+	score: number;
+	parlamentares_comparados: number;
+}
+
+export interface MatchResponse {
+	parlamentares: MatchResult[];
+	partidos: PartidoMatchResult[];
+}
+
 export interface Parlamentar {
 	id: number;
 	nome_parlamentar: string;
