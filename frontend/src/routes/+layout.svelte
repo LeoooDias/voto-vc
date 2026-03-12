@@ -120,7 +120,7 @@
 		display: flex;
 		align-items: center;
 		gap: 0.75rem;
-		padding-left: 0.5rem;
+		padding-left: 1.25rem;
 		border-left: 1px solid #e5e7eb;
 	}
 
