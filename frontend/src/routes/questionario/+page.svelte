@@ -14,8 +14,9 @@
 	import { goto } from '$app/navigation';
 	import { get } from 'svelte/store';
 
-	const MIN_RESPOSTAS = 10;
-	const META_RESPOSTAS = 20;
+	const TIER1 = 10;
+	const TIER2 = 25;
+	const TIER3 = 50;
 
 	const UFS = [
 		{ sigla: 'AC', nome: 'Acre' },
@@ -52,8 +53,20 @@
 	let currentItems: QuestionarioItem[] = $state([]);
 	let idx = $state(0);
 	let answeredCount = $state(0);
-	let canFinish = $derived(answeredCount >= MIN_RESPOSTAS);
-	let reachedMeta = $derived(answeredCount >= META_RESPOSTAS);
+	let canFinish = $derived(answeredCount >= TIER1);
+	let reachedTier2 = $derived(answeredCount >= TIER2);
+	let reachedTier3 = $derived(answeredCount >= TIER3);
+
+	// Progress segments: each tier fills 1/3 of the bar
+	let seg1 = $derived(Math.min(answeredCount / TIER1, 1) * 33.33);
+	let seg2 = $derived(answeredCount > TIER1 ? Math.min((answeredCount - TIER1) / (TIER2 - TIER1), 1) * 33.33 : 0);
+	let seg3 = $derived(answeredCount > TIER2 ? Math.min((answeredCount - TIER2) / (TIER3 - TIER2), 1) * 33.34 : 0);
+
+	let tierLabel = $derived(
+		reachedTier3 ? 'Expert' :
+		reachedTier2 ? 'Avançado' :
+		canFinish ? 'Básico' : ''
+	);
 
 	function escolherUf(sigla: string) {
 		uf = sigla;
@@ -194,23 +207,29 @@
 {:else}
 	<div class="questionario">
 		<div class="progress">
-			<div class="progress-bar" style="width: {((idx + 1) / currentItems.length) * 100}%"></div>
+			{#if seg1 > 0}<div class="progress-seg yellow" style="width: {seg1}%"></div>{/if}
+			{#if seg2 > 0}<div class="progress-seg green" style="width: {seg2}%"></div>{/if}
+			{#if seg3 > 0}<div class="progress-seg blue" style="width: {seg3}%"></div>{/if}
 		</div>
 		<div class="counter-row">
-			<p class="counter">{idx + 1} de {currentItems.length}</p>
 			<p class="answered">
 				{answeredCount} respondida{answeredCount !== 1 ? 's' : ''}
-				{#if !canFinish}
-					<span class="hint">· mínimo {MIN_RESPOSTAS}</span>
+				{#if tierLabel}
+					<span class="tier-badge">{tierLabel}</span>
+				{:else}
+					<span class="hint">· mínimo {TIER1}</span>
 				{/if}
 			</p>
 		</div>
 
-		{#if reachedMeta && !canFinish}
-			<!-- shouldn't happen but just in case -->
-		{:else if reachedMeta}
+		{#if reachedTier3}
 			<div class="meta-banner success">
-				Excelente! Você já respondeu {answeredCount} proposições. Seu perfil está bem definido.
+				Perfil expert! {answeredCount} respostas. Altíssima precisão.
+				<button class="btn-resultado" onclick={verResultado}>Ver meu resultado</button>
+			</div>
+		{:else if reachedTier2}
+			<div class="meta-banner success">
+				Perfil avançado! Quanto mais você responder, mais preciso fica.
 				<button class="btn-resultado" onclick={verResultado}>Ver meu resultado</button>
 			</div>
 		{:else if canFinish}
@@ -278,12 +297,6 @@
 		margin: 0.5rem 0 1rem;
 	}
 
-	.counter {
-		color: var(--text-secondary);
-		font-size: 0.875rem;
-		margin: 0;
-	}
-
 	.answered {
 		color: var(--text-secondary);
 		font-size: 0.875rem;
@@ -294,6 +307,16 @@
 	.hint {
 		color: var(--text-secondary);
 		font-weight: 400;
+	}
+
+	.tier-badge {
+		font-size: 0.75rem;
+		font-weight: 600;
+		padding: 0.125rem 0.5rem;
+		border-radius: 10px;
+		background: var(--link);
+		color: white;
+		margin-left: 0.25rem;
 	}
 
 	.meta-banner {
@@ -397,7 +420,7 @@
 	}
 
 	.link-camara {
-		color: #2563eb;
+		color: var(--link);
 		font-size: 0.8rem;
 		text-decoration: none;
 	}
@@ -442,15 +465,15 @@
 	}
 
 	.pular {
-		background: #e5e7eb;
-		color: #6b7280;
+		background: var(--border);
+		color: var(--text-secondary);
 	}
 
 	.loading,
 	.empty {
 		text-align: center;
 		padding: 4rem;
-		color: #6b7280;
+		color: var(--text-secondary);
 		font-size: 1.125rem;
 	}
 
@@ -461,12 +484,12 @@
 	}
 
 	.uf-selector h1 {
-		color: #1a1a2e;
+		color: var(--text-primary);
 		margin-bottom: 0.25rem;
 	}
 
 	.uf-subtitle {
-		color: #6b7280;
+		color: var(--text-secondary);
 		margin-bottom: 2rem;
 	}
 
@@ -481,8 +504,8 @@
 		align-items: center;
 		gap: 0.5rem;
 		padding: 0.75rem 1rem;
-		background: white;
-		border: 1px solid #e5e7eb;
+		background: var(--bg-card);
+		border: 1px solid var(--border);
 		border-radius: 10px;
 		cursor: pointer;
 		transition: border-color 0.2s, background 0.2s;
@@ -490,19 +513,19 @@
 	}
 
 	.uf-btn:hover {
-		border-color: #2563eb;
-		background: #eff6ff;
+		border-color: var(--link);
+		background: var(--bg-page);
 	}
 
 	.uf-sigla {
 		font-weight: 700;
-		color: #2563eb;
+		color: var(--link);
 		font-size: 1rem;
 		min-width: 1.75rem;
 	}
 
 	.uf-nome {
-		color: #374151;
+		color: var(--text-primary);
 		font-size: 0.85rem;
 	}
 </style>

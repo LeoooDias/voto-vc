@@ -34,19 +34,21 @@
 		substantiva: boolean;
 	}
 
-	let parlamentar: ParlamentarDetail | null = $state(null);
+	let parlamentar = $state<ParlamentarDetail | null>(null);
 	let error = $state(false);
 	let expandedId: number | null = $state(null);
 	let soSubstantivas = $state(false);
 
-	let votosVisiveis = $derived(
+	let allVotos = $derived((parlamentar?.votos ?? []) as VotoHistory[]);
+
+	let votosVisiveis = $derived<VotoHistory[]>(
 		soSubstantivas
-			? (parlamentar?.votos ?? []).filter((v) => v.substantiva)
-			: (parlamentar?.votos ?? [])
+			? allVotos.filter((v: VotoHistory) => v.substantiva)
+			: allVotos
 	);
 
 	let countSubstantivas = $derived(
-		(parlamentar?.votos ?? []).filter((v) => v.substantiva).length
+		allVotos.filter((v: VotoHistory) => v.substantiva).length
 	);
 
 	onMount(async () => {
@@ -166,14 +168,12 @@
 				{#each votosVisiveis as voto}
 					{@const hasDetails = voto.substantiva && (voto.resumo_cidadao || voto.descricao_detalhada)}
 					{@const isExpanded = expandedId === voto.proposicao_id}
-					<div
+					<button
+						type="button"
 						class="voto-card"
 						class:expandable={hasDetails}
 						class:expanded={isExpanded}
 						onclick={() => hasDetails && toggleExpand(voto.proposicao_id)}
-						onkeydown={(e) => e.key === 'Enter' && hasDetails && toggleExpand(voto.proposicao_id)}
-						role={hasDetails ? 'button' : undefined}
-						tabindex={hasDetails ? 0 : undefined}
 					>
 						<div class="voto-main">
 							<span class="voto-badge {votoClass(voto.voto)}">{votoLabel(voto.voto)}</span>
@@ -212,7 +212,7 @@
 								{/if}
 							</div>
 						{/if}
-					</div>
+					</button>
 				{/each}
 			</div>
 		{:else}
@@ -328,6 +328,10 @@
 	}
 
 	.voto-card {
+		display: block;
+		width: 100%;
+		text-align: left;
+		font: inherit;
 		background: white;
 		border: 1px solid #e5e7eb;
 		border-radius: 12px;
