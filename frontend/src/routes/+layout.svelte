@@ -18,7 +18,7 @@
 	</main>
 
 	<footer>
-		<p>voto.vc — Transparência e neutralidade para o eleitor brasileiro</p>
+		<p>voto.vc — seja representado</p>
 	</footer>
 </div>
 

@@ -3,7 +3,7 @@
 </svelte:head>
 
 <div class="hero">
-	<h1>Descubra quais políticos pensam como você</h1>
+	<h1>Descubra quais políticos votam como você</h1>
 	<p class="subtitle">
 		Responda a proposições reais do Congresso Nacional e veja quais parlamentares
 		mais se alinham com seus pontos de vista. Baseado em dados públicos, com
@@ -22,7 +22,7 @@
 		</div>
 		<div class="feature">
 			<h3>Seu controle</h3>
-			<p>Vote como se estivesse no Congresso e veja quem vota como você</p>
+			<p>Vote como se estivesse no Congresso e veja quem te representa</p>
 		</div>
 	</div>
 </div>
