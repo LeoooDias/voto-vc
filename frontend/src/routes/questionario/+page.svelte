@@ -255,17 +255,21 @@
 	}
 
 	.progress {
-		background: #e5e7eb;
+		background: var(--border);
 		border-radius: 4px;
-		height: 6px;
+		height: 8px;
 		overflow: hidden;
+		display: flex;
 	}
 
-	.progress-bar {
-		background: #2563eb;
+	.progress-seg {
 		height: 100%;
 		transition: width 0.3s ease;
 	}
+
+	.progress-seg.yellow { background: #eab308; }
+	.progress-seg.green { background: #16a34a; }
+	.progress-seg.blue { background: #2563eb; }
 
 	.counter-row {
 		display: flex;
@@ -275,20 +279,20 @@
 	}
 
 	.counter {
-		color: #9ca3af;
+		color: var(--text-secondary);
 		font-size: 0.875rem;
 		margin: 0;
 	}
 
 	.answered {
-		color: #6b7280;
+		color: var(--text-secondary);
 		font-size: 0.875rem;
 		font-weight: 600;
 		margin: 0;
 	}
 
 	.hint {
-		color: #9ca3af;
+		color: var(--text-secondary);
 		font-weight: 400;
 	}
 
@@ -334,8 +338,8 @@
 	}
 
 	.card {
-		background: white;
-		border: 1px solid #e5e7eb;
+		background: var(--bg-card);
+		border: 1px solid var(--border);
 		border-radius: 16px;
 		padding: 2rem;
 		min-height: 200px;
@@ -375,12 +379,12 @@
 	.resumo {
 		font-size: 1.25rem;
 		line-height: 1.6;
-		color: #1a1a2e;
+		color: var(--text-primary);
 		margin: 0;
 	}
 
 	.descricao {
-		color: #374151;
+		color: var(--text-secondary);
 		font-size: 0.95rem;
 		margin-top: 1rem;
 		line-height: 1.6;

@@ -2,10 +2,14 @@
 	import { onMount } from 'svelte';
 	import { authUser, authLoading, checkAuth, logout } from '$lib/stores/auth';
 	import { initTheme } from '$lib/stores/theme';
+	import { respostas } from '$lib/stores/questionario';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
 
 	let { children } = $props();
 	let settingsOpen = $state(false);
+	let respostasArr: { voto: string }[] = $state([]);
+	respostas.subscribe(r => respostasArr = r);
+	let perfilEnabled = $derived(respostasArr.filter(r => r.voto !== 'pular').length >= 10);
 
 	onMount(() => {
 		initTheme();
@@ -20,18 +24,25 @@
 			<div class="nav-right">
 				<div class="nav-links">
 					<a href="/questionario">Questionário</a>
+					{#if perfilEnabled}
+						<a href="/resultado">Perfil</a>
+					{:else}
+						<span class="nav-disabled">Perfil</span>
+					{/if}
+					<a href="/proposicoes">Proposições</a>
 					<a href="/sobre">Sobre</a>
 				</div>
 				{#if !$authLoading}
 					<div class="nav-auth">
 						{#if $authUser}
 							<span class="user-name">{$authUser.nome ?? $authUser.email}</span>
-							<button class="nav-btn" onclick={() => settingsOpen = true}>Config</button>
 							<button class="nav-btn" onclick={() => logout()}>Sair</button>
 						{:else}
-							<button class="nav-btn" onclick={() => settingsOpen = true}>Config</button>
 							<a href="/login" class="nav-btn-login">Entrar</a>
 						{/if}
+						<button class="nav-btn-icon" onclick={() => settingsOpen = true} title="Configurações">
+							<svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
+						</button>
 					</div>
 				{/if}
 			</div>
@@ -182,6 +193,28 @@
 
 	.nav-btn:hover {
 		background: var(--bg-page);
+	}
+
+	.nav-btn-icon {
+		background: none;
+		border: none;
+		color: var(--text-secondary);
+		cursor: pointer;
+		padding: 0.375rem;
+		border-radius: 6px;
+		display: flex;
+		align-items: center;
+	}
+
+	.nav-btn-icon:hover {
+		background: var(--bg-page);
+		color: var(--text-primary);
+	}
+
+	.nav-disabled {
+		color: var(--border);
+		font-weight: 500;
+		cursor: default;
 	}
 
 	.nav-btn-login {

@@ -1,9 +1,9 @@
 <svelte:head>
-	<title>voto.vc — Descubra seu perfil político</title>
+	<title>voto.vc — seja representado</title>
 </svelte:head>
 
 <div class="hero">
-	<h1>Descubra quais políticos votam como você</h1>
+	<h1>seja representado</h1>
 	<p class="subtitle">
 		Responda a proposições reais do Congresso Nacional e veja quais parlamentares
 		mais se alinham com seus pontos de vista. Baseado em dados públicos, com
@@ -35,14 +35,14 @@
 
 	h1 {
 		font-size: 2.5rem;
-		color: #1a1a2e;
+		color: var(--text-primary);
 		margin-bottom: 1rem;
 		line-height: 1.2;
 	}
 
 	.subtitle {
 		font-size: 1.25rem;
-		color: #6b7280;
+		color: var(--text-secondary);
 		max-width: 600px;
 		margin: 0 auto 2rem;
 		line-height: 1.6;
@@ -73,19 +73,19 @@
 	}
 
 	.feature {
-		background: white;
+		background: var(--bg-card);
 		padding: 1.5rem;
 		border-radius: 12px;
-		border: 1px solid #e5e7eb;
+		border: 1px solid var(--border);
 	}
 
 	.feature h3 {
-		color: #2563eb;
+		color: var(--link);
 		margin: 0 0 0.5rem;
 	}
 
 	.feature p {
-		color: #6b7280;
+		color: var(--text-secondary);
 		margin: 0;
 		line-height: 1.5;
 	}
