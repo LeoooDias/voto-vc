@@ -3,7 +3,7 @@ import uuid
 from sqlalchemy import ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import Base, TimestampMixin, VotoUsuario
+from app.models.base import Base, ProvedorAuth, TimestampMixin, VotoUsuario
 
 
 class Usuario(Base, TimestampMixin):
@@ -15,6 +15,8 @@ class Usuario(Base, TimestampMixin):
     nome: Mapped[str | None] = mapped_column(String(200))
     uf: Mapped[str | None] = mapped_column(String(2))
     anonimo: Mapped[bool] = mapped_column(default=True)
+    provedor_auth: Mapped[ProvedorAuth] = mapped_column(default=ProvedorAuth.EMAIL)
+    provedor_id: Mapped[str | None] = mapped_column(String(200))
 
     respostas: Mapped[list["RespostaUsuario"]] = relationship(back_populates="usuario")
 

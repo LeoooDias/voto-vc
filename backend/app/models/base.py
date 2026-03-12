@@ -36,3 +36,9 @@ class VotoUsuario(str, enum.Enum):
     SIM = "sim"
     NAO = "nao"
     PULAR = "pular"
+
+
+class ProvedorAuth(str, enum.Enum):
+    EMAIL = "email"
+    GOOGLE = "google"
+    MAGIC_LINK = "magic_link"

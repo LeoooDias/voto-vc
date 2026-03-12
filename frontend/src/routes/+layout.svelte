@@ -1,5 +1,12 @@
 <script>
+	import { onMount } from 'svelte';
+	import { authUser, authLoading, checkAuth, logout } from '$lib/stores/auth';
+
 	let { children } = $props();
+
+	onMount(() => {
+		checkAuth();
+	});
 </script>
 
 <div class="app">
@@ -9,6 +16,14 @@
 			<div class="nav-links">
 				<a href="/questionario">Questionário</a>
 				<a href="/sobre">Sobre</a>
+				{#if !$authLoading}
+					{#if $authUser}
+						<span class="user-name">{$authUser.nome ?? $authUser.email}</span>
+						<button class="nav-btn" onclick={() => logout()}>Sair</button>
+					{:else}
+						<a href="/login" class="nav-btn-login">Entrar</a>
+					{/if}
+				{/if}
 			</div>
 		</nav>
 	</header>
@@ -88,6 +103,40 @@
 
 	.nav-links a:hover {
 		color: #2563eb;
+	}
+
+	.user-name {
+		color: #1a1a2e;
+		font-weight: 500;
+		font-size: 0.875rem;
+	}
+
+	.nav-btn {
+		background: none;
+		border: 1px solid #d1d5db;
+		border-radius: 6px;
+		padding: 0.375rem 0.75rem;
+		color: #4b5563;
+		font-weight: 500;
+		cursor: pointer;
+		font-size: 0.875rem;
+	}
+
+	.nav-btn:hover {
+		background: #f3f4f6;
+	}
+
+	.nav-btn-login {
+		background: #2563eb;
+		color: white !important;
+		border-radius: 6px;
+		padding: 0.375rem 0.75rem;
+		font-size: 0.875rem;
+	}
+
+	.nav-btn-login:hover {
+		background: #1d4ed8;
+		color: white !important;
 	}
 
 	main {
