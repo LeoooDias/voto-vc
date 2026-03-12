@@ -195,6 +195,32 @@ async def me(usuario: Usuario = Depends(get_current_user)):
     }
 
 
+class AtualizarPerfilRequest(BaseModel):
+    uf: str | None = None
+    nome: str | None = None
+
+
+@router.patch("/me")
+async def atualizar_perfil(
+    request: AtualizarPerfilRequest,
+    usuario: Usuario = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    if request.uf is not None:
+        usuario.uf = request.uf.upper() if request.uf else None
+    if request.nome is not None:
+        usuario.nome = request.nome or None
+    await db.commit()
+    await db.refresh(usuario)
+    return {
+        "id": str(usuario.id),
+        "email": usuario.email,
+        "nome": usuario.nome,
+        "uf": usuario.uf,
+        "provedor_auth": usuario.provedor_auth.value,
+    }
+
+
 @router.post("/logout")
 async def logout():
     response = RedirectResponse(settings.frontend_url, status_code=302)

@@ -59,6 +59,16 @@
 		uf = sigla;
 		selectedUf.set(sigla);
 		loadQuestions();
+
+		// Persistir UF no perfil se logado
+		if (get(authUser)) {
+			fetch('/api/auth/me', {
+				method: 'PATCH',
+				credentials: 'include',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ uf: sigla })
+			});
+		}
 	}
 
 	async function loadQuestions() {
@@ -93,6 +103,14 @@
 	}
 
 	onMount(async () => {
+		// Carregar UF do perfil se logado e sem UF local
+		if (!uf) {
+			const user = get(authUser);
+			if (user?.uf) {
+				uf = user.uf;
+				selectedUf.set(user.uf);
+			}
+		}
 		if (uf) {
 			await loadQuestions();
 		}

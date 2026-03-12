@@ -4,7 +4,7 @@ from sqlalchemy.orm import joinedload
 
 from app.models.base import Casa, TipoVoto
 from app.models.parlamentar import Parlamentar
-from app.models.votacao import VotoParlamentar, Votacao
+from app.models.votacao import Votacao, VotoParlamentar
 
 
 async def ranking_parlamentares(
@@ -23,8 +23,26 @@ async def ranking_parlamentares(
     if not proposicao_ids:
         return []
 
+    # Pre-load parlamentares filtered by casa/uf to know which IDs to score
+    parl_filter_query = select(Parlamentar.id).select_from(Parlamentar)
+    if casa:
+        parl_filter_query = parl_filter_query.where(
+            Parlamentar.casa == Casa(casa)
+        )
+    if uf:
+        parl_filter_query = parl_filter_query.where(
+            Parlamentar.uf == uf.upper()
+        )
+    parl_filter_result = await db.execute(parl_filter_query)
+    valid_parl_ids = set(parl_filter_result.scalars().all())
+
+    if not valid_parl_ids:
+        return []
+
     # Get all votacoes linked to the proposicoes the user voted on
-    votacao_query = select(Votacao).where(Votacao.proposicao_id.in_(proposicao_ids))
+    votacao_query = select(Votacao).where(
+        Votacao.proposicao_id.in_(proposicao_ids)
+    )
     votacao_result = await db.execute(votacao_query)
     votacoes = votacao_result.scalars().all()
     votacao_ids = [v.id for v in votacoes]
@@ -35,24 +53,30 @@ async def ranking_parlamentares(
         return []
 
     # Get all individual votes for those votacoes
-    votos_query = select(VotoParlamentar).where(VotoParlamentar.votacao_id.in_(votacao_ids))
+    votos_query = select(VotoParlamentar).where(
+        VotoParlamentar.votacao_id.in_(votacao_ids)
+    )
     votos_result = await db.execute(votos_query)
     votos = votos_result.scalars().all()
 
-    # Group votes by parlamentar
+    # Group votes by parlamentar (only for valid parlamentares)
     parlamentar_votos: dict[int, list[tuple[int, TipoVoto]]] = {}
     for vp in votos:
+        if vp.parlamentar_id not in valid_parl_ids:
+            continue
         prop_id = votacao_to_prop.get(vp.votacao_id)
         if prop_id:
-            parlamentar_votos.setdefault(vp.parlamentar_id, []).append((prop_id, vp.voto))
+            parlamentar_votos.setdefault(vp.parlamentar_id, []).append(
+                (prop_id, vp.voto)
+            )
 
-    # Calculate scores — one vote per proposição (use majority vote if multiple votações)
+    # Calculate scores
     scores: list[tuple[int, float, int]] = []
     for parl_id, voto_list in parlamentar_votos.items():
         total_score = 0.0
         total_weight = 0.0
 
-        # Group by proposição — if multiple votações, take the most common vote
+        # Group by proposição
         prop_votes: dict[int, list[TipoVoto]] = {}
         for prop_id, tipo_voto in voto_list:
             prop_votes.setdefault(prop_id, []).append(tipo_voto)
@@ -79,12 +103,16 @@ async def ranking_parlamentares(
             props_compared += 1
 
             # Agreement: both sim or both nao
-            if (user_voto.value == "sim" and parl_vote == TipoVoto.SIM) or (
+            if (
+                user_voto.value == "sim" and parl_vote == TipoVoto.SIM
+            ) or (
                 user_voto.value == "nao" and parl_vote == TipoVoto.NAO
             ):
                 total_score += peso
             # Disagreement
-            elif (user_voto.value == "sim" and parl_vote == TipoVoto.NAO) or (
+            elif (
+                user_voto.value == "sim" and parl_vote == TipoVoto.NAO
+            ) or (
                 user_voto.value == "nao" and parl_vote == TipoVoto.SIM
             ):
                 total_score -= peso
@@ -96,7 +124,7 @@ async def ranking_parlamentares(
             normalized = ((total_score / total_weight) + 1) * 50
             scores.append((parl_id, normalized, props_compared))
 
-    # Sort by score descending
+    # Sort by score descending — limit applied AFTER uf/casa filtering
     scores.sort(key=lambda x: x[1], reverse=True)
 
     # Fetch parlamentar details for top results
@@ -109,11 +137,6 @@ async def ranking_parlamentares(
         .options(joinedload(Parlamentar.partido))
         .where(Parlamentar.id.in_(top_ids))
     )
-    if casa:
-        parl_query = parl_query.where(Parlamentar.casa == Casa(casa))
-    if uf:
-        parl_query = parl_query.where(Parlamentar.uf == uf.upper())
-
     parl_result = await db.execute(parl_query)
     parlamentares = {p.id: p for p in parl_result.scalars().unique().all()}
 

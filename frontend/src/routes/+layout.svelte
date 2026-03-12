@@ -1,10 +1,14 @@
 <script>
 	import { onMount } from 'svelte';
 	import { authUser, authLoading, checkAuth, logout } from '$lib/stores/auth';
+	import { initTheme } from '$lib/stores/theme';
+	import SettingsModal from '$lib/components/SettingsModal.svelte';
 
 	let { children } = $props();
+	let settingsOpen = $state(false);
 
 	onMount(() => {
+		initTheme();
 		checkAuth();
 	});
 </script>
@@ -22,8 +26,10 @@
 					<div class="nav-auth">
 						{#if $authUser}
 							<span class="user-name">{$authUser.nome ?? $authUser.email}</span>
+							<button class="nav-btn" onclick={() => settingsOpen = true}>Config</button>
 							<button class="nav-btn" onclick={() => logout()}>Sair</button>
 						{:else}
+							<button class="nav-btn" onclick={() => settingsOpen = true}>Config</button>
 							<a href="/login" class="nav-btn-login">Entrar</a>
 						{/if}
 					</div>
@@ -41,12 +47,43 @@
 	</footer>
 </div>
 
+<SettingsModal bind:open={settingsOpen} />
+
 <style>
+	:global(:root),
+	:global([data-theme='claro']) {
+		--bg-page: #f8f9fa;
+		--bg-card: #ffffff;
+		--bg-header: #ffffff;
+		--bg-footer: #1a1a2e;
+		--text-primary: #1a1a2e;
+		--text-secondary: #6b7280;
+		--text-footer: #9ca3af;
+		--border: #e5e7eb;
+		--border-hover: #2563eb;
+		--link: #2563eb;
+		--link-hover: #1d4ed8;
+	}
+
+	:global([data-theme='escuro']) {
+		--bg-page: #0f1117;
+		--bg-card: #1a1d2e;
+		--bg-header: #151822;
+		--bg-footer: #0a0c12;
+		--text-primary: #e5e7eb;
+		--text-secondary: #9ca3af;
+		--text-footer: #6b7280;
+		--border: #2d3348;
+		--border-hover: #3b82f6;
+		--link: #3b82f6;
+		--link-hover: #60a5fa;
+	}
+
 	:global(body) {
 		margin: 0;
 		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-		color: #1a1a2e;
-		background: #f8f9fa;
+		color: var(--text-primary);
+		background: var(--bg-page);
 	}
 
 	.app {
@@ -56,9 +93,12 @@
 	}
 
 	header {
-		background: white;
-		border-bottom: 1px solid #e5e7eb;
+		background: var(--bg-header);
+		border-bottom: 1px solid var(--border);
 		padding: 0 1.5rem;
+		position: sticky;
+		top: 0;
+		z-index: 50;
 	}
 
 	nav {
@@ -107,13 +147,13 @@
 	}
 
 	.nav-links a {
-		color: #4b5563;
+		color: var(--text-secondary);
 		text-decoration: none;
 		font-weight: 500;
 	}
 
 	.nav-links a:hover {
-		color: #2563eb;
+		color: var(--link);
 	}
 
 	.nav-auth {
@@ -121,27 +161,27 @@
 		align-items: center;
 		gap: 0.75rem;
 		padding-left: 1.25rem;
-		border-left: 1px solid #e5e7eb;
+		border-left: 1px solid var(--border);
 	}
 
 	.user-name {
-		color: #4b5563;
+		color: var(--text-secondary);
 		font-weight: 500;
 	}
 
 	.nav-btn {
 		background: none;
-		border: 1px solid #d1d5db;
+		border: 1px solid var(--border);
 		border-radius: 6px;
 		padding: 0.375rem 0.75rem;
-		color: #4b5563;
+		color: var(--text-secondary);
 		font-weight: 500;
 		cursor: pointer;
 		font-size: inherit;
 	}
 
 	.nav-btn:hover {
-		background: #f3f4f6;
+		background: var(--bg-page);
 	}
 
 	.nav-btn-login {
@@ -168,8 +208,8 @@
 	}
 
 	footer {
-		background: #1a1a2e;
-		color: #9ca3af;
+		background: var(--bg-footer);
+		color: var(--text-footer);
 		text-align: center;
 		padding: 1.5rem;
 		font-size: 0.875rem;
