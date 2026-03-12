@@ -1,7 +1,15 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { api } from '$lib/api';
-	import { items, respostas, currentIndex, selectedUf } from '$lib/stores/questionario';
+	import {
+		items,
+		respostas,
+		currentIndex,
+		selectedUf,
+		salvarResposta,
+		carregarRespostas
+	} from '$lib/stores/questionario';
+	import { authUser } from '$lib/stores/auth';
 	import type { QuestionarioItem, RespostaItem } from '$lib/types';
 	import { goto } from '$app/navigation';
 	import { get } from 'svelte/store';
@@ -56,6 +64,24 @@
 	async function loadQuestions() {
 		try {
 			const data = await api.get<QuestionarioItem[]>('/questionario/items?n_items=50');
+
+			// Se logado, carregar respostas salvas do DB
+			const user = get(authUser);
+			if (user) {
+				const saved = await carregarRespostas();
+				if (saved.length > 0) {
+					respostas.set(saved);
+					const answeredIds = new Set(saved.map((r) => r.proposicao_id));
+					const remaining = data.filter((q) => !answeredIds.has(q.proposicao_id));
+					items.set(remaining);
+					currentItems = remaining;
+					currentIndex.set(0);
+					answeredCount = saved.filter((r) => r.voto !== 'pular').length;
+					loaded = true;
+					return;
+				}
+			}
+
 			items.set(data);
 			currentItems = data;
 			const existing = get(respostas);
@@ -87,6 +113,11 @@
 		respostas.update((r) => [...r, resposta]);
 		if (voto !== 'pular') {
 			answeredCount++;
+		}
+
+		// Salvar no backend se logado (fire-and-forget)
+		if (get(authUser)) {
+			salvarResposta(resposta);
 		}
 
 		if (idx + 1 >= currentItems.length) {

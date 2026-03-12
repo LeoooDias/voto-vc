@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { api } from '$lib/api';
-	import { respostas, selectedUf } from '$lib/stores/questionario';
+	import { respostas, selectedUf, carregarRespostas } from '$lib/stores/questionario';
+	import { authUser } from '$lib/stores/auth';
 	import { resultados, loading } from '$lib/stores/resultado';
 	import type { MatchResult } from '$lib/types';
 	import { goto } from '$app/navigation';
@@ -9,16 +10,29 @@
 
 	let results: MatchResult[] = $state([]);
 	let isLoading = $state(true);
+	let totalRespostas = $state(0);
 
 	resultados.subscribe((v) => (results = v));
 	loading.subscribe((v) => (isLoading = v));
 
 	onMount(async () => {
-		const userRespostas = get(respostas);
+		let userRespostas = get(respostas);
+
+		// Se logado e sem respostas no store, tentar do DB
+		if (userRespostas.length === 0 && get(authUser)) {
+			const saved = await carregarRespostas();
+			if (saved.length > 0) {
+				respostas.set(saved);
+				userRespostas = saved;
+			}
+		}
+
 		if (userRespostas.length === 0) {
 			goto('/questionario');
 			return;
 		}
+
+		totalRespostas = userRespostas.filter((r) => r.voto !== 'pular').length;
 
 		loading.set(true);
 		try {
@@ -50,7 +64,7 @@
 {:else}
 	<div class="resultado">
 		<h1>Seus parlamentares mais alinhados</h1>
-		<p class="subtitle">Baseado nas suas {get(respostas).length} respostas</p>
+		<p class="subtitle">Baseado nas suas {totalRespostas} respostas</p>
 
 		<div class="lista">
 			{#each results as result, i}
@@ -69,10 +83,12 @@
 			{/each}
 		</div>
 
-		<div class="cta-section">
-			<p>Quer acompanhar novas votações e atualizar seu perfil?</p>
-			<a href="/conta/registrar" class="cta">Criar conta</a>
-		</div>
+		{#if !$authUser}
+			<div class="cta-section">
+				<p>Quer salvar suas respostas e acompanhar novas votações?</p>
+				<a href="/login" class="cta">Entrar com Google</a>
+			</div>
+		{/if}
 	</div>
 {/if}
 
