@@ -13,16 +13,20 @@
 	<header>
 		<nav>
 			<a href="/" class="logo"><span class="logo-flag"><span class="logo-text">voto.vc</span></span></a>
-			<div class="nav-links">
-				<a href="/questionario">Questionário</a>
-				<a href="/sobre">Sobre</a>
+			<div class="nav-right">
+				<div class="nav-links">
+					<a href="/questionario">Questionário</a>
+					<a href="/sobre">Sobre</a>
+				</div>
 				{#if !$authLoading}
-					{#if $authUser}
-						<span class="user-name">{$authUser.nome ?? $authUser.email}</span>
-						<button class="nav-btn" onclick={() => logout()}>Sair</button>
-					{:else}
-						<a href="/login" class="nav-btn-login">Entrar</a>
-					{/if}
+					<div class="nav-auth">
+						{#if $authUser}
+							<span class="user-name">{$authUser.nome ?? $authUser.email}</span>
+							<button class="nav-btn" onclick={() => logout()}>Sair</button>
+						{:else}
+							<a href="/login" class="nav-btn-login">Entrar</a>
+						{/if}
+					</div>
 				{/if}
 			</div>
 		</nav>
@@ -90,6 +94,12 @@
 		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 	}
 
+	.nav-right {
+		display: flex;
+		align-items: center;
+		gap: 2rem;
+	}
+
 	.nav-links {
 		display: flex;
 		align-items: center;
@@ -106,10 +116,17 @@
 		color: #2563eb;
 	}
 
+	.nav-auth {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		padding-left: 0.5rem;
+		border-left: 1px solid #e5e7eb;
+	}
+
 	.user-name {
-		color: #1a1a2e;
+		color: #4b5563;
 		font-weight: 500;
-		font-size: 0.875rem;
 	}
 
 	.nav-btn {
@@ -120,7 +137,7 @@
 		color: #4b5563;
 		font-weight: 500;
 		cursor: pointer;
-		font-size: 0.875rem;
+		font-size: inherit;
 	}
 
 	.nav-btn:hover {
@@ -130,9 +147,10 @@
 	.nav-btn-login {
 		background: #2563eb;
 		color: white !important;
+		text-decoration: none;
 		border-radius: 6px;
 		padding: 0.375rem 0.75rem;
-		font-size: 0.875rem;
+		font-weight: 500;
 	}
 
 	.nav-btn-login:hover {
