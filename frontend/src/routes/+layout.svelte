@@ -78,12 +78,12 @@
 		justify-content: center;
 		background: linear-gradient(to right, #009C3B 33.33%, #FFDF00 33.33%, #FFDF00 66.66%, #002776 66.66%);
 		border-radius: 4px;
-		padding: 0.42rem 0.84rem;
+		padding: 0.2rem 0.5rem;
 		line-height: 1;
 	}
 
 	.logo-text {
-		font-size: 1.96rem;
+		font-size: 2.2rem;
 		font-weight: 800;
 		color: white;
 		letter-spacing: 0.03em;
@@ -92,6 +92,7 @@
 
 	.nav-links {
 		display: flex;
+		align-items: center;
 		gap: 1.5rem;
 	}
 
