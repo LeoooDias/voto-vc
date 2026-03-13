@@ -241,27 +241,27 @@
 		height: 100px;
 		border-radius: 50%;
 		object-fit: cover;
-		border: 3px solid #e5e7eb;
+		border: 3px solid var(--border);
 	}
 
 	h1 {
 		margin: 0;
-		color: #1a1a2e;
+		color: var(--text-primary);
 	}
 
 	.meta {
-		color: #6b7280;
+		color: var(--text-secondary);
 		margin: 0.25rem 0 0;
 	}
 
 	.nome-civil {
-		color: #9ca3af;
+		color: var(--text-secondary);
 		font-size: 0.875rem;
 		margin: 0.25rem 0 0;
 	}
 
 	h2 {
-		color: #1a1a2e;
+		color: var(--text-primary);
 		font-size: 1.125rem;
 		margin: 0;
 	}
@@ -281,8 +281,8 @@
 	}
 
 	.stat-item {
-		background: white;
-		border: 1px solid #e5e7eb;
+		background: var(--bg-card);
+		border: 1px solid var(--border);
 		border-radius: 12px;
 		padding: 1rem 1.25rem;
 		text-align: center;
@@ -297,12 +297,12 @@
 
 	.stat-label {
 		font-size: 0.8rem;
-		color: #6b7280;
+		color: var(--text-secondary);
 	}
 
 	.stat-item.voto-sim .stat-count { color: #16a34a; }
 	.stat-item.voto-nao .stat-count { color: #dc2626; }
-	.stat-item.voto-outro .stat-count { color: #6b7280; }
+	.stat-item.voto-outro .stat-count { color: var(--text-secondary); }
 
 	.historico-header {
 		display: flex;
@@ -318,13 +318,13 @@
 		align-items: center;
 		gap: 0.4rem;
 		font-size: 0.8rem;
-		color: #6b7280;
+		color: var(--text-secondary);
 		cursor: pointer;
 		user-select: none;
 	}
 
 	.filter-toggle input {
-		accent-color: #2563eb;
+		accent-color: var(--link);
 	}
 
 	.voto-card {
@@ -332,8 +332,8 @@
 		width: 100%;
 		text-align: left;
 		font: inherit;
-		background: white;
-		border: 1px solid #e5e7eb;
+		background: var(--bg-card);
+		border: 1px solid var(--border);
 		border-radius: 12px;
 		padding: 1rem;
 		margin-bottom: 0.5rem;
@@ -345,11 +345,11 @@
 	}
 
 	.voto-card.expandable:hover {
-		border-color: #93c5fd;
+		border-color: var(--border-hover);
 	}
 
 	.voto-card.expanded {
-		border-color: #2563eb;
+		border-color: var(--link);
 	}
 
 	.voto-main {
@@ -399,17 +399,17 @@
 	.voto-ementa {
 		margin: 0.5rem 0 0;
 		font-size: 0.9rem;
-		color: #374151;
+		color: var(--text-primary);
 		line-height: 1.4;
 	}
 
 	.voto-data {
 		font-size: 0.8rem;
-		color: #9ca3af;
+		color: var(--text-secondary);
 	}
 
 	.expand-icon {
-		color: #9ca3af;
+		color: var(--text-secondary);
 		font-size: 1rem;
 		transition: transform 0.2s;
 		flex-shrink: 0;
@@ -423,12 +423,12 @@
 	.voto-details {
 		margin-top: 1rem;
 		padding-top: 1rem;
-		border-top: 1px solid #f3f4f6;
+		border-top: 1px solid var(--border);
 	}
 
 	.detail-resumo {
 		font-size: 1rem;
-		color: #1a1a2e;
+		color: var(--text-primary);
 		line-height: 1.6;
 		margin: 0 0 0.75rem;
 		font-weight: 500;
@@ -436,13 +436,13 @@
 
 	.detail-descricao {
 		font-size: 0.9rem;
-		color: #374151;
+		color: var(--text-secondary);
 		line-height: 1.6;
 		margin: 0 0 0.75rem;
 	}
 
 	.link-camara {
-		color: #2563eb;
+		color: var(--link);
 		font-size: 0.8rem;
 		text-decoration: none;
 	}
@@ -454,7 +454,7 @@
 	.back {
 		display: inline-block;
 		margin-top: 2rem;
-		color: #2563eb;
+		color: var(--link);
 		text-decoration: none;
 	}
 
@@ -463,11 +463,11 @@
 	.loading, .empty {
 		text-align: center;
 		padding: 4rem;
-		color: #6b7280;
+		color: var(--text-secondary);
 	}
 
 	.empty-votos {
-		color: #9ca3af;
+		color: var(--text-secondary);
 		text-align: center;
 		padding: 2rem;
 	}

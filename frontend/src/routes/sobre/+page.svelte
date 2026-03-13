@@ -62,17 +62,17 @@
 	}
 
 	h1 {
-		color: #1a1a2e;
+		color: var(--text-primary);
 		margin-bottom: 2rem;
 	}
 
 	h2 {
-		color: #2563eb;
+		color: var(--link);
 		margin-top: 2rem;
 	}
 
 	p, li {
-		color: #4b5563;
+		color: var(--text-secondary);
 		line-height: 1.7;
 	}
 

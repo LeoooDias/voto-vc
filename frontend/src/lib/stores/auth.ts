@@ -11,16 +11,20 @@ export interface AuthUser {
 export const authUser = writable<AuthUser | null>(null);
 export const authLoading = writable(true);
 
-export async function checkAuth(): Promise<void> {
+export async function checkAuth(): Promise<AuthUser | null> {
 	try {
 		const res = await fetch('/api/auth/me', { credentials: 'include' });
 		if (res.ok) {
-			authUser.set(await res.json());
+			const user: AuthUser = await res.json();
+			authUser.set(user);
+			return user;
 		} else {
 			authUser.set(null);
+			return null;
 		}
 	} catch {
 		authUser.set(null);
+		return null;
 	} finally {
 		authLoading.set(false);
 	}

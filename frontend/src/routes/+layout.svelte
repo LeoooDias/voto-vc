@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { authUser, authLoading, checkAuth, logout } from '$lib/stores/auth';
 	import { initTheme } from '$lib/stores/theme';
-	import { respostas } from '$lib/stores/questionario';
+	import { respostas, carregarRespostas } from '$lib/stores/questionario';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
 
 	let { children } = $props();
@@ -11,9 +11,15 @@
 	respostas.subscribe(r => respostasArr = r);
 	let perfilEnabled = $derived(respostasArr.filter(r => r.voto !== 'pular').length >= 10);
 
-	onMount(() => {
+	onMount(async () => {
 		initTheme();
-		checkAuth();
+		const user = await checkAuth();
+		if (user) {
+			const saved = await carregarRespostas();
+			if (saved.length > 0) {
+				respostas.set(saved);
+			}
+		}
 	});
 </script>
 
@@ -23,7 +29,7 @@
 			<a href="/" class="logo"><span class="logo-flag"><span class="logo-text">voto.vc</span></span></a>
 			<div class="nav-right">
 				<div class="nav-links">
-					<a href="/questionario">Vote</a>
+					<a href="/vote">Vote</a>
 					{#if perfilEnabled}
 						<a href="/resultado">Perfil</a>
 					{:else}

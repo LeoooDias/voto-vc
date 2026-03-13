@@ -30,7 +30,7 @@
 		}
 
 		if (userRespostas.length === 0) {
-			goto('/questionario');
+			goto('/vote');
 			return;
 		}
 

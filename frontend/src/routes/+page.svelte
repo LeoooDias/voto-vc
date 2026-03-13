@@ -9,7 +9,7 @@
 		mais se alinham com seus pontos de vista. Baseado em dados públicos, com
 		total transparência.
 	</p>
-	<a href="/questionario" class="cta">Vote</a>
+	<a href="/vote" class="cta">Vote</a>
 
 	<div class="features">
 		<div class="feature">
