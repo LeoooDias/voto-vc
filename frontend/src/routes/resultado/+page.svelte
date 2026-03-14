@@ -106,7 +106,7 @@
 		{:else}
 			<div class="lista">
 				{#each partidoResults as result, i}
-					<div class="partido-card">
+					<a href="/partido/{result.partido_id}" class="partido-card">
 						<span class="rank">#{i + 1}</span>
 						<div class="info">
 							<div class="nome">{result.sigla}</div>
@@ -115,7 +115,7 @@
 						<div class="score" class:high={result.score >= 70} class:mid={result.score >= 40 && result.score < 70} class:low={result.score < 40}>
 							{result.score}%
 						</div>
-					</div>
+					</a>
 				{/each}
 			</div>
 		{/if}

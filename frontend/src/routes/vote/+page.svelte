@@ -9,7 +9,7 @@
 		salvarResposta,
 		carregarRespostas
 	} from '$lib/stores/questionario';
-	import { authUser } from '$lib/stores/auth';
+	import { authUser, authLoading } from '$lib/stores/auth';
 	import type { QuestionarioItem, RespostaItem } from '$lib/types';
 	import { goto } from '$app/navigation';
 	import { get } from 'svelte/store';
@@ -115,8 +115,7 @@
 		}
 	}
 
-	onMount(async () => {
-		// Carregar UF do perfil se logado e sem UF local
+	async function initPage() {
 		if (!uf) {
 			const user = get(authUser);
 			if (user?.uf) {
@@ -127,6 +126,21 @@
 		if (uf) {
 			await loadQuestions();
 		}
+	}
+
+	onMount(() => {
+		// Se auth já resolveu, iniciar direto
+		if (!get(authLoading)) {
+			initPage();
+			return;
+		}
+		// Senão, esperar auth resolver
+		const unsub = authLoading.subscribe((loading) => {
+			if (!loading) {
+				unsub();
+				initPage();
+			}
+		});
 	});
 
 	items.subscribe((v) => (currentItems = v));
@@ -333,15 +347,15 @@
 	}
 
 	.meta-banner.ready {
-		background: #fef9c3;
-		color: #854d0e;
-		border: 1px solid #fde68a;
+		background: #eab3081a;
+		color: #eab308;
+		border: 1px solid #eab30833;
 	}
 
 	.meta-banner.success {
-		background: #dcfce7;
-		color: #166534;
-		border: 1px solid #bbf7d0;
+		background: #16a34a1a;
+		color: #16a34a;
+		border: 1px solid #16a34a33;
 	}
 
 	.btn-resultado {

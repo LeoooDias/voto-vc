@@ -2,27 +2,21 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { api } from '$lib/api';
+	import { authUser, authLoading } from '$lib/stores/auth';
+	import { selectedUf } from '$lib/stores/questionario';
+	import { get } from 'svelte/store';
 
-	interface ParlamentarDetail {
-		id: number;
-		nome_parlamentar: string;
-		nome_civil: string;
-		casa: string;
-		uf: string;
-		sexo: string | null;
-		foto_url: string | null;
-		partido: { sigla: string; nome: string } | null;
-		legislatura_atual: boolean;
-		stats: Record<string, number>;
-		votos: VotoHistory[];
+	interface VotoBreakdown {
+		sim?: number;
+		nao?: number;
+		abstencao?: number;
+		obstrucao?: number;
+		ausente?: number;
+		presente_sem_voto?: number;
 	}
 
-	interface VotoHistory {
-		voto: string;
-		partido_na_epoca: string | null;
-		data: string | null;
-		descricao_votacao: string | null;
-		proposicao_id: number | null;
+	interface PartidoVoto {
+		proposicao_id: number;
 		proposicao_tipo: string | null;
 		proposicao_numero: number | null;
 		proposicao_ano: number | null;
@@ -31,38 +25,145 @@
 		descricao_detalhada: string | null;
 		tema: string | null;
 		url_camara: string | null;
+		data: string | null;
+		descricao_votacao: string | null;
 		substantiva: boolean;
+		breakdown: VotoBreakdown;
 	}
 
-	let parlamentar = $state<ParlamentarDetail | null>(null);
+	interface PartidoDetail {
+		id: number;
+		sigla: string;
+		nome: string;
+		total_parlamentares: number;
+		stats: Record<string, number>;
+		votos: PartidoVoto[];
+	}
+
+	const UFS = [
+		'AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS',
+		'MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'
+	];
+
+	let partido = $state<PartidoDetail | null>(null);
 	let error = $state(false);
 	let expandedId: number | null = $state(null);
 	let soSubstantivas = $state(false);
+	let escopo: 'nacional' | 'estado' = $state('nacional');
+	let ufSelecionada = $state('');
+	let showUfPicker = $state(false);
 
-	let allVotos = $derived((parlamentar?.votos ?? []) as VotoHistory[]);
-
-	let votosVisiveis = $derived<VotoHistory[]>(
-		soSubstantivas
-			? allVotos.filter((v: VotoHistory) => v.substantiva)
-			: allVotos
+	let allVotos = $derived((partido?.votos ?? []) as PartidoVoto[]);
+	let votosVisiveis = $derived<PartidoVoto[]>(
+		soSubstantivas ? allVotos.filter((v) => v.substantiva) : allVotos
 	);
+	let countSubstantivas = $derived(allVotos.filter((v) => v.substantiva).length);
 
-	let countSubstantivas = $derived(
-		allVotos.filter((v: VotoHistory) => v.substantiva).length
-	);
-
-	onMount(async () => {
+	async function loadPartido() {
 		try {
-			parlamentar = await api.get<ParlamentarDetail>(`/parlamentares/${page.params.id}`);
+			const ufParam = escopo === 'estado' && ufSelecionada ? `?uf=${ufSelecionada}` : '';
+			partido = await api.get<PartidoDetail>(`/partidos/${page.params.id}${ufParam}`);
 		} catch (e) {
-			console.error('Failed to load parlamentar:', e);
+			console.error('Failed to load partido:', e);
 			error = true;
 		}
+	}
+
+	function setEscopo(novo: 'nacional' | 'estado') {
+		if (novo === 'estado' && !ufSelecionada) {
+			showUfPicker = true;
+			return;
+		}
+		escopo = novo;
+		loadPartido();
+	}
+
+	function escolherUf(sigla: string) {
+		ufSelecionada = sigla;
+		selectedUf.set(sigla);
+		showUfPicker = false;
+		escopo = 'estado';
+		loadPartido();
+	}
+
+	onMount(() => {
+		// Esperar auth resolver para ter UF do perfil
+		function init() {
+			const user = get(authUser);
+			if (user?.uf) {
+				ufSelecionada = user.uf;
+			} else {
+				const storeUf = get(selectedUf);
+				if (storeUf) ufSelecionada = storeUf;
+			}
+			loadPartido();
+		}
+
+		if (!get(authLoading)) {
+			init();
+			return;
+		}
+		const unsub = authLoading.subscribe((loading) => {
+			if (!loading) {
+				unsub();
+				init();
+			}
+		});
 	});
 
 	function toggleExpand(proposicaoId: number | null) {
 		if (!proposicaoId) return;
 		expandedId = expandedId === proposicaoId ? null : proposicaoId;
+	}
+
+	function formatDate(iso: string | null): string {
+		if (!iso) return '';
+		try {
+			return new Date(iso).toLocaleDateString('pt-BR');
+		} catch {
+			return '';
+		}
+	}
+
+	function breakdownLabel(key: string): string {
+		const map: Record<string, string> = {
+			sim: 'A favor',
+			nao: 'Contra',
+			abstencao: 'Abstenção',
+			obstrucao: 'Obstrução',
+			ausente: 'Ausente',
+			presente_sem_voto: 'Presente s/ voto'
+		};
+		return map[key] || key;
+	}
+
+	function breakdownClass(key: string): string {
+		if (key === 'sim') return 'bd-sim';
+		if (key === 'nao') return 'bd-nao';
+		return 'bd-outro';
+	}
+
+	function mainVoto(bd: VotoBreakdown): string {
+		const sim = bd.sim ?? 0;
+		const nao = bd.nao ?? 0;
+		const abs = (bd.abstencao ?? 0) + (bd.obstrucao ?? 0) + (bd.ausente ?? 0) + (bd.presente_sem_voto ?? 0);
+		if (sim > nao && sim > abs) return 'sim';
+		if (nao > sim && nao > abs) return 'nao';
+		return 'dividido';
+	}
+
+	function mainVotoLabel(bd: VotoBreakdown): string {
+		const v = mainVoto(bd);
+		if (v === 'sim') return 'A favor';
+		if (v === 'nao') return 'Contra';
+		return 'Dividido';
+	}
+
+	function mainVotoClass(bd: VotoBreakdown): string {
+		const v = mainVoto(bd);
+		if (v === 'sim') return 'voto-sim';
+		if (v === 'nao') return 'voto-nao';
+		return 'voto-outro';
 	}
 
 	function votoLabel(voto: string): string {
@@ -81,15 +182,6 @@
 		if (voto === 'sim') return 'voto-sim';
 		if (voto === 'nao') return 'voto-nao';
 		return 'voto-outro';
-	}
-
-	function formatDate(iso: string | null): string {
-		if (!iso) return '';
-		try {
-			return new Date(iso).toLocaleDateString('pt-BR');
-		} catch {
-			return '';
-		}
 	}
 
 	const temaInfo: Record<string, { label: string; cor: string }> = {
@@ -114,36 +206,59 @@
 </script>
 
 <svelte:head>
-	<title>{parlamentar?.nome_parlamentar ?? 'Parlamentar'} — voto.vc</title>
+	<title>{partido?.sigla ?? 'Partido'} — voto.vc</title>
 </svelte:head>
 
-{#if error}
-	<div class="empty">Parlamentar não encontrado.</div>
-{:else if !parlamentar}
+{#if showUfPicker}
+	<div class="uf-selector">
+		<h1>De qual estado?</h1>
+		<p class="uf-subtitle">Filtrar parlamentares do partido por estado</p>
+		<div class="uf-grid">
+			{#each UFS as sigla}
+				<button class="uf-btn" onclick={() => escolherUf(sigla)}>
+					{sigla}
+				</button>
+			{/each}
+		</div>
+		<button class="uf-cancel" onclick={() => showUfPicker = false}>Cancelar</button>
+	</div>
+{:else if error}
+	<div class="empty">Partido não encontrado.</div>
+{:else if !partido}
 	<div class="loading">Carregando...</div>
 {:else}
 	<div class="perfil">
 		<div class="header">
-			{#if parlamentar.foto_url}
-				<img src={parlamentar.foto_url} alt={parlamentar.nome_parlamentar} class="foto" />
-			{/if}
 			<div class="header-info">
-				<h1>{parlamentar.nome_parlamentar}</h1>
-				<p class="meta">
-					{parlamentar.partido?.sigla ?? 'Sem partido'} · {parlamentar.uf} ·
-					{parlamentar.casa === 'camara' ? (parlamentar.sexo === 'F' ? 'Deputada Federal' : 'Deputado Federal') : (parlamentar.sexo === 'F' ? 'Senadora' : 'Senador')}
+				<h1>{partido.sigla}</h1>
+				<p class="meta">{partido.nome}</p>
+				<p class="meta-count">
+					{partido.total_parlamentares} parlamentar{partido.total_parlamentares !== 1 ? 'es' : ''}
+					{#if escopo === 'estado' && ufSelecionada}
+						em {ufSelecionada}
+					{/if}
 				</p>
-				{#if parlamentar.nome_civil !== parlamentar.nome_parlamentar}
-					<p class="nome-civil">{parlamentar.nome_civil}</p>
-				{/if}
 			</div>
 		</div>
 
-		{#if Object.keys(parlamentar.stats).length > 0}
+		<div class="escopo-toggle">
+			<button
+				class="escopo-btn"
+				class:active={escopo === 'nacional'}
+				onclick={() => setEscopo('nacional')}
+			>Nacional</button>
+			<button
+				class="escopo-btn"
+				class:active={escopo === 'estado'}
+				onclick={() => setEscopo('estado')}
+			>Meu estado{ufSelecionada ? ` (${ufSelecionada})` : ''}</button>
+		</div>
+
+		{#if Object.keys(partido.stats).length > 0}
 			<div class="stats">
 				<h2>Resumo de votações</h2>
 				<div class="stats-grid">
-					{#each Object.entries(parlamentar.stats) as [voto, count]}
+					{#each Object.entries(partido.stats) as [voto, count]}
 						<div class="stat-item {votoClass(voto)}">
 							<span class="stat-count">{count}</span>
 							<span class="stat-label">{votoLabel(voto)}</span>
@@ -153,11 +268,11 @@
 			</div>
 		{/if}
 
-		{#if parlamentar.votos.length > 0}
+		{#if partido.votos.length > 0}
 			<div class="historico">
 				<div class="historico-header">
 					<h2>Histórico de votações</h2>
-					{#if countSubstantivas > 0 && countSubstantivas < parlamentar.votos.length}
+					{#if countSubstantivas > 0 && countSubstantivas < partido.votos.length}
 						<label class="filter-toggle">
 							<input type="checkbox" bind:checked={soSubstantivas} />
 							Só proposições substantivas ({countSubstantivas})
@@ -176,7 +291,7 @@
 						onclick={() => hasDetails && toggleExpand(voto.proposicao_id)}
 					>
 						<div class="voto-main">
-							<span class="voto-badge {votoClass(voto.voto)}">{votoLabel(voto.voto)}</span>
+							<span class="voto-badge {mainVotoClass(voto.breakdown)}">{mainVotoLabel(voto.breakdown)}</span>
 							<div class="voto-info">
 								<div class="voto-top">
 									{#if voto.proposicao_tipo}
@@ -190,6 +305,21 @@
 								<p class="voto-ementa">
 									{voto.proposicao_ementa ?? voto.descricao_votacao ?? 'Sem descrição'}
 								</p>
+								<div class="breakdown-bar">
+									{#each Object.entries(voto.breakdown) as [tipo, n]}
+										{@const total = Object.values(voto.breakdown).reduce((a, b) => a + b, 0)}
+										{#if n > 0}
+											<div class="bar-seg {breakdownClass(tipo)}" style="width: {(n / total) * 100}%" title="{breakdownLabel(tipo)}: {n}"></div>
+										{/if}
+									{/each}
+								</div>
+								<div class="breakdown-legend">
+									{#each Object.entries(voto.breakdown) as [tipo, n]}
+										{#if n > 0}
+											<span class="legend-item {breakdownClass(tipo)}">{breakdownLabel(tipo)}: {n}</span>
+										{/if}
+									{/each}
+								</div>
 								{#if voto.data}
 									<span class="voto-data">{formatDate(voto.data)}</span>
 								{/if}
@@ -216,7 +346,7 @@
 				{/each}
 			</div>
 		{:else}
-			<p class="empty-votos">Nenhum voto registrado.</p>
+			<p class="empty-votos">Nenhum voto registrado{escopo === 'estado' && ufSelecionada ? ` para ${ufSelecionada}` : ''}.</p>
 		{/if}
 
 		<a href="/resultado" class="back">Voltar ao resultado</a>
@@ -230,23 +360,13 @@
 	}
 
 	.header {
-		display: flex;
-		gap: 1.5rem;
-		align-items: center;
-		margin-bottom: 2rem;
-	}
-
-	.foto {
-		width: 100px;
-		height: 100px;
-		border-radius: 50%;
-		object-fit: cover;
-		border: 3px solid var(--border);
+		margin-bottom: 1.5rem;
 	}
 
 	h1 {
 		margin: 0;
 		color: var(--text-primary);
+		font-size: 2rem;
 	}
 
 	.meta {
@@ -254,10 +374,40 @@
 		margin: 0.25rem 0 0;
 	}
 
-	.nome-civil {
+	.meta-count {
 		color: var(--text-secondary);
 		font-size: 0.875rem;
 		margin: 0.25rem 0 0;
+	}
+
+	.escopo-toggle {
+		display: flex;
+		gap: 0;
+		margin-bottom: 1.5rem;
+		border-bottom: 2px solid var(--border);
+	}
+
+	.escopo-btn {
+		flex: 1;
+		padding: 0.625rem 1rem;
+		background: none;
+		border: none;
+		border-bottom: 2px solid transparent;
+		margin-bottom: -2px;
+		font-size: 0.938rem;
+		font-weight: 600;
+		color: var(--text-secondary);
+		cursor: pointer;
+		transition: color 0.2s, border-color 0.2s;
+	}
+
+	.escopo-btn:hover {
+		color: var(--text-primary);
+	}
+
+	.escopo-btn.active {
+		color: var(--link);
+		border-bottom-color: var(--link);
 	}
 
 	h2 {
@@ -276,7 +426,7 @@
 
 	.stats-grid {
 		display: flex;
-		gap: 1rem;
+		gap: 0.75rem;
 		flex-wrap: wrap;
 	}
 
@@ -284,19 +434,19 @@
 		background: var(--bg-card);
 		border: 1px solid var(--border);
 		border-radius: 12px;
-		padding: 1rem 1.25rem;
+		padding: 0.75rem 1rem;
 		text-align: center;
-		min-width: 80px;
+		min-width: 70px;
 	}
 
 	.stat-count {
 		display: block;
-		font-size: 1.5rem;
+		font-size: 1.25rem;
 		font-weight: 700;
 	}
 
 	.stat-label {
-		font-size: 0.8rem;
+		font-size: 0.75rem;
 		color: var(--text-secondary);
 	}
 
@@ -338,6 +488,7 @@
 		padding: 1rem;
 		margin-bottom: 0.5rem;
 		transition: border-color 0.2s;
+		cursor: default;
 	}
 
 	.voto-card.expandable {
@@ -402,6 +553,40 @@
 		color: var(--text-primary);
 		line-height: 1.4;
 	}
+
+	.breakdown-bar {
+		display: flex;
+		height: 6px;
+		border-radius: 3px;
+		overflow: hidden;
+		margin-top: 0.5rem;
+		background: var(--border);
+	}
+
+	.bar-seg {
+		height: 100%;
+		transition: width 0.3s;
+	}
+
+	.bar-seg.bd-sim { background: #16a34a; }
+	.bar-seg.bd-nao { background: #dc2626; }
+	.bar-seg.bd-outro { background: #9ca3af; }
+
+	.breakdown-legend {
+		display: flex;
+		gap: 0.75rem;
+		flex-wrap: wrap;
+		margin-top: 0.35rem;
+	}
+
+	.legend-item {
+		font-size: 0.7rem;
+		font-weight: 500;
+	}
+
+	.legend-item.bd-sim { color: #16a34a; }
+	.legend-item.bd-nao { color: #dc2626; }
+	.legend-item.bd-outro { color: var(--text-secondary); }
 
 	.voto-data {
 		font-size: 0.8rem;
@@ -470,5 +655,57 @@
 		color: var(--text-secondary);
 		text-align: center;
 		padding: 2rem;
+	}
+
+	/* UF picker */
+	.uf-selector {
+		max-width: 500px;
+		margin: 0 auto;
+		text-align: center;
+	}
+
+	.uf-selector h1 {
+		color: var(--text-primary);
+		margin-bottom: 0.25rem;
+	}
+
+	.uf-subtitle {
+		color: var(--text-secondary);
+		margin-bottom: 1.5rem;
+	}
+
+	.uf-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+		gap: 0.5rem;
+	}
+
+	.uf-btn {
+		padding: 0.625rem;
+		background: var(--bg-card);
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		cursor: pointer;
+		font-weight: 700;
+		color: var(--link);
+		font-size: 0.938rem;
+		transition: border-color 0.2s;
+	}
+
+	.uf-btn:hover {
+		border-color: var(--link);
+	}
+
+	.uf-cancel {
+		margin-top: 1.5rem;
+		background: none;
+		border: none;
+		color: var(--text-secondary);
+		cursor: pointer;
+		font-size: 0.875rem;
+	}
+
+	.uf-cancel:hover {
+		color: var(--text-primary);
 	}
 </style>

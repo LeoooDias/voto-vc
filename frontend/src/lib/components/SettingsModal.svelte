@@ -257,7 +257,7 @@
 	}
 
 	.theme-btn:hover {
-		border-color: #2563eb;
+		border-color: var(--link);
 	}
 
 	.theme-btn.active {
@@ -268,7 +268,7 @@
 
 	.danger-btn {
 		background: none;
-		border: 1px solid #fca5a5;
+		border: 1px solid #dc26264d;
 		border-radius: 8px;
 		padding: 0.5rem 1rem;
 		color: #dc2626;
@@ -279,12 +279,12 @@
 	}
 
 	.danger-btn:hover {
-		background: #fef2f2;
+		background: #dc26261a;
 	}
 
 	.confirm-box {
-		background: #fef2f2;
-		border: 1px solid #fca5a5;
+		background: #dc26261a;
+		border: 1px solid #dc26264d;
 		border-radius: 10px;
 		padding: 1rem;
 	}
@@ -292,7 +292,7 @@
 	.confirm-text {
 		margin: 0 0 0.75rem;
 		font-size: 0.875rem;
-		color: #991b1b;
+		color: #dc2626;
 		line-height: 1.4;
 	}
 

@@ -34,10 +34,10 @@
 	}
 
 	.login-card {
-		background: white;
+		background: var(--bg-card);
+		border: 1px solid var(--border);
 		border-radius: 12px;
 		padding: 2.5rem;
-		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 		text-align: center;
 		max-width: 400px;
 		width: 100%;
@@ -46,11 +46,11 @@
 	h1 {
 		font-size: 1.5rem;
 		margin: 0 0 0.5rem;
-		color: #1a1a2e;
+		color: var(--text-primary);
 	}
 
 	p {
-		color: #6b7280;
+		color: var(--text-secondary);
 		margin: 0 0 2rem;
 		font-size: 0.938rem;
 	}
@@ -59,19 +59,18 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 0.75rem;
-		background: white;
-		border: 1px solid #d1d5db;
+		background: var(--bg-card);
+		border: 1px solid var(--border);
 		border-radius: 8px;
 		padding: 0.75rem 1.5rem;
 		font-size: 1rem;
 		font-weight: 500;
-		color: #1a1a2e;
+		color: var(--text-primary);
 		text-decoration: none;
 		transition: background 0.15s;
 	}
 
 	.google-btn:hover {
-		background: #f9fafb;
-		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+		background: var(--bg-page);
 	}
 </style>

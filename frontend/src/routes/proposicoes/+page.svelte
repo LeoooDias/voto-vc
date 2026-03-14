@@ -327,11 +327,11 @@
 	}
 
 	.prop-card.expandable:hover {
-		border-color: #93c5fd;
+		border-color: var(--border-hover);
 	}
 
 	.prop-card.expanded {
-		border-color: #2563eb;
+		border-color: var(--link);
 	}
 
 	.prop-main {
@@ -354,8 +354,8 @@
 	.prop-tipo {
 		font-size: 0.8rem;
 		font-weight: 600;
-		color: #2563eb;
-		background: #eff6ff;
+		color: var(--link);
+		background: #2563eb1a;
 		padding: 0.1rem 0.5rem;
 		border-radius: 4px;
 	}
@@ -386,7 +386,7 @@
 	}
 
 	.expand-icon {
-		color: #9ca3af;
+		color: var(--text-secondary);
 		font-size: 1rem;
 		transition: transform 0.2s;
 		flex-shrink: 0;

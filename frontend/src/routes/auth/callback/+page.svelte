@@ -19,6 +19,6 @@
 		justify-content: center;
 		align-items: center;
 		min-height: 60vh;
-		color: #6b7280;
+		color: var(--text-secondary);
 	}
 </style>
