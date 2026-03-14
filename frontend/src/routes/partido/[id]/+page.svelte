@@ -49,7 +49,7 @@
 	let error = $state(false);
 	let expandedId: number | null = $state(null);
 	let soSubstantivas = $state(false);
-	let escopo: 'nacional' | 'estado' = $state('nacional');
+	let escopo: 'brasil' | 'estado' = $state('brasil');
 	let ufSelecionada = $state('');
 	let showUfPicker = $state(false);
 
@@ -62,6 +62,7 @@
 	async function loadPartido() {
 		try {
 			const ufParam = escopo === 'estado' && ufSelecionada ? `?uf=${ufSelecionada}` : '';
+
 			partido = await api.get<PartidoDetail>(`/partidos/${page.params.id}${ufParam}`);
 		} catch (e) {
 			console.error('Failed to load partido:', e);
@@ -69,7 +70,7 @@
 		}
 	}
 
-	function setEscopo(novo: 'nacional' | 'estado') {
+	function setEscopo(novo: 'brasil' | 'estado') {
 		if (novo === 'estado' && !ufSelecionada) {
 			showUfPicker = true;
 			return;
@@ -244,9 +245,9 @@
 		<div class="escopo-toggle">
 			<button
 				class="escopo-btn"
-				class:active={escopo === 'nacional'}
-				onclick={() => setEscopo('nacional')}
-			>Nacional</button>
+				class:active={escopo === 'brasil'}
+				onclick={() => setEscopo('brasil')}
+			>Brasil</button>
 			<button
 				class="escopo-btn"
 				class:active={escopo === 'estado'}

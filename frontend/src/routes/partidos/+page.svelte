@@ -7,12 +7,20 @@
 	import { goto } from '$app/navigation';
 	import { get } from 'svelte/store';
 
+	const UFS = [
+		'AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS',
+		'MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'
+	];
+
 	let results: PartidoMatchResult[] = $state([]);
 	let isLoading = $state(true);
 	let sortKey: 'sigla' | 'score' | 'parlamentares_comparados' = $state('score');
 	let sortAsc = $state(false);
 	let perPage = $state(25);
 	let currentPage = $state(1);
+	let escopo: 'brasil' | 'estado' = $state('brasil');
+	let ufSelecionada = $state('');
+	let showUfPicker = $state(false);
 
 	let sorted = $derived(
 		[...results].sort((a, b) => {
@@ -43,8 +51,49 @@
 		return sortAsc ? ' ▲' : ' ▼';
 	}
 
-	async function load() {
-		let userRespostas = get(respostas);
+	function changePerPage(e: Event) {
+		perPage = Number((e.target as HTMLSelectElement).value);
+		currentPage = 1;
+	}
+
+	let userRespostas: { proposicao_id: number; voto: string; peso: number }[] = [];
+
+	async function loadData() {
+		isLoading = true;
+		try {
+			const uf = escopo === 'estado' && ufSelecionada ? ufSelecionada : (escopo === 'brasil' ? undefined : get(selectedUf) || undefined);
+			const data = await api.post<MatchResponse>('/matching/calcular', {
+				respostas: userRespostas,
+				uf: escopo === 'estado' ? (ufSelecionada || undefined) : undefined,
+				limit: 1000
+			});
+			results = data.partidos;
+		} catch (e) {
+			console.error('Failed to load:', e);
+		} finally {
+			isLoading = false;
+		}
+	}
+
+	function setEscopo(novo: 'brasil' | 'estado') {
+		if (novo === 'estado' && !ufSelecionada) {
+			showUfPicker = true;
+			return;
+		}
+		escopo = novo;
+		loadData();
+	}
+
+	function escolherUf(sigla: string) {
+		ufSelecionada = sigla;
+		selectedUf.set(sigla);
+		showUfPicker = false;
+		escopo = 'estado';
+		loadData();
+	}
+
+	async function init() {
+		userRespostas = get(respostas) as typeof userRespostas;
 		if (userRespostas.length === 0 && get(authUser)) {
 			const saved = await carregarRespostas();
 			if (saved.length > 0) {
@@ -56,25 +105,20 @@
 			goto('/vote');
 			return;
 		}
-		try {
-			const uf = get(selectedUf);
-			const data = await api.post<MatchResponse>('/matching/calcular', {
-				respostas: userRespostas,
-				uf: uf || undefined,
-				limit: 1000
-			});
-			results = data.partidos;
-		} catch (e) {
-			console.error('Failed to load:', e);
-		} finally {
-			isLoading = false;
+		const user = get(authUser);
+		if (user?.uf) {
+			ufSelecionada = user.uf;
+		} else {
+			const storeUf = get(selectedUf);
+			if (storeUf) ufSelecionada = storeUf;
 		}
+		await loadData();
 	}
 
 	onMount(() => {
-		if (!get(authLoading)) { load(); return; }
+		if (!get(authLoading)) { init(); return; }
 		const unsub = authLoading.subscribe((l) => {
-			if (!l) { unsub(); load(); }
+			if (!l) { unsub(); init(); }
 		});
 	});
 </script>
@@ -83,20 +127,47 @@
 	<title>Partidos — voto.vc</title>
 </svelte:head>
 
-{#if isLoading}
+{#if showUfPicker}
+	<div class="uf-selector">
+		<h1>De qual estado?</h1>
+		<p class="uf-subtitle">Filtrar partidos por estado</p>
+		<div class="uf-grid">
+			{#each UFS as sigla}
+				<button class="uf-btn" onclick={() => escolherUf(sigla)}>{sigla}</button>
+			{/each}
+		</div>
+		<button class="uf-cancel" onclick={() => showUfPicker = false}>Cancelar</button>
+	</div>
+{:else if isLoading}
 	<div class="loading">Calculando alinhamento...</div>
 {:else}
 	<div class="page">
 		<div class="page-header">
 			<h1>Partidos</h1>
 			<div class="controls">
-				<select bind:value={perPage} onchange={() => currentPage = 1}>
-					<option value={10}>10</option>
-					<option value={25}>25</option>
-					<option value={50}>50</option>
-					<option value={1000}>Todos</option>
-				</select>
+				<label class="per-page-label">
+					<select value={perPage} onchange={changePerPage}>
+						<option value="10">10</option>
+						<option value="25">25</option>
+						<option value="50">50</option>
+						<option value="1000">Todos</option>
+					</select>
+					partidos por página
+				</label>
 			</div>
+		</div>
+
+		<div class="escopo-toggle">
+			<button
+				class="escopo-btn"
+				class:active={escopo === 'brasil'}
+				onclick={() => setEscopo('brasil')}
+			>Brasil</button>
+			<button
+				class="escopo-btn"
+				class:active={escopo === 'estado'}
+				onclick={() => setEscopo('estado')}
+			>Meu estado{ufSelecionada ? ` (${ufSelecionada})` : ''}</button>
 		</div>
 
 		<div class="table-wrap">
@@ -105,7 +176,6 @@
 					<tr>
 						<th class="col-rank">#</th>
 						<th class="col-name sortable" onclick={() => toggleSort('sigla')}>Partido{sortIndicator('sigla')}</th>
-						<th class="col-full-name">Nome</th>
 						<th class="col-num sortable" onclick={() => toggleSort('parlamentares_comparados')}>Parlamentares{sortIndicator('parlamentares_comparados')}</th>
 						<th class="col-score sortable" onclick={() => toggleSort('score')}>Alinhamento{sortIndicator('score')}</th>
 					</tr>
@@ -114,8 +184,10 @@
 					{#each paged as result, i}
 						<tr>
 							<td class="col-rank">{(currentPage - 1) * perPage + i + 1}</td>
-							<td class="col-name"><a href="/partido/{result.partido_id}">{result.sigla}</a></td>
-							<td class="col-full-name">{result.nome}</td>
+							<td class="col-name">
+								<a href="/partido/{result.partido_id}">{result.sigla}</a>
+								<span class="nome-full">{result.nome}</span>
+							</td>
 							<td class="col-num">{result.parlamentares_comparados}</td>
 							<td class="col-score">
 								<span class="score" class:high={result.score >= 70} class:mid={result.score >= 40 && result.score < 70} class:low={result.score < 40}>
@@ -148,7 +220,7 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		margin-bottom: 1.5rem;
+		margin-bottom: 1rem;
 		flex-wrap: wrap;
 		gap: 0.5rem;
 	}
@@ -160,32 +232,55 @@
 
 	.controls {
 		display: flex;
-		gap: 0.5rem;
 		align-items: center;
 	}
 
+	.per-page-label {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		font-size: 0.813rem;
+		color: var(--text-secondary);
+	}
+
 	select {
-		padding: 0.375rem 0.75rem;
+		padding: 0.3rem 0.5rem;
 		border: 1px solid var(--border);
-		border-radius: 8px;
+		border-radius: 6px;
 		background: var(--bg-card);
 		color: var(--text-primary);
-		font-size: 0.875rem;
+		font-size: 0.813rem;
 		cursor: pointer;
 	}
 
-	.table-wrap {
-		overflow-x: auto;
-	}
-
-	table {
-		width: 100%;
-		border-collapse: collapse;
-	}
-
-	thead {
+	.escopo-toggle {
+		display: flex;
+		gap: 0;
+		margin-bottom: 1.5rem;
 		border-bottom: 2px solid var(--border);
 	}
+
+	.escopo-btn {
+		flex: 1;
+		padding: 0.625rem 1rem;
+		background: none;
+		border: none;
+		border-bottom: 2px solid transparent;
+		margin-bottom: -2px;
+		font-size: 0.938rem;
+		font-weight: 600;
+		color: var(--text-secondary);
+		cursor: pointer;
+		transition: color 0.2s, border-color 0.2s;
+	}
+
+	.escopo-btn:hover { color: var(--text-primary); }
+	.escopo-btn.active { color: var(--link); border-bottom-color: var(--link); }
+
+	.table-wrap { overflow-x: auto; }
+
+	table { width: 100%; border-collapse: collapse; }
+	thead { border-bottom: 2px solid var(--border); }
 
 	th {
 		text-align: left;
@@ -196,14 +291,8 @@
 		white-space: nowrap;
 	}
 
-	th.sortable {
-		cursor: pointer;
-		user-select: none;
-	}
-
-	th.sortable:hover {
-		color: var(--link);
-	}
+	th.sortable { cursor: pointer; user-select: none; }
+	th.sortable:hover { color: var(--link); }
 
 	td {
 		padding: 0.625rem 0.75rem;
@@ -212,9 +301,7 @@
 		color: var(--text-primary);
 	}
 
-	tr:hover td {
-		background: var(--bg-page);
-	}
+	tr:hover td { background: var(--bg-page); }
 
 	.col-rank {
 		width: 3rem;
@@ -228,32 +315,19 @@
 		font-weight: 600;
 	}
 
-	.col-name a:hover {
-		text-decoration: underline;
-	}
+	.col-name a:hover { text-decoration: underline; }
 
-	.col-full-name {
+	.nome-full {
+		display: block;
+		font-size: 0.75rem;
 		color: var(--text-secondary);
-		font-size: 0.875rem;
+		font-weight: 400;
 	}
 
-	td.col-full-name {
-		color: var(--text-secondary);
-		font-size: 0.875rem;
-	}
+	.col-num { text-align: center; }
+	.col-score { text-align: right; }
 
-	.col-num {
-		text-align: center;
-	}
-
-	.col-score {
-		text-align: right;
-	}
-
-	.score {
-		font-weight: 700;
-	}
-
+	.score { font-weight: 700; }
 	.high { color: #16a34a; }
 	.mid { color: #ca8a04; }
 	.low { color: #dc2626; }
@@ -277,14 +351,8 @@
 		font-weight: 500;
 	}
 
-	.pagination button:disabled {
-		opacity: 0.4;
-		cursor: default;
-	}
-
-	.pagination button:not(:disabled):hover {
-		border-color: var(--link);
-	}
+	.pagination button:disabled { opacity: 0.4; cursor: default; }
+	.pagination button:not(:disabled):hover { border-color: var(--link); }
 
 	.pagination span {
 		color: var(--text-secondary);
@@ -297,4 +365,39 @@
 		color: var(--text-secondary);
 		font-size: 1.125rem;
 	}
+
+	.uf-selector { max-width: 500px; margin: 0 auto; text-align: center; }
+	.uf-selector h1 { color: var(--text-primary); margin-bottom: 0.25rem; }
+	.uf-subtitle { color: var(--text-secondary); margin-bottom: 1.5rem; }
+
+	.uf-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+		gap: 0.5rem;
+	}
+
+	.uf-btn {
+		padding: 0.625rem;
+		background: var(--bg-card);
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		cursor: pointer;
+		font-weight: 700;
+		color: var(--link);
+		font-size: 0.938rem;
+		transition: border-color 0.2s;
+	}
+
+	.uf-btn:hover { border-color: var(--link); }
+
+	.uf-cancel {
+		margin-top: 1.5rem;
+		background: none;
+		border: none;
+		color: var(--text-secondary);
+		cursor: pointer;
+		font-size: 0.875rem;
+	}
+
+	.uf-cancel:hover { color: var(--text-primary); }
 </style>
