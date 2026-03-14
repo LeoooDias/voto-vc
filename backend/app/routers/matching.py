@@ -22,6 +22,7 @@ class CalcularRequest(BaseModel):
     respostas: list[RespostaItem] = []
     casa: str | None = None
     uf: str | None = None
+    limit: int = 50
 
 
 @router.post("/calcular")
@@ -54,6 +55,7 @@ async def calcular(
         respostas=respostas,
         casa=request.casa,
         uf=request.uf,
+        limit=min(request.limit, 1000),
     ), await ranking_partidos(
         db,
         respostas=respostas,

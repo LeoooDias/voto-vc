@@ -26,12 +26,17 @@
 <div class="app">
 	<header>
 		<nav>
-			<a href="/" class="logo"><span class="logo-flag"><span class="logo-text">voto.vc</span></span></a>
+			<a href="/" class="logo">
+				<img src="/logo-claro-sm.png" alt="voto.vc" class="logo-img logo-claro" width="95" height="40" />
+				<img src="/logo-escuro-sm.png" alt="voto.vc" class="logo-img logo-escuro" width="95" height="40" />
+			</a>
 			<div class="nav-right">
 				<div class="nav-links">
 					<a href="/vote">Vote</a>
 					{#if perfilEnabled}
 						<a href="/resultado">Perfil</a>
+						<a href="/partidos">Partidos</a>
+						<a href="/parlamentares">Parlamentares</a>
 					{:else}
 						<span class="nav-disabled">Perfil</span>
 					{/if}
@@ -133,23 +138,16 @@
 		align-items: center;
 	}
 
-	.logo-flag {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		background: linear-gradient(to right, #009C3B 33.33%, #FFDF00 33.33%, #FFDF00 66.66%, #002776 66.66%);
-		border-radius: 4px;
-		padding: 0.2rem 0.5rem;
-		line-height: 1;
+	.logo-img {
+		display: block;
+		height: 40px;
+		width: auto;
 	}
 
-	.logo-text {
-		font-size: 2.2rem;
-		font-weight: 800;
-		color: white;
-		letter-spacing: 0.03em;
-		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-	}
+	.logo-escuro { display: none; }
+
+	:global([data-theme='escuro']) .logo-claro { display: none; }
+	:global([data-theme='escuro']) .logo-escuro { display: block; }
 
 	.nav-right {
 		display: flex;

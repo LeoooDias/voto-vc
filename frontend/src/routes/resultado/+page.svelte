@@ -12,7 +12,7 @@
 	let partidoResults: PartidoMatchResult[] = $state([]);
 	let isLoading = $state(true);
 	let totalRespostas = $state(0);
-	let tab: 'parlamentares' | 'partidos' = $state('parlamentares');
+	let tab: 'parlamentares' | 'partidos' = $state('partidos');
 
 	resultados.subscribe((v) => (parlResults = v));
 	resultadosPartidos.subscribe((v) => (partidoResults = v));
