@@ -32,21 +32,23 @@
 			</a>
 			<div class="nav-right">
 				<div class="nav-links">
-					<a href="/vote">Vote</a>
+					<a href="/vote" class="nav-vote">Vote</a>
 					{#if perfilEnabled}
-						<a href="/resultado">Perfil</a>
-						<a href="/partidos">Partidos</a>
 						<a href="/parlamentares">Parlamentares</a>
-					{:else}
-						<span class="nav-disabled">Perfil</span>
+						<a href="/partidos">Partidos</a>
 					{/if}
 					<a href="/proposicoes">Proposições</a>
+					<span class="nav-sep">|</span>
 					<a href="/sobre">Sobre</a>
+					{#if perfilEnabled}
+						<a href="/resultado" class="nav-perfil">Meu Perfil</a>
+					{:else}
+						<span class="nav-disabled">Meu Perfil</span>
+					{/if}
 				</div>
 				{#if !$authLoading}
 					<div class="nav-auth">
 						{#if $authUser}
-							<span class="user-name">{$authUser.nome ?? $authUser.email}</span>
 							<button class="nav-btn" onclick={() => logout()}>Sair</button>
 						{:else}
 							<a href="/login" class="nav-btn-login">Entrar</a>
@@ -171,17 +173,35 @@
 		color: var(--link);
 	}
 
+	.nav-vote {
+		background: #2563eb;
+		color: white !important;
+		border-radius: 6px;
+		padding: 0.375rem 0.75rem;
+	}
+
+	.nav-vote:hover {
+		background: #1d4ed8;
+		color: white !important;
+	}
+
+	.nav-perfil {
+		color: var(--link) !important;
+		font-weight: 600 !important;
+	}
+
+	.nav-sep {
+		color: var(--border);
+		font-weight: 300;
+		user-select: none;
+	}
+
 	.nav-auth {
 		display: flex;
 		align-items: center;
 		gap: 0.75rem;
 		padding-left: 1.25rem;
 		border-left: 1px solid var(--border);
-	}
-
-	.user-name {
-		color: var(--text-secondary);
-		font-weight: 500;
 	}
 
 	.nav-btn {
