@@ -137,7 +137,7 @@
 
 			{#if $authUser}
 				<div class="setting last">
-					<span class="setting-label">Apagar meus votos</span>
+					<span class="setting-label">Meus dados</span>
 					{#if confirmingDelete}
 						<div class="confirm-box">
 							<p class="confirm-text">Todos os seus votos serão apagados permanentemente. Isso não pode ser desfeito.</p>
@@ -149,7 +149,7 @@
 							</div>
 						</div>
 					{:else}
-						<button class="danger-btn" onclick={() => confirmingDelete = true}>Apagar todos os votos</button>
+						<button class="danger-btn" onclick={() => confirmingDelete = true}>Apagar meus votos</button>
 					{/if}
 				</div>
 			{/if}
