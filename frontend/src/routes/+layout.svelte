@@ -32,7 +32,6 @@
 			</a>
 			<div class="nav-right">
 				<div class="nav-links">
-					<a href="/vote" class="nav-vote">Vote</a>
 					{#if perfilEnabled}
 						<a href="/parlamentares">Parlamentares</a>
 						<a href="/partidos">Partidos</a>
@@ -45,6 +44,7 @@
 					{:else}
 						<span class="nav-disabled">Meu Perfil</span>
 					{/if}
+					<a href="/vote" class="nav-vote">Vote</a>
 				</div>
 				{#if !$authLoading}
 					<div class="nav-auth">

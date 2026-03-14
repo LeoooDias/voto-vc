@@ -56,10 +56,10 @@
 		return sexo === 'F' ? 'Senadora' : 'Senador';
 	}
 
-	function changePerPage(e: Event) {
-		perPage = Number((e.target as HTMLSelectElement).value);
+	$effect(() => {
+		perPage;
 		currentPage = 1;
-	}
+	});
 
 	let userRespostas: { proposicao_id: number; voto: string; peso: number }[] = [];
 
@@ -150,11 +150,11 @@
 			<h1>Parlamentares</h1>
 			<div class="controls">
 				<label class="per-page-label">
-					<select value={perPage} onchange={changePerPage}>
-						<option value="10">10</option>
-						<option value="25">25</option>
-						<option value="50">50</option>
-						<option value="1000">Todos</option>
+					<select bind:value={perPage}>
+						<option value={10}>10</option>
+						<option value={25}>25</option>
+						<option value={50}>50</option>
+						<option value={1000}>Todos</option>
 					</select>
 					parlamentares por página
 				</label>
@@ -251,13 +251,14 @@
 	}
 
 	select {
-		padding: 0.3rem 0.5rem;
+		padding: 0.3rem 1.5rem 0.3rem 0.5rem;
 		border: 1px solid var(--border);
 		border-radius: 6px;
 		background: var(--bg-card);
 		color: var(--text-primary);
 		font-size: 0.813rem;
 		cursor: pointer;
+		min-width: 4.5rem;
 	}
 
 	.escopo-toggle {
