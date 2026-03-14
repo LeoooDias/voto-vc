@@ -27,8 +27,8 @@
 	<header>
 		<nav>
 			<a href="/" class="logo">
-				<img src="/logo-claro-sm.png" alt="voto.vc" class="logo-img logo-claro" width="95" height="40" />
-				<img src="/logo-escuro-sm.png" alt="voto.vc" class="logo-img logo-escuro" width="95" height="40" />
+				<img src="/logo-claro-sm.png" alt="voto.vc" class="logo-img logo-claro" width="190" height="80" />
+				<img src="/logo-escuro-sm.png" alt="voto.vc" class="logo-img logo-escuro" width="190" height="80" />
 			</a>
 			<div class="nav-right">
 				<div class="nav-links">
@@ -129,7 +129,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		height: 60px;
+		height: 90px;
 	}
 
 	.logo {
@@ -140,7 +140,7 @@
 
 	.logo-img {
 		display: block;
-		height: 40px;
+		height: 80px;
 		width: auto;
 	}
 
