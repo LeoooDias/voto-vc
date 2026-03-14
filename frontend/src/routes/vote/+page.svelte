@@ -347,8 +347,14 @@
 	}
 
 	.meta-banner.ready {
+		background: #fef3c7;
+		color: #92400e;
+		border: 1px solid #f59e0b66;
+	}
+
+	:global([data-theme='escuro']) .meta-banner.ready {
 		background: #eab3081a;
-		color: #eab308;
+		color: #fbbf24;
 		border: 1px solid #eab30833;
 	}
 
