@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { authUser, checkAuth } from '$lib/stores/auth';
 	import { theme, setTheme, type Theme } from '$lib/stores/theme';
-	import { respostas } from '$lib/stores/questionario';
+	import { respostas, selectedUf as selectedUfStore } from '$lib/stores/questionario';
 	import { get } from 'svelte/store';
 
 	let { open = $bindable(false) } = $props();
@@ -44,6 +44,7 @@
 				body: JSON.stringify({ uf: selectedUf || null })
 			});
 			if (res.ok) {
+				selectedUfStore.set(selectedUf);
 				await checkAuth();
 			}
 		} finally {
