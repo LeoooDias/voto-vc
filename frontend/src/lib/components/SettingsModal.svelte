@@ -113,25 +113,6 @@
 				{/if}
 			</div>
 
-			{#if $authUser}
-				<div class="setting">
-					<span class="setting-label">Seus votos</span>
-					{#if confirmingDelete}
-						<div class="confirm-box">
-							<p class="confirm-text">Todos os seus votos serão apagados permanentemente. Isso não pode ser desfeito.</p>
-							<div class="confirm-actions">
-								<button class="confirm-cancel" onclick={() => confirmingDelete = false}>Cancelar</button>
-								<button class="confirm-delete" onclick={apagarVotos} disabled={deleting}>
-									{deleting ? 'Apagando...' : 'Apagar tudo'}
-								</button>
-							</div>
-						</div>
-					{:else}
-						<button class="danger-btn" onclick={() => confirmingDelete = true}>Apagar todos os votos</button>
-					{/if}
-				</div>
-			{/if}
-
 			<div class="setting">
 				<span class="setting-label">Tema</span>
 				<div class="theme-options">
@@ -152,6 +133,25 @@
 					>Auto</button>
 				</div>
 			</div>
+
+			{#if $authUser}
+				<div class="setting last">
+					<span class="setting-label">Apagar meus votos</span>
+					{#if confirmingDelete}
+						<div class="confirm-box">
+							<p class="confirm-text">Todos os seus votos serão apagados permanentemente. Isso não pode ser desfeito.</p>
+							<div class="confirm-actions">
+								<button class="confirm-cancel" onclick={() => confirmingDelete = false}>Cancelar</button>
+								<button class="confirm-delete" onclick={apagarVotos} disabled={deleting}>
+									{deleting ? 'Apagando...' : 'Apagar tudo'}
+								</button>
+							</div>
+						</div>
+					{:else}
+						<button class="danger-btn" onclick={() => confirmingDelete = true}>Apagar todos os votos</button>
+					{/if}
+				</div>
+			{/if}
 		</div>
 	</div>
 {/if}
