@@ -43,16 +43,20 @@
 	let expandedIdx: number | null = $state(null);
 	let soSubstantivas = $state(false);
 	let soMeusVotos = $state(false);
+	let showLimit = $state(100);
 	let userVotoMap = $state<Map<number, 'sim' | 'nao'>>(new Map());
 
 	let allVotos = $derived((parlamentar?.votos ?? []) as VotoHistory[]);
 
-	let votosVisiveis = $derived.by(() => {
+	let votosFiltrados = $derived.by(() => {
 		let v = allVotos;
 		if (soSubstantivas) v = v.filter((x: VotoHistory) => x.substantiva);
 		if (soMeusVotos) v = v.filter((x: VotoHistory) => x.proposicao_id && userVotoMap.has(x.proposicao_id));
 		return v;
 	});
+
+	let votosVisiveis = $derived(votosFiltrados.slice(0, showLimit));
+	let hasMore = $derived(votosFiltrados.length > showLimit);
 
 	let countSubstantivas = $derived(
 		allVotos.filter((v: VotoHistory) => v.substantiva).length
@@ -298,6 +302,11 @@
 						{/if}
 					</button>
 				{/each}
+				{#if hasMore}
+					<button class="btn-more" onclick={() => showLimit += 100}>
+						Mostrar mais ({votosFiltrados.length - showLimit} restantes)
+					</button>
+				{/if}
 			</div>
 		{:else}
 			<p class="empty-votos">Nenhum voto registrado.</p>
@@ -543,6 +552,24 @@
 	}
 
 	.back:hover { text-decoration: underline; }
+
+	.btn-more {
+		display: block;
+		width: 100%;
+		padding: 0.75rem;
+		background: var(--bg-card);
+		border: 1px dashed var(--border);
+		border-radius: 12px;
+		color: var(--link);
+		font-weight: 600;
+		font-size: 0.875rem;
+		cursor: pointer;
+		transition: border-color 0.2s;
+	}
+
+	.btn-more:hover {
+		border-color: var(--link);
+	}
 
 	/* Comparação */
 	.comparacao {

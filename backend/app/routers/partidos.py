@@ -125,5 +125,5 @@ async def obter_partido(
         "nome": partido.nome,
         "total_parlamentares": len(parl_ids),
         "stats": stats,
-        "votos": list(prop_map.values())[:100],
+        "votos": list(prop_map.values()),
     }

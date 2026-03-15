@@ -67,7 +67,6 @@ async def obter_parlamentar(parlamentar_id: int, db: AsyncSession = Depends(get_
         .outerjoin(Proposicao, Votacao.proposicao_id == Proposicao.id)
         .where(VotoParlamentar.parlamentar_id == parlamentar_id)
         .order_by(Votacao.data.desc())
-        .limit(100)
     )
     votos_result = await db.execute(votos_query)
 

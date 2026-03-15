@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Depends
+from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models.proposicao import Proposicao
+from app.utils import url_camara_from_id_externo
 
 router = APIRouter()
 
@@ -87,6 +89,38 @@ async def listar_proposicoes(
             for p in props
         ],
     }
+
+
+class BatchRequest(BaseModel):
+    ids: list[int]
+
+
+@router.post("/batch")
+async def batch_proposicoes(
+    body: BatchRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """Return proposição details for a list of IDs."""
+    if not body.ids or len(body.ids) > 500:
+        return []
+
+    query = select(Proposicao).where(Proposicao.id.in_(body.ids))
+    result = await db.execute(query)
+    props = result.scalars().all()
+
+    return [
+        {
+            "proposicao_id": p.id,
+            "tipo": p.tipo,
+            "numero": p.numero,
+            "ano": p.ano,
+            "resumo": p.resumo_cidadao,
+            "descricao_detalhada": p.descricao_detalhada,
+            "tema": p.tema or "geral",
+            "url_camara": url_camara_from_id_externo(p.id_externo),
+        }
+        for p in props
+    ]
 
 
 @router.get("/filtros")

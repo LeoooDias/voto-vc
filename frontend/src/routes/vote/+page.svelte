@@ -113,19 +113,42 @@
 	items.subscribe((v) => (currentItems = v));
 	currentIndex.subscribe((v) => (idx = v));
 
+	let respostaAtual = $derived.by(() => {
+		if (!currentItems[idx]) return undefined;
+		const pid = currentItems[idx].proposicao_id;
+		return get(respostas).find((r) => r.proposicao_id === pid);
+	});
+
+	function voltar() {
+		if (idx > 0) {
+			currentIndex.set(idx - 1);
+		}
+	}
+
 	function votar(voto: 'sim' | 'nao' | 'pular') {
 		if (!currentItems[idx]) return;
 
+		const pid = currentItems[idx].proposicao_id;
 		const resposta: RespostaItem = {
-			proposicao_id: currentItems[idx].proposicao_id,
+			proposicao_id: pid,
 			voto,
 			peso: 1.0
 		};
 
-		respostas.update((r) => [...r, resposta]);
-		if (voto !== 'pular') {
-			answeredCount++;
-		}
+		respostas.update((r) => {
+			const existing = r.findIndex((x) => x.proposicao_id === pid);
+			if (existing >= 0) {
+				const old = r[existing];
+				// Ajustar contagem
+				if (old.voto === 'pular' && voto !== 'pular') answeredCount++;
+				else if (old.voto !== 'pular' && voto === 'pular') answeredCount--;
+				const updated = [...r];
+				updated[existing] = resposta;
+				return updated;
+			}
+			if (voto !== 'pular') answeredCount++;
+			return [...r, resposta];
+		});
 
 		// Salvar no backend se logado (fire-and-forget)
 		if (get(authUser)) {
@@ -222,9 +245,10 @@
 		</div>
 
 		<div class="actions">
-			<button class="btn nao" onclick={() => votar('nao')}>Contra</button>
-			<button class="btn pular" onclick={() => votar('pular')}>Pular</button>
-			<button class="btn sim" onclick={() => votar('sim')}>A favor</button>
+			<button class="btn-voltar" onclick={voltar} disabled={idx === 0} aria-label="Voltar">&#8592;</button>
+			<button class="btn nao" class:selected={respostaAtual?.voto === 'nao'} onclick={() => votar('nao')}>Contra</button>
+			<button class="btn pular" class:selected={respostaAtual?.voto === 'pular'} onclick={() => votar('pular')}>Pular</button>
+			<button class="btn sim" class:selected={respostaAtual?.voto === 'sim'} onclick={() => votar('sim')}>A favor</button>
 		</div>
 	</div>
 {/if}
@@ -399,19 +423,46 @@
 
 	.actions {
 		display: flex;
-		gap: 1rem;
+		gap: 0.75rem;
 		margin-top: 1.5rem;
 		justify-content: center;
+		align-items: center;
+	}
+
+	.btn-voltar {
+		width: 44px;
+		height: 44px;
+		flex-shrink: 0;
+		border: 1px solid var(--border);
+		border-radius: 12px;
+		background: var(--bg-card);
+		color: var(--text-secondary);
+		font-size: 1.25rem;
+		cursor: pointer;
+		transition: border-color 0.2s, color 0.2s;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.btn-voltar:hover:not(:disabled) {
+		border-color: var(--link);
+		color: var(--text-primary);
+	}
+
+	.btn-voltar:disabled {
+		opacity: 0.3;
+		cursor: default;
 	}
 
 	.btn {
 		padding: 0.875rem 2rem;
-		border: none;
+		border: 2px solid transparent;
 		border-radius: 12px;
 		font-size: 1rem;
 		font-weight: 600;
 		cursor: pointer;
-		transition: transform 0.1s, opacity 0.2s;
+		transition: transform 0.1s, opacity 0.2s, box-shadow 0.2s;
 		white-space: nowrap;
 		flex: 1;
 		min-width: 0;
@@ -438,6 +489,10 @@
 	.pular {
 		background: var(--border);
 		color: var(--text-secondary);
+	}
+
+	.btn.selected {
+		box-shadow: 0 0 0 3px var(--bg-page), 0 0 0 5px currentColor;
 	}
 
 	.loading,

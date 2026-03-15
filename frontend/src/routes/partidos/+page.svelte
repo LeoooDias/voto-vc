@@ -111,6 +111,7 @@
 			const storeUf = get(selectedUf);
 			if (storeUf) ufSelecionada = storeUf;
 		}
+		if (ufSelecionada) escopo = 'estado';
 		await loadData();
 	}
 
