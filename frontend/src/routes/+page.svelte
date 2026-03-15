@@ -5,7 +5,7 @@
 <div class="hero">
 	<h1>Descubra quem vota como você.</h1>
 	<p class="subtitle">
-		Responda a proposições reais do Congresso Nacional e veja quais parlamentares
+		Responda a proposições reais da Câmara dos Deputados e veja quais parlamentares
 		mais se alinham com seus pontos de vista. Baseado em dados públicos, com
 		total transparência.
 	</p>
@@ -14,7 +14,7 @@
 	<div class="features">
 		<div class="feature">
 			<h3>Dados reais</h3>
-			<p>Baseado em votações nominais da Câmara e do Senado Federal</p>
+			<p>Baseado em votações nominais da Câmara dos Deputados</p>
 		</div>
 		<div class="feature">
 			<h3>Neutro</h3>

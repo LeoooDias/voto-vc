@@ -8,9 +8,14 @@
 
 	let { children } = $props();
 	let settingsOpen = $state(false);
+	let menuOpen = $state(false);
 	let respostasArr: { voto: string }[] = $state([]);
 	respostas.subscribe(r => respostasArr = r);
 	let perfilEnabled = $derived(respostasArr.filter(r => r.voto !== 'pular').length >= 10);
+
+	function closeMenu() {
+		menuOpen = false;
+	}
 
 	onMount(async () => {
 		initTheme();
@@ -31,33 +36,42 @@
 				<img src="/logo-claro-sm.png" alt="voto.vc" class="logo-img logo-claro" width="190" height="80" />
 				<img src="/logo-escuro-sm.png" alt="voto.vc" class="logo-img logo-escuro" width="190" height="80" />
 			</a>
-			<div class="nav-right">
+
+			<button class="hamburger" onclick={() => menuOpen = !menuOpen} aria-label="Menu">
+				{#if menuOpen}
+					<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+				{:else}
+					<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+				{/if}
+			</button>
+
+			<div class="nav-right" class:nav-open={menuOpen}>
 				<div class="nav-links">
 					{#if perfilEnabled}
-						<a href="/parlamentares">Parlamentares</a>
-						<a href="/partidos">Partidos</a>
+						<a href="/parlamentares" onclick={closeMenu}>Parlamentares</a>
+						<a href="/partidos" onclick={closeMenu}>Partidos</a>
 					{:else}
 						<span class="nav-disabled">Parlamentares</span>
 						<span class="nav-disabled">Partidos</span>
 					{/if}
-					<a href="/proposicoes">Proposições</a>
+					<a href="/proposicoes" onclick={closeMenu}>Proposições</a>
 					<span class="nav-sep">|</span>
-					<a href="/sobre">Sobre</a>
+					<a href="/sobre" onclick={closeMenu}>Sobre</a>
 					{#if perfilEnabled}
-						<a href="/resultado" class="nav-perfil">Meu Perfil</a>
+						<a href="/resultado" class="nav-perfil" onclick={closeMenu}>Meu Perfil</a>
 					{:else}
 						<span class="nav-disabled">Meu Perfil</span>
 					{/if}
-					<a href="/vote" class="nav-vote">Vote</a>
+					<a href="/vote" class="nav-vote" onclick={closeMenu}>Vote</a>
 				</div>
 				{#if !$authLoading}
 					<div class="nav-auth">
 						{#if $authUser}
-							<button class="nav-btn" onclick={() => logout()}>Sair</button>
+							<button class="nav-btn" onclick={() => { logout(); closeMenu(); }}>Sair</button>
 						{:else}
-							<a href="/login" class="nav-btn-login">Entrar</a>
+							<a href="/login" class="nav-btn-login" onclick={closeMenu}>Entrar</a>
 						{/if}
-						<button class="nav-btn-icon" onclick={() => settingsOpen = true} title="Configurações">
+						<button class="nav-btn-icon" onclick={() => { settingsOpen = true; closeMenu(); }} title="Configurações">
 							<svg width="27" height="27" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
 						</button>
 					</div>
@@ -65,6 +79,10 @@
 			</div>
 		</nav>
 	</header>
+
+	{#if menuOpen}
+		<button class="menu-overlay" onclick={closeMenu} aria-label="Fechar menu"></button>
+	{/if}
 
 	<main>
 		{@render children()}
@@ -155,6 +173,22 @@
 
 	:global([data-theme='escuro']) .logo-claro { display: none; }
 	:global([data-theme='escuro']) .logo-escuro { display: block; }
+
+	/* Hamburger button — hidden on desktop */
+	.hamburger {
+		display: none;
+		background: none;
+		border: none;
+		color: var(--text-secondary);
+		cursor: pointer;
+		padding: 0.5rem;
+		border-radius: 6px;
+	}
+
+	.hamburger:hover {
+		background: var(--bg-page);
+		color: var(--text-primary);
+	}
 
 	.nav-right {
 		display: flex;
@@ -260,6 +294,11 @@
 		color: white !important;
 	}
 
+	/* Menu overlay — only visible on mobile when menu is open */
+	.menu-overlay {
+		display: none;
+	}
+
 	main {
 		flex: 1;
 		max-width: 1200px;
@@ -275,5 +314,86 @@
 		text-align: center;
 		padding: 1.5rem;
 		font-size: 0.875rem;
+	}
+
+	/* ---- Mobile ---- */
+	@media (max-width: 768px) {
+		nav {
+			height: 70px;
+		}
+
+		.logo-img {
+			height: 64px;
+		}
+
+		.hamburger {
+			display: flex;
+			align-items: center;
+		}
+
+		.nav-right {
+			display: none;
+			position: absolute;
+			top: 70px;
+			left: 0;
+			right: 0;
+			background: var(--bg-header);
+			border-bottom: 1px solid var(--border);
+			flex-direction: column;
+			padding: 1rem 1.5rem;
+			gap: 0;
+			z-index: 100;
+			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+		}
+
+		.nav-right.nav-open {
+			display: flex;
+		}
+
+		.nav-links {
+			flex-direction: column;
+			align-items: stretch;
+			gap: 0;
+			width: 100%;
+		}
+
+		.nav-links a,
+		.nav-links .nav-disabled {
+			padding: 0.75rem 0;
+			border-bottom: 1px solid var(--border);
+			font-size: 1rem;
+		}
+
+		.nav-links .nav-vote {
+			text-align: center;
+			margin-top: 0.5rem;
+			border-bottom: none;
+			padding: 0.625rem 0;
+		}
+
+		.nav-sep {
+			display: none;
+		}
+
+		.nav-auth {
+			padding-left: 0;
+			border-left: none;
+			border-top: 1px solid var(--border);
+			padding-top: 0.75rem;
+			margin-top: 0.5rem;
+			width: 100%;
+			justify-content: space-between;
+		}
+
+		.menu-overlay {
+			display: block;
+			position: fixed;
+			inset: 0;
+			top: 70px;
+			background: rgba(0, 0, 0, 0.3);
+			z-index: 49;
+			border: none;
+			cursor: default;
+		}
 	}
 </style>

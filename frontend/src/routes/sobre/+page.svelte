@@ -10,7 +10,7 @@
 		<p>
 			O voto.vc ajuda eleitores brasileiros a encontrar os políticos e partidos
 			que mais se alinham com seus pontos de vista, baseando-se exclusivamente
-			em dados públicos de votações do Congresso Nacional.
+			em dados públicos de votações da Câmara dos Deputados (Senado em breve).
 		</p>
 	</section>
 
@@ -27,8 +27,12 @@
 		<h2>Fontes de dados</h2>
 		<ul>
 			<li>Câmara dos Deputados — Dados Abertos (dadosabertos.camara.leg.br)</li>
-			<li>Senado Federal — Dados Abertos (legis.senado.leg.br/dadosabertos)</li>
+			<li>Senado Federal — em breve</li>
 		</ul>
+		<p>
+			No momento, o voto.vc cobre as votações nominais da Câmara dos Deputados.
+			O Senado Federal será incluído em breve.
+		</p>
 	</section>
 
 	<section>
