@@ -217,7 +217,7 @@ async def link_unlinked_votacoes():
             # Look for proposições in the response
             afetadas = vot_data.get("proposicoesAfetadas", [])
             if not afetadas:
-                logger.info(f"  No proposicoesAfetadas found, skipping")
+                logger.info("  No proposicoesAfetadas found, skipping")
                 skipped += 1
                 continue
 
@@ -228,7 +228,7 @@ async def link_unlinked_votacoes():
             # Pick the main proposition
             main_prop = pick_main_proposition(afetadas)
             if not main_prop:
-                logger.info(f"  Could not identify main proposition, skipping")
+                logger.info("  Could not identify main proposition, skipping")
                 skipped += 1
                 continue
 
@@ -257,7 +257,7 @@ async def link_unlinked_votacoes():
                 if proposicao:
                     logger.info(f"  Found existing proposição (alt format): {alt_id} (DB id={proposicao.id})")
                 else:
-                    logger.info(f"  Proposição not in DB, creating...")
+                    logger.info("  Proposição not in DB, creating...")
                     proposicao = await create_proposicao_from_api(
                         db, client, main_prop, topico_mapping, sim_count, nao_count
                     )

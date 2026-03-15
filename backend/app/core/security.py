@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from jose import jwt
 from passlib.context import CryptContext
@@ -17,7 +17,7 @@ def verificar_senha(senha: str, senha_hash: str) -> bool:
 
 
 def criar_token(subject: str) -> str:
-    expire = datetime.now(timezone.utc) + timedelta(minutes=settings.jwt_expire_minutes)
+    expire = datetime.now(UTC) + timedelta(minutes=settings.jwt_expire_minutes)
     return jwt.encode(
         {"sub": subject, "exp": expire},
         settings.jwt_secret,

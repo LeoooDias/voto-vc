@@ -42,7 +42,9 @@ def classify_proposicao(
         confianca = min(1.0, raw_score * (1 + 0.2 * len(matched)))
 
         if confianca >= min_confianca:
-            results.append(TopicMatch(slug=slug, confianca=round(confianca, 3), keywords_matched=matched))
+            results.append(TopicMatch(
+                slug=slug, confianca=round(confianca, 3), keywords_matched=matched,
+            ))
 
     results.sort(key=lambda x: x.confianca, reverse=True)
     return results

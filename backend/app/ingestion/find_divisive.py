@@ -9,7 +9,6 @@ import logging
 from datetime import datetime
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.classification.classifier import classify_proposicao
 from app.database import async_session

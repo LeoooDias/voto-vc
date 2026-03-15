@@ -3,17 +3,15 @@
 import asyncio
 import logging
 import re
-from datetime import datetime
 
 import httpx
-from sqlalchemy import func, select, text
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, text
 
 from app.classification.classifier import classify_proposicao
 from app.database import async_session
 from app.models.proposicao import Proposicao
 from app.models.topico import ProposicaoTopico, Topico
-from app.models.votacao import Votacao, VotoParlamentar
+from app.models.votacao import Votacao
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)

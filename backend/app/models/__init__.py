@@ -3,7 +3,7 @@ from app.models.partido import BlocoParlamentar, Partido, bloco_partido
 from app.models.proposicao import Proposicao
 from app.models.topico import ProposicaoTopico, Topico
 from app.models.usuario import RespostaUsuario, Usuario
-from app.models.votacao import VotoParlamentar, Votacao
+from app.models.votacao import Votacao, VotoParlamentar
 
 __all__ = [
     "BlocoParlamentar",

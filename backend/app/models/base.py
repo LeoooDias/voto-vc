@@ -18,12 +18,12 @@ class TimestampMixin:
     )
 
 
-class Casa(str, enum.Enum):
+class Casa(enum.StrEnum):
     CAMARA = "camara"
     SENADO = "senado"
 
 
-class TipoVoto(str, enum.Enum):
+class TipoVoto(enum.StrEnum):
     SIM = "sim"
     NAO = "nao"
     ABSTENCAO = "abstencao"
@@ -32,13 +32,13 @@ class TipoVoto(str, enum.Enum):
     PRESENTE_SEM_VOTO = "presente_sem_voto"
 
 
-class VotoUsuario(str, enum.Enum):
+class VotoUsuario(enum.StrEnum):
     SIM = "sim"
     NAO = "nao"
     PULAR = "pular"
 
 
-class ProvedorAuth(str, enum.Enum):
+class ProvedorAuth(enum.StrEnum):
     EMAIL = "email"
     GOOGLE = "google"
     MAGIC_LINK = "magic_link"

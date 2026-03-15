@@ -7,6 +7,7 @@ from app.models.parlamentar import Parlamentar
 from app.models.partido import Partido
 from app.models.proposicao import Proposicao
 from app.models.votacao import Votacao, VotoParlamentar
+from app.utils import url_camara_from_id_externo
 
 router = APIRouter()
 
@@ -103,11 +104,6 @@ async def obter_partido(
     for row in votos_result.all():
         prop_id = row[0]
         if prop_id not in prop_map:
-            id_externo = row[8]
-            url_camara = None
-            if id_externo and id_externo.startswith("camara_prop_"):
-                num_id = id_externo.replace("camara_prop_", "")
-                url_camara = f"https://www.camara.leg.br/proposicoesWeb/fichadetramitacao?idProposicao={num_id}"
             prop_map[prop_id] = {
                 "proposicao_id": prop_id,
                 "proposicao_tipo": row[1],
@@ -119,7 +115,7 @@ async def obter_partido(
                 "resumo_cidadao": row[5],
                 "descricao_detalhada": row[6],
                 "tema": row[7],
-                "url_camara": url_camara,
+                "url_camara": url_camara_from_id_externo(row[8]),
                 "data": row[9].isoformat() if row[9] else None,
                 "descricao_votacao": row[10],
                 "substantiva": row[1] in SUBSTANTIVE_TYPES if row[1] else False,

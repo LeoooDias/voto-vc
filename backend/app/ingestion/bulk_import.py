@@ -13,10 +13,8 @@ import json
 import logging
 import os
 from datetime import datetime
-from pathlib import Path
 
-from sqlalchemy import select, text
-from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.classification.classifier import classify_proposicao
@@ -68,7 +66,7 @@ async def import_deputados(db: AsyncSession, data_dir: str) -> dict[str, int]:
 
     # Ensure partidos exist
     result = await db.execute(select(Partido.sigla, Partido.id))
-    partido_map = {row[0]: row[1] for row in result.all()}
+    {row[0]: row[1] for row in result.all()}
 
     created = 0
     for dep in deps:

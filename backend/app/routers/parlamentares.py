@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
@@ -7,6 +7,7 @@ from app.database import get_db
 from app.models.parlamentar import Parlamentar
 from app.models.proposicao import Proposicao
 from app.models.votacao import Votacao, VotoParlamentar
+from app.utils import url_camara_from_id_externo
 
 router = APIRouter()
 
@@ -73,10 +74,9 @@ async def obter_parlamentar(parlamentar_id: int, db: AsyncSession = Depends(get_
     substantive_types = {"PL", "PEC", "MPV", "PLP", "PDL", "MIP"}
     votos_history = []
     for row in votos_result.all():
-        id_externo = row[12]
-        url_camara = None
-        if id_externo and id_externo.startswith("camara_prop_"):
-            url_camara = f"https://www.camara.leg.br/proposicoesWeb/fichadetramitacao?idProposicao={id_externo.replace('camara_prop_', '')}"
+        ementa = row[8]
+        if ementa and len(ementa) > 150:
+            ementa = ementa[:150] + "..."
         votos_history.append({
             "voto": row[0].value,
             "partido_na_epoca": row[1],
@@ -86,11 +86,11 @@ async def obter_parlamentar(parlamentar_id: int, db: AsyncSession = Depends(get_
             "proposicao_tipo": row[5],
             "proposicao_numero": row[6],
             "proposicao_ano": row[7],
-            "proposicao_ementa": (row[8][:150] + "...") if row[8] and len(row[8]) > 150 else row[8],
+            "proposicao_ementa": ementa,
             "resumo_cidadao": row[9],
             "descricao_detalhada": row[10],
             "tema": row[11],
-            "url_camara": url_camara,
+            "url_camara": url_camara_from_id_externo(row[12]),
             "substantiva": row[5] in substantive_types if row[5] else False,
         })
 
@@ -106,6 +106,7 @@ async def obter_parlamentar(parlamentar_id: int, db: AsyncSession = Depends(get_
     stats_result = await db.execute(stats_query)
     stats = {row[0].value: row[1] for row in stats_result.all()}
 
+    partido = parlamentar.partido
     return {
         "id": parlamentar.id,
         "nome_parlamentar": parlamentar.nome_parlamentar,
@@ -114,7 +115,10 @@ async def obter_parlamentar(parlamentar_id: int, db: AsyncSession = Depends(get_
         "uf": parlamentar.uf,
         "sexo": parlamentar.sexo,
         "foto_url": parlamentar.foto_url,
-        "partido": {"sigla": parlamentar.partido.sigla, "nome": parlamentar.partido.nome} if parlamentar.partido else None,
+        "partido": (
+            {"sigla": partido.sigla, "nome": partido.nome}
+            if partido else None
+        ),
         "legislatura_atual": parlamentar.legislatura_atual,
         "stats": stats,
         "votos": votos_history,

@@ -14,8 +14,8 @@ from app.ingestion.camara import CamaraClient
 from app.ingestion.normalize import (
     normalize_deputado,
     normalize_senador,
-    normalize_voto_camara,
     normalize_votacao_camara,
+    normalize_voto_camara,
 )
 from app.ingestion.senado import SenadoClient
 from app.models.parlamentar import Parlamentar

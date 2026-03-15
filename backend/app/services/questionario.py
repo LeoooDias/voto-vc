@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.proposicao import Proposicao
+from app.utils import url_camara_from_id_externo
 
 
 async def montar_questionario(
@@ -82,7 +83,7 @@ async def montar_questionario(
             "resumo": p.resumo_cidadao,
             "descricao_detalhada": p.descricao_detalhada,
             "tema": p.tema or "geral",
-            "url_camara": f"https://www.camara.leg.br/proposicoesWeb/fichadetramitacao?idProposicao={p.id_externo.replace('camara_prop_', '')}" if p.id_externo else None,
+            "url_camara": url_camara_from_id_externo(p.id_externo),
         }
         for p in selected
     ]
