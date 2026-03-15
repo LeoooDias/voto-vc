@@ -26,17 +26,13 @@ async def obter_partido(
     uf: str | None = None,
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(
-        select(Partido).where(Partido.id == partido_id)
-    )
+    result = await db.execute(select(Partido).where(Partido.id == partido_id))
     partido = result.scalar_one_or_none()
     if not partido:
         raise HTTPException(status_code=404, detail="Partido não encontrado")
 
     # Get parlamentar IDs for this party (optionally filtered by UF)
-    parl_query = select(Parlamentar.id).where(
-        Parlamentar.partido_id == partido_id
-    )
+    parl_query = select(Parlamentar.id).where(Parlamentar.partido_id == partido_id)
     if uf:
         parl_query = parl_query.where(Parlamentar.uf == uf.upper())
     parl_result = await db.execute(parl_query)

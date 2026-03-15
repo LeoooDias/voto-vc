@@ -77,22 +77,24 @@ async def obter_parlamentar(parlamentar_id: int, db: AsyncSession = Depends(get_
         ementa = row[8]
         if ementa and len(ementa) > 150:
             ementa = ementa[:150] + "..."
-        votos_history.append({
-            "voto": row[0].value,
-            "partido_na_epoca": row[1],
-            "data": row[2].isoformat() if row[2] else None,
-            "descricao_votacao": row[3],
-            "proposicao_id": row[4],
-            "proposicao_tipo": row[5],
-            "proposicao_numero": row[6],
-            "proposicao_ano": row[7],
-            "proposicao_ementa": ementa,
-            "resumo_cidadao": row[9],
-            "descricao_detalhada": row[10],
-            "tema": row[11],
-            "url_camara": url_camara_from_id_externo(row[12]),
-            "substantiva": row[5] in substantive_types if row[5] else False,
-        })
+        votos_history.append(
+            {
+                "voto": row[0].value,
+                "partido_na_epoca": row[1],
+                "data": row[2].isoformat() if row[2] else None,
+                "descricao_votacao": row[3],
+                "proposicao_id": row[4],
+                "proposicao_tipo": row[5],
+                "proposicao_numero": row[6],
+                "proposicao_ano": row[7],
+                "proposicao_ementa": ementa,
+                "resumo_cidadao": row[9],
+                "descricao_detalhada": row[10],
+                "tema": row[11],
+                "url_camara": url_camara_from_id_externo(row[12]),
+                "substantiva": row[5] in substantive_types if row[5] else False,
+            }
+        )
 
     # Vote stats
     stats_query = (
@@ -115,10 +117,7 @@ async def obter_parlamentar(parlamentar_id: int, db: AsyncSession = Depends(get_
         "uf": parlamentar.uf,
         "sexo": parlamentar.sexo,
         "foto_url": parlamentar.foto_url,
-        "partido": (
-            {"sigla": partido.sigla, "nome": partido.nome}
-            if partido else None
-        ),
+        "partido": ({"sigla": partido.sigla, "nome": partido.nome} if partido else None),
         "legislatura_atual": parlamentar.legislatura_atual,
         "stats": stats,
         "votos": votos_history,

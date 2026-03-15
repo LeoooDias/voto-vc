@@ -42,9 +42,13 @@ def classify_proposicao(
         confianca = min(1.0, raw_score * (1 + 0.2 * len(matched)))
 
         if confianca >= min_confianca:
-            results.append(TopicMatch(
-                slug=slug, confianca=round(confianca, 3), keywords_matched=matched,
-            ))
+            results.append(
+                TopicMatch(
+                    slug=slug,
+                    confianca=round(confianca, 3),
+                    keywords_matched=matched,
+                )
+            )
 
     results.sort(key=lambda x: x.confianca, reverse=True)
     return results
@@ -54,11 +58,18 @@ def _normalize_text(text: str) -> str:
     """Normalize text for matching: lowercase, remove accents."""
     text = text.lower()
     replacements = {
-        "á": "a", "à": "a", "ã": "a", "â": "a",
-        "é": "e", "ê": "e",
+        "á": "a",
+        "à": "a",
+        "ã": "a",
+        "â": "a",
+        "é": "e",
+        "ê": "e",
         "í": "i",
-        "ó": "o", "ô": "o", "õ": "o",
-        "ú": "u", "ü": "u",
+        "ó": "o",
+        "ô": "o",
+        "õ": "o",
+        "ú": "u",
+        "ü": "u",
         "ç": "c",
     }
     for orig, repl in replacements.items():

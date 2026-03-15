@@ -30,8 +30,7 @@ def _build_filters(
         conditions.append(Proposicao.tipo.notin_(SUBSTANTIVE_TYPES))
     if busca:
         conditions.append(
-            Proposicao.ementa.ilike(f"%{busca}%")
-            | Proposicao.resumo_cidadao.ilike(f"%{busca}%")
+            Proposicao.ementa.ilike(f"%{busca}%") | Proposicao.resumo_cidadao.ilike(f"%{busca}%")
         )
     return conditions
 
@@ -78,9 +77,7 @@ async def listar_proposicoes(
                 "numero": p.numero,
                 "ano": p.ano,
                 "ementa": (
-                    (p.ementa[:150] + "...")
-                    if p.ementa and len(p.ementa) > 150
-                    else p.ementa
+                    (p.ementa[:150] + "...") if p.ementa and len(p.ementa) > 150 else p.ementa
                 ),
                 "resumo_cidadao": p.resumo_cidadao,
                 "descricao_detalhada": p.descricao_detalhada,
@@ -105,11 +102,7 @@ async def obter_filtros(db: AsyncSession = Depends(get_db)):
         .group_by(Proposicao.tipo)
         .order_by(func.count(Proposicao.id).desc())
     )
-    anos_q = (
-        select(Proposicao.ano)
-        .distinct()
-        .order_by(Proposicao.ano.desc())
-    )
+    anos_q = select(Proposicao.ano).distinct().order_by(Proposicao.ano.desc())
 
     temas = await db.execute(temas_q)
     tipos = await db.execute(tipos_q)

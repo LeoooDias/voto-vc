@@ -58,9 +58,7 @@ async def obter_respostas(
     db: AsyncSession = Depends(get_db),
 ):
     result = await db.execute(
-        select(RespostaUsuario).where(
-            RespostaUsuario.usuario_id == usuario.id
-        )
+        select(RespostaUsuario).where(RespostaUsuario.usuario_id == usuario.id)
     )
     return [
         {
@@ -77,10 +75,6 @@ async def limpar_respostas(
     usuario: Usuario = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    await db.execute(
-        delete(RespostaUsuario).where(
-            RespostaUsuario.usuario_id == usuario.id
-        )
-    )
+    await db.execute(delete(RespostaUsuario).where(RespostaUsuario.usuario_id == usuario.id))
     await db.commit()
     return {"ok": True}

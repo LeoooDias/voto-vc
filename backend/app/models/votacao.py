@@ -29,9 +29,7 @@ class Votacao(Base, TimestampMixin):
 
 class VotoParlamentar(Base):
     __tablename__ = "votos_parlamentares"
-    __table_args__ = (
-        UniqueConstraint("votacao_id", "parlamentar_id", name="uq_voto_parlamentar"),
-    )
+    __table_args__ = (UniqueConstraint("votacao_id", "parlamentar_id", name="uq_voto_parlamentar"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
     votacao_id: Mapped[int] = mapped_column(ForeignKey("votacoes.id"), index=True)

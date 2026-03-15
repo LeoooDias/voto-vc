@@ -12,7 +12,9 @@ class SenadoClient(BaseAPIClient):
         super().__init__(SENADO_API)
 
     async def fetch_senadores(self, legislatura: int | None = None) -> list[dict]:
-        path = "senador/lista/atual" if not legislatura else f"senador/lista/legislatura/{legislatura}"
+        path = (
+            "senador/lista/atual" if not legislatura else f"senador/lista/legislatura/{legislatura}"
+        )
         data = await self.get(f"{path}.json")
         # Senado API nests data differently
         lista = data.get("ListaParlamentarEmExercicio", data.get("ListaParlamentarLegislatura", {}))

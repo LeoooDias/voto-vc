@@ -82,11 +82,7 @@ async def registrar(request: Request, body: RegistrarRequest, db: AsyncSession =
 async def login(request: Request, body: LoginRequest, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Usuario).where(Usuario.email == body.email))
     usuario = result.scalar_one_or_none()
-    if (
-        not usuario
-        or not usuario.senha_hash
-        or not verificar_senha(body.senha, usuario.senha_hash)
-    ):
+    if not usuario or not usuario.senha_hash or not verificar_senha(body.senha, usuario.senha_hash):
         raise HTTPException(status_code=401, detail="Credenciais inválidas")
     token = criar_token(str(usuario.id))
     return {"token": token, "usuario_id": str(usuario.id)}

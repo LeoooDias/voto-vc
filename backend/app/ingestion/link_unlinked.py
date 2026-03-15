@@ -223,7 +223,9 @@ async def link_unlinked_votacoes():
 
             logger.info(f"  Found {len(afetadas)} proposicoesAfetadas:")
             for p in afetadas:
-                logger.info(f"    - {p.get('siglaTipo')} {p.get('numero')}/{p.get('ano')} (id={p.get('id')})")
+                logger.info(
+                    f"    - {p.get('siglaTipo')} {p.get('numero')}/{p.get('ano')} (id={p.get('id')})"
+                )
 
             # Pick the main proposition
             main_prop = pick_main_proposition(afetadas)
@@ -242,20 +244,22 @@ async def link_unlinked_votacoes():
             proposicao = await find_proposicao_by_api_id(db, api_prop_id)
 
             if proposicao:
-                logger.info(f"  Found existing proposição: {proposicao.id_externo} (DB id={proposicao.id})")
+                logger.info(
+                    f"  Found existing proposição: {proposicao.id_externo} (DB id={proposicao.id})"
+                )
             else:
                 # Also check by tipo/numero/ano format (used by link_votacoes.py)
                 tipo = main_prop.get("siglaTipo", "")
                 numero = main_prop.get("numero", 0)
                 ano = main_prop.get("ano", 0)
                 alt_id = f"camara_prop_{tipo}_{numero}_{ano}"
-                result = await db.execute(
-                    select(Proposicao).where(Proposicao.id_externo == alt_id)
-                )
+                result = await db.execute(select(Proposicao).where(Proposicao.id_externo == alt_id))
                 proposicao = result.scalar_one_or_none()
 
                 if proposicao:
-                    logger.info(f"  Found existing proposição (alt format): {alt_id} (DB id={proposicao.id})")
+                    logger.info(
+                        f"  Found existing proposição (alt format): {alt_id} (DB id={proposicao.id})"
+                    )
                 else:
                     logger.info("  Proposição not in DB, creating...")
                     proposicao = await create_proposicao_from_api(

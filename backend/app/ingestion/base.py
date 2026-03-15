@@ -27,7 +27,9 @@ class BaseAPIClient:
                     return response.json()
             except (httpx.HTTPStatusError, httpx.RequestError) as e:
                 wait = min(2 ** (attempt + 1), 60)
-                logger.warning(f"Request failed (attempt {attempt + 1}/{retries}), retry in {wait}s: {e}")
+                logger.warning(
+                    f"Request failed (attempt {attempt + 1}/{retries}), retry in {wait}s: {e}"
+                )
                 if attempt == retries - 1:
                     raise
                 await asyncio.sleep(wait)

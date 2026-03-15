@@ -42,9 +42,7 @@ async def calcular(
     # Se user logado e não mandou respostas, usar as do DB
     if not respostas and usuario:
         result = await db.execute(
-            select(RespostaUsuario).where(
-                RespostaUsuario.usuario_id == usuario.id
-            )
+            select(RespostaUsuario).where(RespostaUsuario.usuario_id == usuario.id)
         )
         db_respostas = result.scalars().all()
         respostas = [

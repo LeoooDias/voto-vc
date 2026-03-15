@@ -21,9 +21,7 @@ class Topico(Base):
 class ProposicaoTopico(Base):
     __tablename__ = "proposicoes_topicos"
 
-    proposicao_id: Mapped[int] = mapped_column(
-        ForeignKey("proposicoes.id"), primary_key=True
-    )
+    proposicao_id: Mapped[int] = mapped_column(ForeignKey("proposicoes.id"), primary_key=True)
     topico_id: Mapped[int] = mapped_column(ForeignKey("topicos.id"), primary_key=True)
     confianca: Mapped[float] = mapped_column(default=1.0)
     metodo: Mapped[str] = mapped_column(String(20), default="heuristic")

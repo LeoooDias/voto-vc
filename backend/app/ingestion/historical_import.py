@@ -44,12 +44,14 @@ def generate_quarters(start_year: int, end_year: int) -> list[tuple[str, str]]:
     """Generate (start_date, end_date) pairs for each quarter."""
     quarters = []
     for year in range(start_year, end_year + 1):
-        quarters.extend([
-            (f"{year}-01-01", f"{year}-03-31"),
-            (f"{year}-04-01", f"{year}-06-30"),
-            (f"{year}-07-01", f"{year}-09-30"),
-            (f"{year}-10-01", f"{year}-12-31"),
-        ])
+        quarters.extend(
+            [
+                (f"{year}-01-01", f"{year}-03-31"),
+                (f"{year}-04-01", f"{year}-06-30"),
+                (f"{year}-07-01", f"{year}-09-30"),
+                (f"{year}-10-01", f"{year}-12-31"),
+            ]
+        )
     # Trim future quarters
     today = datetime.now().strftime("%Y-%m-%d")
     return [(s, min(e, today)) for s, e in quarters if s <= today]
@@ -120,16 +122,16 @@ async def historical_import(start_year: int = 1999, end_year: int = 2026):
         total_no_votes = 0
 
         for qi, (start_date, end_date) in enumerate(quarters):
-            logger.info(f"\n{'='*60}")
-            logger.info(f"Quarter {qi+1}/{len(quarters)}: {start_date} → {end_date}")
+            logger.info(f"\n{'=' * 60}")
+            logger.info(f"Quarter {qi + 1}/{len(quarters)}: {start_date} → {end_date}")
 
             votacoes = await fetch_all_votacoes_for_quarter(client, start_date, end_date)
 
             # Pre-filter: only votações with dataHoraRegistro (nominal) and vote count hints
             nominal = [
-                v for v in votacoes
-                if v.get("dataHoraRegistro")
-                and f"camara_{v.get('id', '')}" not in existing_vot_ids
+                v
+                for v in votacoes
+                if v.get("dataHoraRegistro") and f"camara_{v.get('id', '')}" not in existing_vot_ids
             ]
             already = sum(1 for v in votacoes if f"camara_{v.get('id', '')}" in existing_vot_ids)
             total_skipped += already
@@ -174,7 +176,11 @@ async def historical_import(start_year: int = 1999, end_year: int = 2026):
                 proposicao = None
 
                 # Check uriProposicaoPrincipal first
-                prop_uri = vot_raw.get("uriProposicaoPrincipal") or vot_raw.get("uriProposicaoObjeto") or ""
+                prop_uri = (
+                    vot_raw.get("uriProposicaoPrincipal")
+                    or vot_raw.get("uriProposicaoObjeto")
+                    or ""
+                )
                 prop_api_id = None
                 if "proposicoes" in prop_uri:
                     maybe_id = prop_uri.rstrip("/").split("/")[-1]
@@ -209,7 +215,11 @@ async def historical_import(start_year: int = 1999, end_year: int = 2026):
 
                                 if not proposicao:
                                     topics = classify_proposicao(ementa, tipo)
-                                    relevancia = round(min(sim, nao) / total_votes * 2, 3) if total_votes > 0 else 0
+                                    relevancia = (
+                                        round(min(sim, nao) / total_votes * 2, 3)
+                                        if total_votes > 0
+                                        else 0
+                                    )
 
                                     proposicao = Proposicao(
                                         id_externo=prop_id_externo,
@@ -218,10 +228,14 @@ async def historical_import(start_year: int = 1999, end_year: int = 2026):
                                         numero=numero,
                                         ano=ano,
                                         ementa=ementa,
-                                        ementa_simplificada=ementa[:200] if len(ementa) > 200 else None,
+                                        ementa_simplificada=ementa[:200]
+                                        if len(ementa) > 200
+                                        else None,
                                         resumo_cidadao=ementa,
                                         url_inteiro_teor=prop_raw.get("urlInteiroTeor"),
-                                        situacao=prop_raw.get("statusProposicao", {}).get("descricaoSituacao")
+                                        situacao=prop_raw.get("statusProposicao", {}).get(
+                                            "descricaoSituacao"
+                                        )
                                         if isinstance(prop_raw.get("statusProposicao"), dict)
                                         else None,
                                         relevancia_score=relevancia,
@@ -248,7 +262,10 @@ async def historical_import(start_year: int = 1999, end_year: int = 2026):
                         # Update relevância if needed
                         if total_votes > 0:
                             rel = round(min(sim, nao) / total_votes * 2, 3)
-                            if proposicao.relevancia_score is None or rel > proposicao.relevancia_score:
+                            if (
+                                proposicao.relevancia_score is None
+                                or rel > proposicao.relevancia_score
+                            ):
                                 proposicao.relevancia_score = rel
 
                 # Create votação
@@ -289,9 +306,7 @@ async def historical_import(start_year: int = 1999, end_year: int = 2026):
 
                     if not parl_db_id:
                         # Create parlamentar on-the-fly for historical deputies
-                        parl_db_id = await ensure_parlamentar(
-                            db, dep, parl_mapping
-                        )
+                        parl_db_id = await ensure_parlamentar(db, dep, parl_mapping)
                         if not parl_db_id:
                             continue
 
@@ -326,7 +341,7 @@ async def historical_import(start_year: int = 1999, end_year: int = 2026):
                 f"{total_skipped} skipped (existing), {total_no_votes} skipped (no nominal votes)"
             )
 
-        logger.info(f"\n{'='*60}")
+        logger.info(f"\n{'=' * 60}")
         logger.info(
             f"DONE! Imported {total_imported} nominal votações, "
             f"skipped {total_skipped} existing, {total_no_votes} non-nominal"
@@ -342,9 +357,7 @@ async def ensure_parlamentar(db: AsyncSession, dep_data: dict, parl_mapping: dic
     parl_ext = f"camara_{dep_id}"
 
     # Double-check DB
-    result = await db.execute(
-        select(Parlamentar).where(Parlamentar.id_externo == parl_ext)
-    )
+    result = await db.execute(select(Parlamentar).where(Parlamentar.id_externo == parl_ext))
     existing = result.scalar_one_or_none()
     if existing:
         parl_mapping[parl_ext] = existing.id

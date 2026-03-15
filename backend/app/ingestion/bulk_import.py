@@ -116,7 +116,7 @@ async def import_year(
     existing_prop_ids: set[str],
 ):
     """Import all data for a single year from JSON files."""
-    logger.info(f"\n{'='*60}")
+    logger.info(f"\n{'=' * 60}")
     logger.info(f"IMPORTING {ano}")
 
     # Load files
@@ -356,7 +356,9 @@ async def import_year(
     return imported_vot, imported_votos, imported_props
 
 
-async def bulk_import(start_year: int = 2003, end_year: int = 2026, data_dir: str = DEFAULT_DATA_DIR):
+async def bulk_import(
+    start_year: int = 2003, end_year: int = 2026, data_dir: str = DEFAULT_DATA_DIR
+):
     """Import all years from bulk JSON files."""
     logger.info(f"Bulk import from {data_dir}, years {start_year}-{end_year}")
 
@@ -384,14 +386,19 @@ async def bulk_import(start_year: int = 2003, end_year: int = 2026, data_dir: st
 
         for ano in range(start_year, end_year + 1):
             v, vo, p = await import_year(
-                db, ano, data_dir, parl_mapping, topico_mapping,
-                existing_vot_ids, existing_prop_ids,
+                db,
+                ano,
+                data_dir,
+                parl_mapping,
+                topico_mapping,
+                existing_vot_ids,
+                existing_prop_ids,
             )
             total_vot += v
             total_votos += vo
             total_props += p
 
-        logger.info(f"\n{'='*60}")
+        logger.info(f"\n{'=' * 60}")
         logger.info(
             f"BULK IMPORT COMPLETE: {total_vot} votações, "
             f"{total_votos} votos, {total_props} proposições"

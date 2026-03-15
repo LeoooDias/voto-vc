@@ -179,7 +179,9 @@ async def find_and_import_divisive_votes():
                         select(Votacao).where(Votacao.id_externo == vot_id_externo)
                     )
                     if not existing_vot.scalar_one_or_none():
-                        data_str = best_votacao.get("dataHoraRegistro") or best_votacao.get("data", "")
+                        data_str = best_votacao.get("dataHoraRegistro") or best_votacao.get(
+                            "data", ""
+                        )
                         try:
                             data_dt = datetime.fromisoformat(data_str)
                         except (ValueError, TypeError):
@@ -211,7 +213,10 @@ async def find_and_import_divisive_votes():
                                 continue
 
                             voto_str = {
-                                "Sim": "sim", "Não": "nao", "Abstenção": "abstencao", "Obstrução": "obstrucao"
+                                "Sim": "sim",
+                                "Não": "nao",
+                                "Abstenção": "abstencao",
+                                "Obstrução": "obstrucao",
                             }.get(vr.get("tipoVoto", ""), "ausente")
 
                             db.add(
@@ -226,7 +231,7 @@ async def find_and_import_divisive_votes():
                     found += 1
                     logger.info(
                         f"  [{found}/{target}] {tipo} {prop_raw.get('numero', '?')}/{ano} "
-                        f"({sim} sim / {nao} nao, div={round(best_divisiveness*100,1)}%) "
+                        f"({sim} sim / {nao} nao, div={round(best_divisiveness * 100, 1)}%) "
                         f"topics={[t.slug for t in topics[:3]]}"
                     )
                     await db.commit()

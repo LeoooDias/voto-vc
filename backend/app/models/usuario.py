@@ -23,9 +23,7 @@ class Usuario(Base, TimestampMixin):
 
 class RespostaUsuario(Base, TimestampMixin):
     __tablename__ = "respostas_usuarios"
-    __table_args__ = (
-        UniqueConstraint("usuario_id", "proposicao_id", name="uq_resposta_usuario"),
-    )
+    __table_args__ = (UniqueConstraint("usuario_id", "proposicao_id", name="uq_resposta_usuario"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
     usuario_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("usuarios.id"), index=True)

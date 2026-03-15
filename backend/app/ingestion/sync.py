@@ -166,12 +166,14 @@ async def sync_votacoes_camara(db: AsyncSession, camara: CamaraClient, max_pages
                         # Save topic classifications
                         for tc in topics:
                             if tc.slug in topico_mapping:
-                                db.add(ProposicaoTopico(
-                                    proposicao_id=proposicao.id,
-                                    topico_id=topico_mapping[tc.slug],
-                                    confianca=tc.confianca,
-                                    metodo="heuristic",
-                                ))
+                                db.add(
+                                    ProposicaoTopico(
+                                        proposicao_id=proposicao.id,
+                                        topico_id=topico_mapping[tc.slug],
+                                        confianca=tc.confianca,
+                                        metodo="heuristic",
+                                    )
+                                )
                 except Exception as e:
                     logger.warning(f"Failed to fetch proposição {prop_id_match}: {e}")
 
@@ -205,13 +207,15 @@ async def sync_votacoes_camara(db: AsyncSession, camara: CamaraClient, max_pages
                 parl_db_id = parl_mapping.get(voto_data["parlamentar_id_externo"])
                 if not parl_db_id:
                     continue
-                db.add(VotoParlamentar(
-                    votacao_id=votacao.id,
-                    parlamentar_id=parl_db_id,
-                    voto=voto_data["voto"],
-                    partido_na_epoca=voto_data.get("partido_na_epoca"),
-                    dados_brutos=voto_data.get("dados_brutos"),
-                ))
+                db.add(
+                    VotoParlamentar(
+                        votacao_id=votacao.id,
+                        parlamentar_id=parl_db_id,
+                        voto=voto_data["voto"],
+                        partido_na_epoca=voto_data.get("partido_na_epoca"),
+                        dados_brutos=voto_data.get("dados_brutos"),
+                    )
+                )
         except Exception as e:
             logger.warning(f"Failed to fetch votos for votação {vot_raw['id']}: {e}")
 
@@ -229,9 +233,7 @@ async def sync_votacoes_camara(db: AsyncSession, camara: CamaraClient, max_pages
 
 async def compute_relevancia(db: AsyncSession):
     """Set relevancia_score based on how divisive a vote was (close to 50/50 = more relevant)."""
-    result = await db.execute(
-        select(Votacao).where(Votacao.proposicao_id.is_not(None))
-    )
+    result = await db.execute(select(Votacao).where(Votacao.proposicao_id.is_not(None)))
     votacoes = result.scalars().all()
 
     for v in votacoes:

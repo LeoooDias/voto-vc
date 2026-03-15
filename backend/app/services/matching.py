@@ -38,15 +38,11 @@ def _score_parlamentar(
         total_weight += peso
         props_compared += 1
 
-        if (
-            user_voto.value == "sim" and parl_vote == TipoVoto.SIM
-        ) or (
+        if (user_voto.value == "sim" and parl_vote == TipoVoto.SIM) or (
             user_voto.value == "nao" and parl_vote == TipoVoto.NAO
         ):
             total_score += peso
-        elif (
-            user_voto.value == "sim" and parl_vote == TipoVoto.NAO
-        ) or (
+        elif (user_voto.value == "sim" and parl_vote == TipoVoto.NAO) or (
             user_voto.value == "nao" and parl_vote == TipoVoto.SIM
         ):
             total_score -= peso
@@ -67,9 +63,7 @@ async def _load_votes(
     Uses raw tuples and filters parlamentar_id in SQL for performance.
     """
     # Get votacao_id -> proposicao_id mapping
-    votacao_query = select(
-        Votacao.id, Votacao.proposicao_id
-    ).where(
+    votacao_query = select(Votacao.id, Votacao.proposicao_id).where(
         Votacao.proposicao_id.in_(proposicao_ids)
     )
     votacao_result = await db.execute(votacao_query)
@@ -95,9 +89,7 @@ async def _load_votes(
     for parl_id, votacao_id, voto in votos_result.all():
         prop_id = votacao_to_prop.get(votacao_id)
         if prop_id:
-            parlamentar_votos.setdefault(parl_id, {}).setdefault(
-                prop_id, []
-            ).append(voto)
+            parlamentar_votos.setdefault(parl_id, {}).setdefault(prop_id, []).append(voto)
 
     return parlamentar_votos
 
@@ -108,9 +100,7 @@ async def _load_parlamentar_ids(
     uf: str | None = None,
 ) -> list[tuple[int, int | None]]:
     """Load parlamentar (id, partido_id) tuples with optional filters."""
-    query = select(
-        Parlamentar.id, Parlamentar.partido_id
-    ).select_from(Parlamentar)
+    query = select(Parlamentar.id, Parlamentar.partido_id).select_from(Parlamentar)
     if casa:
         query = query.where(Parlamentar.casa == Casa(casa))
     if uf:

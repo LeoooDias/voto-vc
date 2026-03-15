@@ -301,10 +301,7 @@ class TestCalcularMatching:
         """Parlamentar who agrees on everything should score 100."""
         props, parl1, parl2, _, _ = await self._create_test_data(db, n_props=4)
 
-        respostas = [
-            MagicMock(proposicao_id=p.id, voto=VotoUsuario.SIM, peso=1.0)
-            for p in props
-        ]
+        respostas = [MagicMock(proposicao_id=p.id, voto=VotoUsuario.SIM, peso=1.0) for p in props]
 
         result = await calcular_matching(db, respostas=respostas)
         parlamentares = result["parlamentares"]
@@ -318,10 +315,7 @@ class TestCalcularMatching:
         """Parlamentar who disagrees on everything should score 0."""
         props, parl1, parl2, _, _ = await self._create_test_data(db, n_props=4)
 
-        respostas = [
-            MagicMock(proposicao_id=p.id, voto=VotoUsuario.SIM, peso=1.0)
-            for p in props
-        ]
+        respostas = [MagicMock(proposicao_id=p.id, voto=VotoUsuario.SIM, peso=1.0) for p in props]
 
         result = await calcular_matching(db, respostas=respostas)
         parlamentares = result["parlamentares"]
@@ -341,10 +335,7 @@ class TestCalcularMatching:
             parl2_votes=[TipoVoto.SIM, TipoVoto.SIM, TipoVoto.SIM, TipoVoto.SIM],
         )
 
-        respostas = [
-            MagicMock(proposicao_id=p.id, voto=VotoUsuario.SIM, peso=1.0)
-            for p in props
-        ]
+        respostas = [MagicMock(proposicao_id=p.id, voto=VotoUsuario.SIM, peso=1.0) for p in props]
 
         result = await calcular_matching(db, respostas=respostas)
         parlamentares = result["parlamentares"]
@@ -369,10 +360,7 @@ class TestCalcularMatching:
             parl2_votes=[TipoVoto.SIM, TipoVoto.SIM] + [TipoVoto.ABSTENCAO] * 10,
         )
 
-        respostas = [
-            MagicMock(proposicao_id=p.id, voto=VotoUsuario.SIM, peso=1.0)
-            for p in props
-        ]
+        respostas = [MagicMock(proposicao_id=p.id, voto=VotoUsuario.SIM, peso=1.0) for p in props]
 
         result = await calcular_matching(db, respostas=respostas)
         parlamentares = result["parlamentares"]
@@ -390,10 +378,7 @@ class TestCalcularMatching:
             parl2_votes=[TipoVoto.NAO] * 4,
         )
 
-        respostas = [
-            MagicMock(proposicao_id=p.id, voto=VotoUsuario.SIM, peso=1.0)
-            for p in props
-        ]
+        respostas = [MagicMock(proposicao_id=p.id, voto=VotoUsuario.SIM, peso=1.0) for p in props]
 
         result = await calcular_matching(db, respostas=respostas)
         partidos = result["partidos"]
@@ -413,10 +398,7 @@ class TestCalcularMatching:
         """UF filter should only return parlamentares from the given state."""
         props, parl1, parl2, _, _ = await self._create_test_data(db, n_props=4)
 
-        respostas = [
-            MagicMock(proposicao_id=p.id, voto=VotoUsuario.SIM, peso=1.0)
-            for p in props
-        ]
+        respostas = [MagicMock(proposicao_id=p.id, voto=VotoUsuario.SIM, peso=1.0) for p in props]
 
         # Both parlamentares are from RJ, so filtering by SP should return empty
         result = await calcular_matching(db, respostas=respostas, uf="SP")
@@ -435,10 +417,7 @@ class TestCalcularMatching:
             parl2_votes=[TipoVoto.SIM] * 4,
         )
 
-        respostas = [
-            MagicMock(proposicao_id=p.id, voto=VotoUsuario.SIM, peso=1.0)
-            for p in props
-        ]
+        respostas = [MagicMock(proposicao_id=p.id, voto=VotoUsuario.SIM, peso=1.0) for p in props]
 
         result = await calcular_matching(db, respostas=respostas)
         parlamentares = result["parlamentares"]

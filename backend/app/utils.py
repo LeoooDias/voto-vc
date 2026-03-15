@@ -1,9 +1,6 @@
 """Shared utilities."""
 
-_CAMARA_BASE = (
-    "https://www.camara.leg.br/proposicoesWeb"
-    "/fichadetramitacao?idProposicao="
-)
+_CAMARA_BASE = "https://www.camara.leg.br/proposicoesWeb/fichadetramitacao?idProposicao="
 
 
 def url_camara_from_id_externo(id_externo: str | None) -> str | None:
