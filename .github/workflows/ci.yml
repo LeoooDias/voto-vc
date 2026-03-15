@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   backend:
     runs-on: ubuntu-latest
@@ -51,6 +54,7 @@ jobs:
         working-directory: backend
         env:
           DATABASE_URL: postgresql+asyncpg://votovc:votovc@localhost:5432/votovc_test
+          PYTHONPATH: .
         run: uv run alembic upgrade head
 
   frontend:
