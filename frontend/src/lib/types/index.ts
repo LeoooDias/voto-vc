@@ -31,7 +31,7 @@ export interface PartidoMatchResult {
 	partido_id: number;
 	sigla: string;
 	nome: string;
-	score: number;
+	score: number | null;
 	parlamentares_comparados: number;
 }
 

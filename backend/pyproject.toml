@@ -14,12 +14,17 @@ dependencies = [
     "pydantic[email]>=2.0",
     "python-jose[cryptography]>=3.3",
     "passlib[bcrypt]>=1.7",
+    "slowapi>=0.1.9",
+    "redis>=5.0",
+    "structlog>=24.0",
 ]
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.25",
+    "pytest-httpx>=0.35",
+    "aiosqlite>=0.21",
     "ruff>=0.9",
 ]
 

@@ -5,6 +5,7 @@
 	import { authUser, authLoading } from '$lib/stores/auth';
 	import { selectedUf } from '$lib/stores/questionario';
 	import { get } from 'svelte/store';
+	import { UF_SIGLAS, getTema } from '$lib/constants';
 
 	interface VotoBreakdown {
 		sim?: number;
@@ -39,11 +40,6 @@
 		stats: Record<string, number>;
 		votos: PartidoVoto[];
 	}
-
-	const UFS = [
-		'AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS',
-		'MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'
-	];
 
 	let partido = $state<PartidoDetail | null>(null);
 	let error = $state(false);
@@ -185,25 +181,6 @@
 		return 'voto-outro';
 	}
 
-	const temaInfo: Record<string, { label: string; cor: string }> = {
-		economia: { label: 'Economia', cor: '#2563EB' },
-		tributacao: { label: 'Tributação', cor: '#7C3AED' },
-		saude: { label: 'Saúde', cor: '#DC2626' },
-		educacao: { label: 'Educação', cor: '#EA580C' },
-		'meio-ambiente': { label: 'Meio Ambiente', cor: '#16A34A' },
-		seguranca: { label: 'Segurança', cor: '#475569' },
-		'direitos-humanos': { label: 'Direitos Humanos', cor: '#DB2777' },
-		trabalho: { label: 'Trabalho', cor: '#CA8A04' },
-		agricultura: { label: 'Agricultura', cor: '#65A30D' },
-		defesa: { label: 'Defesa', cor: '#0F766E' },
-		tecnologia: { label: 'Tecnologia', cor: '#6366F1' },
-		corrupcao: { label: 'Transparência', cor: '#B91C1C' },
-		previdencia: { label: 'Previdência', cor: '#78716C' },
-		habitacao: { label: 'Habitação', cor: '#0891B2' },
-		transporte: { label: 'Transporte', cor: '#F59E0B' },
-		cultura: { label: 'Cultura', cor: '#A855F7' },
-		geral: { label: 'Legislação', cor: '#6B7280' }
-	};
 </script>
 
 <svelte:head>
@@ -215,7 +192,7 @@
 		<h1>De qual estado?</h1>
 		<p class="uf-subtitle">Filtrar parlamentares do partido por estado</p>
 		<div class="uf-grid">
-			{#each UFS as sigla}
+			{#each UF_SIGLAS as sigla}
 				<button class="uf-btn" onclick={() => escolherUf(sigla)}>
 					{sigla}
 				</button>
@@ -299,7 +276,7 @@
 										<span class="voto-tipo">{voto.proposicao_tipo} {voto.proposicao_numero}/{voto.proposicao_ano}</span>
 									{/if}
 									{#if voto.tema}
-										{@const info = temaInfo[voto.tema] ?? temaInfo.geral}
+										{@const info = getTema(voto.tema)}
 										<span class="tema-tag" style="background: {info.cor}1a; color: {info.cor}; border-color: {info.cor}33">{info.label}</span>
 									{/if}
 								</div>

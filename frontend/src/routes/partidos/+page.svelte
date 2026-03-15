@@ -6,11 +6,7 @@
 	import type { PartidoMatchResult, MatchResponse } from '$lib/types';
 	import { goto } from '$app/navigation';
 	import { get } from 'svelte/store';
-
-	const UFS = [
-		'AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS',
-		'MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'
-	];
+	import { UF_SIGLAS } from '$lib/constants';
 
 	let results: PartidoMatchResult[] = $state([]);
 	let isLoading = $state(true);
@@ -26,6 +22,9 @@
 		[...results].sort((a, b) => {
 			const va = a[sortKey];
 			const vb = b[sortKey];
+			if (va == null && vb == null) return 0;
+			if (va == null) return 1;
+			if (vb == null) return -1;
 			if (typeof va === 'string' && typeof vb === 'string') {
 				return sortAsc ? va.localeCompare(vb, 'pt-BR') : vb.localeCompare(va, 'pt-BR');
 			}
@@ -132,7 +131,7 @@
 		<h1>De qual estado?</h1>
 		<p class="uf-subtitle">Filtrar partidos por estado</p>
 		<div class="uf-grid">
-			{#each UFS as sigla}
+			{#each UF_SIGLAS as sigla}
 				<button class="uf-btn" onclick={() => escolherUf(sigla)}>{sigla}</button>
 			{/each}
 		</div>
@@ -190,9 +189,13 @@
 							</td>
 							<td class="col-num">{result.parlamentares_comparados}</td>
 							<td class="col-score">
-								<span class="score" class:high={result.score >= 70} class:mid={result.score >= 40 && result.score < 70} class:low={result.score < 40}>
-									{result.score}%
-								</span>
+								{#if result.score != null}
+									<span class="score" class:high={result.score >= 70} class:mid={result.score >= 40 && result.score < 70} class:low={result.score < 40}>
+										{result.score}%
+									</span>
+								{:else}
+									<span class="score-na" title="Dados insuficientes">N/A</span>
+								{/if}
 							</td>
 						</tr>
 					{/each}
@@ -332,6 +335,13 @@
 	.high { color: #16a34a; }
 	.mid { color: #ca8a04; }
 	.low { color: #dc2626; }
+
+	.score-na {
+		color: var(--text-secondary);
+		font-style: italic;
+		font-size: 0.813rem;
+		cursor: help;
+	}
 
 	.pagination {
 		display: flex;

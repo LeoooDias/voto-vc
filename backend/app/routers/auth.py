@@ -1,9 +1,11 @@
 import urllib.parse
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, EmailStr
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,6 +17,7 @@ from app.models.base import ProvedorAuth
 from app.models.usuario import Usuario
 
 router = APIRouter()
+limiter = Limiter(key_func=get_remote_address)
 
 GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
@@ -37,7 +40,7 @@ def _set_auth_cookie(response: RedirectResponse, token: str) -> None:
     )
 
 
-# --- Email/senha (existente) ---
+# --- Email/senha ---
 
 
 class RegistrarRequest(BaseModel):
@@ -53,16 +56,17 @@ class LoginRequest(BaseModel):
 
 
 @router.post("/registrar")
-async def registrar(request: RegistrarRequest, db: AsyncSession = Depends(get_db)):
-    existente = await db.execute(select(Usuario).where(Usuario.email == request.email))
+@limiter.limit(settings.rate_limit_auth)
+async def registrar(request: Request, body: RegistrarRequest, db: AsyncSession = Depends(get_db)):
+    existente = await db.execute(select(Usuario).where(Usuario.email == body.email))
     if existente.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Email já cadastrado")
 
     usuario = Usuario(
-        email=request.email,
-        senha_hash=hash_senha(request.senha),
-        nome=request.nome,
-        uf=request.uf,
+        email=body.email,
+        senha_hash=hash_senha(body.senha),
+        nome=body.nome,
+        uf=body.uf,
         anonimo=False,
         provedor_auth=ProvedorAuth.EMAIL,
     )
@@ -74,13 +78,14 @@ async def registrar(request: RegistrarRequest, db: AsyncSession = Depends(get_db
 
 
 @router.post("/login")
-async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Usuario).where(Usuario.email == request.email))
+@limiter.limit(settings.rate_limit_auth)
+async def login(request: Request, body: LoginRequest, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Usuario).where(Usuario.email == body.email))
     usuario = result.scalar_one_or_none()
     if (
         not usuario
         or not usuario.senha_hash
-        or not verificar_senha(request.senha, usuario.senha_hash)
+        or not verificar_senha(body.senha, usuario.senha_hash)
     ):
         raise HTTPException(status_code=401, detail="Credenciais inválidas")
     token = criar_token(str(usuario.id))
@@ -107,7 +112,6 @@ async def google_login():
 
 @router.get("/google/callback")
 async def google_callback(code: str, db: AsyncSession = Depends(get_db)):
-    # Trocar code por access_token
     async with httpx.AsyncClient() as client:
         token_resp = await client.post(
             GOOGLE_TOKEN_URL,
@@ -127,7 +131,6 @@ async def google_callback(code: str, db: AsyncSession = Depends(get_db)):
     if not access_token:
         raise HTTPException(status_code=400, detail="Token do Google inválido")
 
-    # Buscar dados do user
     async with httpx.AsyncClient() as client:
         userinfo_resp = await client.get(
             GOOGLE_USERINFO_URL,
@@ -141,7 +144,6 @@ async def google_callback(code: str, db: AsyncSession = Depends(get_db)):
     email = userinfo.get("email")
     nome = userinfo.get("name")
 
-    # Buscar user por provedor_id (Google)
     result = await db.execute(
         select(Usuario).where(
             Usuario.provedor_auth == ProvedorAuth.GOOGLE,
@@ -151,18 +153,15 @@ async def google_callback(code: str, db: AsyncSession = Depends(get_db)):
     usuario = result.scalar_one_or_none()
 
     if not usuario and email:
-        # Fallback: buscar por email (account linking)
         result = await db.execute(select(Usuario).where(Usuario.email == email))
         usuario = result.scalar_one_or_none()
         if usuario:
-            # Link existing account to Google
             usuario.provedor_auth = ProvedorAuth.GOOGLE
             usuario.provedor_id = google_id
             if not usuario.nome and nome:
                 usuario.nome = nome
 
     if not usuario:
-        # Criar novo user
         usuario = Usuario(
             email=email,
             nome=nome,
@@ -202,14 +201,14 @@ class AtualizarPerfilRequest(BaseModel):
 
 @router.patch("/me")
 async def atualizar_perfil(
-    request: AtualizarPerfilRequest,
+    body: AtualizarPerfilRequest,
     usuario: Usuario = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    if request.uf is not None:
-        usuario.uf = request.uf.upper() if request.uf else None
-    if request.nome is not None:
-        usuario.nome = request.nome or None
+    if body.uf is not None:
+        usuario.uf = body.uf.upper() if body.uf else None
+    if body.nome is not None:
+        usuario.nome = body.nome or None
     await db.commit()
     await db.refresh(usuario)
     return {

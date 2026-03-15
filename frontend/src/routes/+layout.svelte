@@ -4,6 +4,7 @@
 	import { initTheme } from '$lib/stores/theme';
 	import { respostas, carregarRespostas } from '$lib/stores/questionario';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
+	import Toast from '$lib/components/Toast.svelte';
 
 	let { children } = $props();
 	let settingsOpen = $state(false);
@@ -72,6 +73,7 @@
 </div>
 
 <SettingsModal bind:open={settingsOpen} />
+<Toast />
 
 <style>
 	:global(:root),

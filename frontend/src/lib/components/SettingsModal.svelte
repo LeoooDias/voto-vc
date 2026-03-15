@@ -2,16 +2,12 @@
 	import { authUser, checkAuth } from '$lib/stores/auth';
 	import { theme, setTheme, type Theme } from '$lib/stores/theme';
 	import { respostas, selectedUf as selectedUfStore } from '$lib/stores/questionario';
+	import { UF_SIGLAS } from '$lib/constants';
 	import { get } from 'svelte/store';
 
 	let { open = $bindable(false) } = $props();
 	let confirmingDelete = $state(false);
 	let deleting = $state(false);
-
-	const UFS = [
-		'AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS',
-		'MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'
-	];
 
 	let selectedUf = $state(get(authUser)?.uf ?? '');
 	let currentTheme: Theme = $state(get(theme));
@@ -101,7 +97,7 @@
 					<div class="uf-row">
 						<select bind:value={selectedUf} onchange={saveUf}>
 							<option value="">Selecione...</option>
-							{#each UFS as uf}
+							{#each UF_SIGLAS as uf}
 								<option value={uf}>{uf}</option>
 							{/each}
 						</select>

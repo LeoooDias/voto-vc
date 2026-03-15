@@ -6,11 +6,7 @@
 	import type { MatchResult, MatchResponse } from '$lib/types';
 	import { goto } from '$app/navigation';
 	import { get } from 'svelte/store';
-
-	const UFS = [
-		'AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS',
-		'MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'
-	];
+	import { UF_SIGLAS } from '$lib/constants';
 
 	let results: MatchResult[] = $state([]);
 	let isLoading = $state(true);
@@ -136,7 +132,7 @@
 		<h1>De qual estado?</h1>
 		<p class="uf-subtitle">Filtrar parlamentares por estado</p>
 		<div class="uf-grid">
-			{#each UFS as sigla}
+			{#each UF_SIGLAS as sigla}
 				<button class="uf-btn" onclick={() => escolherUf(sigla)}>{sigla}</button>
 			{/each}
 		</div>

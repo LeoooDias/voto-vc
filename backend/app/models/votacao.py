@@ -12,7 +12,7 @@ class Votacao(Base, TimestampMixin):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     id_externo: Mapped[str] = mapped_column(String(50), unique=True, index=True)
-    proposicao_id: Mapped[int | None] = mapped_column(ForeignKey("proposicoes.id"))
+    proposicao_id: Mapped[int | None] = mapped_column(ForeignKey("proposicoes.id"), index=True)
     casa: Mapped[Casa]
     data: Mapped[datetime]
     descricao: Mapped[str | None] = mapped_column(Text)

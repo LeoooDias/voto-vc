@@ -1,15 +1,19 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
 from app.core.deps import get_optional_user
 from app.database import get_db
 from app.models.base import VotoUsuario
 from app.models.usuario import RespostaUsuario, Usuario
-from app.services.matching import ranking_parlamentares, ranking_partidos
+from app.services.matching import calcular_matching
 
 router = APIRouter()
+limiter = Limiter(key_func=get_remote_address)
 
 
 class RespostaItem(BaseModel):
@@ -26,12 +30,14 @@ class CalcularRequest(BaseModel):
 
 
 @router.post("/calcular")
+@limiter.limit(settings.rate_limit_matching)
 async def calcular(
-    request: CalcularRequest,
+    request: Request,
+    body: CalcularRequest,
     db: AsyncSession = Depends(get_db),
     usuario: Usuario | None = Depends(get_optional_user),
 ):
-    respostas = request.respostas
+    respostas = body.respostas
 
     # Se user logado e não mandou respostas, usar as do DB
     if not respostas and usuario:
@@ -50,16 +56,10 @@ async def calcular(
             for r in db_respostas
         ]
 
-    parlamentares, partidos = await ranking_parlamentares(
+    return await calcular_matching(
         db,
         respostas=respostas,
-        casa=request.casa,
-        uf=request.uf,
-        limit=min(request.limit, 1000),
-    ), await ranking_partidos(
-        db,
-        respostas=respostas,
-        casa=request.casa,
-        uf=request.uf,
+        casa=body.casa,
+        uf=body.uf,
+        limit=min(body.limit, 1000),
     )
-    return {"parlamentares": parlamentares, "partidos": partidos}

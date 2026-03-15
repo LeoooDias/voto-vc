@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: votovc_test
+          POSTGRES_USER: votovc
+          POSTGRES_PASSWORD: votovc
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Setup Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        working-directory: backend
+        run: uv sync --frozen
+
+      - name: Lint
+        working-directory: backend
+        run: |
+          uv run ruff check app/ tests/
+          uv run ruff format --check app/ tests/
+
+      - name: Run tests
+        working-directory: backend
+        run: uv run pytest tests/ -v --tb=short
+
+      - name: Run migrations check
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql+asyncpg://votovc:votovc@localhost:5432/votovc_test
+        run: uv run alembic upgrade head
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install pnpm
+        run: corepack enable && corepack prepare pnpm@latest --activate
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        working-directory: frontend
+        run: pnpm check
+
+      - name: Run tests
+        working-directory: frontend
+        run: pnpm test

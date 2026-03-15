@@ -1,4 +1,4 @@
-.PHONY: dev stop migrate sync-full sync-incremental test lint
+.PHONY: dev stop migrate sync-full sync-incremental test lint ci check
 
 dev:
 	docker compose up -d
@@ -16,9 +16,11 @@ sync-incremental:
 	cd backend && uv run python -m app.ingestion.sync --incremental
 
 test:
-	cd backend && uv run pytest
+	cd backend && uv run pytest tests/ -v
 	cd frontend && pnpm test
 
 lint:
-	cd backend && uv run ruff check . && uv run ruff format --check .
-	cd frontend && pnpm lint
+	cd backend && uv run ruff check app/ tests/ && uv run ruff format --check app/ tests/
+	cd frontend && pnpm check
+
+ci: lint test

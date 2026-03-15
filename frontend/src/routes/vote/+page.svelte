@@ -13,40 +13,7 @@
 	import type { QuestionarioItem, RespostaItem } from '$lib/types';
 	import { goto } from '$app/navigation';
 	import { get } from 'svelte/store';
-
-	const TIER1 = 10;
-	const TIER2 = 25;
-	const TIER3 = 50;
-
-	const UFS = [
-		{ sigla: 'AC', nome: 'Acre' },
-		{ sigla: 'AL', nome: 'Alagoas' },
-		{ sigla: 'AP', nome: 'Amapá' },
-		{ sigla: 'AM', nome: 'Amazonas' },
-		{ sigla: 'BA', nome: 'Bahia' },
-		{ sigla: 'CE', nome: 'Ceará' },
-		{ sigla: 'DF', nome: 'Distrito Federal' },
-		{ sigla: 'ES', nome: 'Espírito Santo' },
-		{ sigla: 'GO', nome: 'Goiás' },
-		{ sigla: 'MA', nome: 'Maranhão' },
-		{ sigla: 'MT', nome: 'Mato Grosso' },
-		{ sigla: 'MS', nome: 'Mato Grosso do Sul' },
-		{ sigla: 'MG', nome: 'Minas Gerais' },
-		{ sigla: 'PA', nome: 'Pará' },
-		{ sigla: 'PB', nome: 'Paraíba' },
-		{ sigla: 'PR', nome: 'Paraná' },
-		{ sigla: 'PE', nome: 'Pernambuco' },
-		{ sigla: 'PI', nome: 'Piauí' },
-		{ sigla: 'RJ', nome: 'Rio de Janeiro' },
-		{ sigla: 'RN', nome: 'Rio Grande do Norte' },
-		{ sigla: 'RS', nome: 'Rio Grande do Sul' },
-		{ sigla: 'RO', nome: 'Rondônia' },
-		{ sigla: 'RR', nome: 'Roraima' },
-		{ sigla: 'SC', nome: 'Santa Catarina' },
-		{ sigla: 'SP', nome: 'São Paulo' },
-		{ sigla: 'SE', nome: 'Sergipe' },
-		{ sigla: 'TO', nome: 'Tocantins' }
-	];
+	import { UFS, TIER1, TIER2, TIER3, getTema } from '$lib/constants';
 
 	let uf = $state(get(selectedUf));
 	let loaded = $state(false);
@@ -176,25 +143,6 @@
 		goto('/resultado');
 	}
 
-	const temaInfo: Record<string, { label: string; cor: string }> = {
-		economia: { label: 'Economia', cor: '#2563EB' },
-		tributacao: { label: 'Tributação', cor: '#7C3AED' },
-		saude: { label: 'Saúde', cor: '#DC2626' },
-		educacao: { label: 'Educação', cor: '#EA580C' },
-		'meio-ambiente': { label: 'Meio Ambiente', cor: '#16A34A' },
-		seguranca: { label: 'Segurança', cor: '#475569' },
-		'direitos-humanos': { label: 'Direitos Humanos', cor: '#DB2777' },
-		trabalho: { label: 'Trabalho', cor: '#CA8A04' },
-		agricultura: { label: 'Agricultura', cor: '#65A30D' },
-		defesa: { label: 'Defesa', cor: '#0F766E' },
-		tecnologia: { label: 'Tecnologia', cor: '#6366F1' },
-		corrupcao: { label: 'Transparência', cor: '#B91C1C' },
-		previdencia: { label: 'Previdência', cor: '#78716C' },
-		habitacao: { label: 'Habitação', cor: '#0891B2' },
-		transporte: { label: 'Transporte', cor: '#F59E0B' },
-		cultura: { label: 'Cultura', cor: '#A855F7' },
-		geral: { label: 'Legislação', cor: '#6B7280' }
-	};
 </script>
 
 <svelte:head>
@@ -256,10 +204,10 @@
 		<div class="card">
 			<div class="card-header">
 				<span class="tipo">{currentItems[idx].tipo} {currentItems[idx].numero}/{currentItems[idx].ano}</span>
-				{#if temaInfo[currentItems[idx].tema]}
-					<span class="tema-tag" style="background: {temaInfo[currentItems[idx].tema].cor}1a; color: {temaInfo[currentItems[idx].tema].cor}; border-color: {temaInfo[currentItems[idx].tema].cor}33">{temaInfo[currentItems[idx].tema].label}</span>
+				{#if getTema(currentItems[idx].tema)}
+					<span class="tema-tag" style="background: {getTema(currentItems[idx].tema).cor}1a; color: {getTema(currentItems[idx].tema).cor}; border-color: {getTema(currentItems[idx].tema).cor}33">{getTema(currentItems[idx].tema).label}</span>
 				{:else}
-					<span class="tema-tag" style="background: {temaInfo.geral.cor}1a; color: {temaInfo.geral.cor}; border-color: {temaInfo.geral.cor}33">{temaInfo.geral.label}</span>
+					<span class="tema-tag" style="background: {getTema('geral').cor}1a; color: {getTema('geral').cor}; border-color: {getTema('geral').cor}33">{getTema('geral').label}</span>
 				{/if}
 			</div>
 			<p class="resumo">{currentItems[idx].resumo}</p>

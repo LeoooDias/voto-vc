@@ -1,12 +1,15 @@
 name: Deploy to AWS
 
 on:
-  push:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
     branches: [main]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - uses: actions/checkout@v5
 
@@ -37,10 +40,11 @@ jobs:
             docker build -f Dockerfile.backend.prod -t votovc-backend:latest .
             docker build -f Dockerfile.frontend.prod -t votovc-frontend:latest .
 
-            # Update compose to use local images
-            cd /opt/votovc
+            # Run migrations
+            docker compose run --rm backend alembic upgrade head
 
             # Stop old containers (keep db running)
+            cd /opt/votovc
             docker compose stop backend frontend nginx 2>/dev/null || true
             docker compose rm -f backend frontend nginx 2>/dev/null || true
 
@@ -50,3 +54,14 @@ jobs:
             echo "Deploy complete!"
             docker compose ps
           EOF
+
+      - name: Health check
+        run: |
+          echo "Waiting for services to start..."
+          sleep 15
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://voto.vc/api/health || true)
+          if [ "$STATUS" = "200" ]; then
+            echo "Health check passed!"
+          else
+            echo "Warning: health check returned $STATUS"
+          fi

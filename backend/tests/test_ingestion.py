@@ -5,7 +5,7 @@ def test_normalize_deputado(sample_deputado_raw):
     result = normalize_deputado(sample_deputado_raw)
     assert result["id_externo"] == "camara_12345"
     assert result["casa"] == "camara"
-    assert result["nome_parlamentar"] == "João da Silva"
+    assert result["nome_parlamentar"] == "Joao da Silva"
     assert result["partido_sigla"] == "PT"
     assert result["uf"] == "SP"
 

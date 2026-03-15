@@ -112,9 +112,13 @@
 							<div class="nome">{result.sigla}</div>
 							<div class="meta">{result.nome} · {result.parlamentares_comparados} parlamentar{result.parlamentares_comparados !== 1 ? 'es' : ''}</div>
 						</div>
-						<div class="score" class:high={result.score >= 70} class:mid={result.score >= 40 && result.score < 70} class:low={result.score < 40}>
-							{result.score}%
-						</div>
+						{#if result.score != null}
+							<div class="score" class:high={result.score >= 70} class:mid={result.score >= 40 && result.score < 70} class:low={result.score < 40}>
+								{result.score}%
+							</div>
+						{:else}
+							<div class="score score-na" title="Dados insuficientes">N/A</div>
+						{/if}
 					</a>
 				{/each}
 			</div>
@@ -224,6 +228,13 @@
 	.high { color: #16a34a; }
 	.mid { color: #ca8a04; }
 	.low { color: #dc2626; }
+
+	.score-na {
+		color: var(--text-secondary) !important;
+		font-style: italic;
+		font-size: 0.875rem;
+		cursor: help;
+	}
 
 	.cta-section {
 		text-align: center;
