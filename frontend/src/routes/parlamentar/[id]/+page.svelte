@@ -6,6 +6,7 @@
 	import { getTema } from '$lib/constants';
 	import { respostas, carregarRespostas } from '$lib/stores/questionario';
 	import { authUser, authLoading } from '$lib/stores/auth';
+	import { resultados } from '$lib/stores/resultado';
 
 	interface ParlamentarDetail {
 		id: number;
@@ -65,15 +66,28 @@
 	let comparacao = $derived.by(() => {
 		let concordou = 0;
 		let discordou = 0;
+		const seen = new Set<number>();
 		for (const voto of allVotos) {
 			if (!voto.proposicao_id) continue;
+			if (seen.has(voto.proposicao_id)) continue;
 			const meuVoto = userVotoMap.get(voto.proposicao_id);
 			if (!meuVoto) continue;
 			if (voto.voto !== 'sim' && voto.voto !== 'nao') continue;
+			seen.add(voto.proposicao_id);
 			if (meuVoto === voto.voto) concordou++;
 			else discordou++;
 		}
-		return { concordou, discordou, total: concordou + discordou };
+		const total = concordou + discordou;
+		const score = total > 0 ? Math.round(((concordou - discordou) / total + 1) * 50 * 10) / 10 : null;
+		return { concordou, discordou, total, score };
+	});
+
+	// Score from matching results (if available)
+	let matchScore = $derived.by(() => {
+		const id = parlamentar?.id;
+		if (!id) return null;
+		const match = get(resultados).find((r) => r.parlamentar_id === id);
+		return match?.score ?? null;
 	});
 
 	function buildUserVotoMap(lista: Array<{ proposicao_id: number; voto: string; peso: number }>) {
@@ -202,6 +216,12 @@
 			<div class="comparacao">
 				<h2>Comparação com seus votos</h2>
 				<div class="comparacao-stats">
+					{#if comparacao.score != null}
+						<div class="comp-item alinhamento" class:high={comparacao.score >= 70} class:mid={comparacao.score >= 40 && comparacao.score < 70} class:low={comparacao.score < 40}>
+							<span class="comp-count">{comparacao.score}%</span>
+							<span class="comp-label">Alinhamento</span>
+						</div>
+					{/if}
 					<div class="comp-item concordou">
 						<span class="comp-count">{comparacao.concordou}</span>
 						<span class="comp-label">Concordaram</span>
@@ -609,6 +629,10 @@
 	.comp-item.concordou .comp-count { color: #16a34a; }
 	.comp-item.discordou .comp-count { color: #dc2626; }
 	.comp-item.total .comp-count { color: var(--link); }
+	.comp-item.alinhamento .comp-count { font-size: 1.75rem; }
+	.comp-item.alinhamento.high .comp-count { color: #16a34a; }
+	.comp-item.alinhamento.mid .comp-count { color: #ca8a04; }
+	.comp-item.alinhamento.low .comp-count { color: #dc2626; }
 
 	.filter-toggles {
 		display: flex;

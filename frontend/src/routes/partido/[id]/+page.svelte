@@ -75,7 +75,9 @@
 			if (meuVoto === mv) concordou++;
 			else discordou++;
 		}
-		return { concordou, discordou, total: concordou + discordou };
+		const total = concordou + discordou;
+		const score = total > 0 ? Math.round(((concordou - discordou) / total + 1) * 50 * 10) / 10 : null;
+		return { concordou, discordou, total, score };
 	});
 
 	function buildUserVotoMap(lista: Array<{ proposicao_id: number; voto: string; peso: number }>) {
@@ -298,6 +300,12 @@
 			<div class="comparacao">
 				<h2>Comparação com seus votos</h2>
 				<div class="comparacao-stats">
+					{#if comparacao.score != null}
+						<div class="comp-item alinhamento" class:high={comparacao.score >= 70} class:mid={comparacao.score >= 40 && comparacao.score < 70} class:low={comparacao.score < 40}>
+							<span class="comp-count">{comparacao.score}%</span>
+							<span class="comp-label">Alinhamento</span>
+						</div>
+					{/if}
 					<div class="comp-item concordou">
 						<span class="comp-count">{comparacao.concordou}</span>
 						<span class="comp-label">Concordaram</span>
@@ -776,6 +784,10 @@
 	.comp-item.concordou .comp-count { color: #16a34a; }
 	.comp-item.discordou .comp-count { color: #dc2626; }
 	.comp-item.total .comp-count { color: var(--link); }
+	.comp-item.alinhamento .comp-count { font-size: 1.5rem; }
+	.comp-item.alinhamento.high .comp-count { color: #16a34a; }
+	.comp-item.alinhamento.mid .comp-count { color: #ca8a04; }
+	.comp-item.alinhamento.low .comp-count { color: #dc2626; }
 
 	.filter-toggles {
 		display: flex;
