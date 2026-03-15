@@ -1,8 +1,11 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
+	import { get } from 'svelte/store';
 	import { api } from '$lib/api';
 	import { getTema } from '$lib/constants';
+	import { respostas, carregarRespostas } from '$lib/stores/questionario';
+	import { authUser, authLoading } from '$lib/stores/auth';
 
 	interface ParlamentarDetail {
 		id: number;
@@ -37,22 +40,79 @@
 
 	let parlamentar = $state<ParlamentarDetail | null>(null);
 	let error = $state(false);
-	let expandedId: number | null = $state(null);
+	let expandedIdx: number | null = $state(null);
 	let soSubstantivas = $state(false);
+	let soMeusVotos = $state(false);
+	let userVotoMap = $state<Map<number, 'sim' | 'nao'>>(new Map());
 
 	let allVotos = $derived((parlamentar?.votos ?? []) as VotoHistory[]);
 
-	let votosVisiveis = $derived<VotoHistory[]>(
-		soSubstantivas
-			? allVotos.filter((v: VotoHistory) => v.substantiva)
-			: allVotos
-	);
+	let votosVisiveis = $derived.by(() => {
+		let v = allVotos;
+		if (soSubstantivas) v = v.filter((x: VotoHistory) => x.substantiva);
+		if (soMeusVotos) v = v.filter((x: VotoHistory) => x.proposicao_id && userVotoMap.has(x.proposicao_id));
+		return v;
+	});
 
 	let countSubstantivas = $derived(
 		allVotos.filter((v: VotoHistory) => v.substantiva).length
 	);
 
+	let comparacao = $derived.by(() => {
+		let concordou = 0;
+		let discordou = 0;
+		for (const voto of allVotos) {
+			if (!voto.proposicao_id) continue;
+			const meuVoto = userVotoMap.get(voto.proposicao_id);
+			if (!meuVoto) continue;
+			if (voto.voto !== 'sim' && voto.voto !== 'nao') continue;
+			if (meuVoto === voto.voto) concordou++;
+			else discordou++;
+		}
+		return { concordou, discordou, total: concordou + discordou };
+	});
+
+	function buildUserVotoMap(lista: Array<{ proposicao_id: number; voto: string; peso: number }>) {
+		const map = new Map<number, 'sim' | 'nao'>();
+		for (const r of lista) {
+			if (r.voto === 'sim' || r.voto === 'nao') {
+				map.set(r.proposicao_id, r.voto);
+			}
+		}
+		userVotoMap = map;
+	}
+
 	onMount(async () => {
+		// Load user votes
+		const storeRespostas = get(respostas);
+		if (storeRespostas.length > 0) {
+			buildUserVotoMap(storeRespostas);
+		} else {
+			// Try loading from DB for logged-in users
+			function tryLoadRespostas() {
+				const user = get(authUser);
+				if (user) {
+					carregarRespostas().then((r) => {
+						if (r.length > 0) {
+							respostas.set(r);
+							buildUserVotoMap(r);
+						}
+					});
+				}
+			}
+			if (!get(authLoading)) {
+				tryLoadRespostas();
+			} else {
+				const unsub = authLoading.subscribe((loading) => {
+					if (!loading) {
+						unsub();
+						tryLoadRespostas();
+					}
+				});
+			}
+		}
+
+		// Load parlamentar
 		try {
 			parlamentar = await api.get<ParlamentarDetail>(`/parlamentares/${page.params.id}`);
 		} catch (e) {
@@ -61,9 +121,8 @@
 		}
 	});
 
-	function toggleExpand(proposicaoId: number | null) {
-		if (!proposicaoId) return;
-		expandedId = expandedId === proposicaoId ? null : proposicaoId;
+	function toggleExpand(idx: number) {
+		expandedIdx = expandedIdx === idx ? null : idx;
 	}
 
 	function votoLabel(voto: string): string {
@@ -135,27 +194,60 @@
 			</div>
 		{/if}
 
+		{#if comparacao.total > 0}
+			<div class="comparacao">
+				<h2>Comparação com seus votos</h2>
+				<div class="comparacao-stats">
+					<div class="comp-item concordou">
+						<span class="comp-count">{comparacao.concordou}</span>
+						<span class="comp-label">Concordaram</span>
+					</div>
+					<div class="comp-item discordou">
+						<span class="comp-count">{comparacao.discordou}</span>
+						<span class="comp-label">Discordaram</span>
+					</div>
+					<div class="comp-item total">
+						<span class="comp-count">{comparacao.total}</span>
+						<span class="comp-label">Comparados</span>
+					</div>
+				</div>
+			</div>
+		{/if}
+
 		{#if parlamentar.votos.length > 0}
 			<div class="historico">
 				<div class="historico-header">
 					<h2>Histórico de votações</h2>
-					{#if countSubstantivas > 0 && countSubstantivas < parlamentar.votos.length}
-						<label class="filter-toggle">
-							<input type="checkbox" bind:checked={soSubstantivas} />
-							Só proposições substantivas ({countSubstantivas})
-						</label>
-					{/if}
+					<div class="filter-toggles">
+						{#if countSubstantivas > 0 && countSubstantivas < parlamentar.votos.length}
+							<label class="filter-toggle">
+								<input type="checkbox" bind:checked={soSubstantivas} />
+								Só substantivas ({countSubstantivas})
+							</label>
+						{/if}
+						{#if userVotoMap.size > 0}
+							<label class="filter-toggle">
+								<input type="checkbox" bind:checked={soMeusVotos} />
+								Só proposições que votei
+							</label>
+						{/if}
+					</div>
 				</div>
 
-				{#each votosVisiveis as voto}
+				{#each votosVisiveis as voto, idx}
 					{@const hasDetails = voto.substantiva && (voto.resumo_cidadao || voto.descricao_detalhada)}
-					{@const isExpanded = expandedId === voto.proposicao_id}
+					{@const isExpanded = expandedIdx === idx}
+					{@const meuVoto = voto.proposicao_id ? userVotoMap.get(voto.proposicao_id) : undefined}
+					{@const comparavel = meuVoto && (voto.voto === 'sim' || voto.voto === 'nao')}
+					{@const concordou = comparavel && meuVoto === voto.voto}
 					<button
 						type="button"
 						class="voto-card"
 						class:expandable={hasDetails}
 						class:expanded={isExpanded}
-						onclick={() => hasDetails && toggleExpand(voto.proposicao_id)}
+						class:card-concordou={comparavel && concordou}
+						class:card-discordou={comparavel && !concordou}
+						onclick={() => hasDetails && toggleExpand(idx)}
 					>
 						<div class="voto-main">
 							<span class="voto-badge {votoClass(voto.voto)}">{votoLabel(voto.voto)}</span>
@@ -172,6 +264,16 @@
 								<p class="voto-ementa">
 									{voto.proposicao_ementa ?? voto.descricao_votacao ?? 'Sem descrição'}
 								</p>
+								{#if meuVoto}
+									<div class="meu-voto-row">
+										<span class="meu-voto-label">Seu voto: {meuVoto === 'sim' ? 'A favor' : 'Contra'}</span>
+										{#if comparavel}
+											<span class="match-badge {concordou ? 'match-concordou' : 'match-discordou'}">
+												{concordou ? 'Concordou' : 'Discordou'}
+											</span>
+										{/if}
+									</div>
+								{/if}
 								{#if voto.data}
 									<span class="voto-data">{formatDate(voto.data)}</span>
 								{/if}
@@ -441,6 +543,90 @@
 	}
 
 	.back:hover { text-decoration: underline; }
+
+	/* Comparação */
+	.comparacao {
+		margin-bottom: 2rem;
+	}
+
+	.comparacao h2 {
+		margin-bottom: 1rem;
+	}
+
+	.comparacao-stats {
+		display: flex;
+		gap: 1rem;
+		flex-wrap: wrap;
+	}
+
+	.comp-item {
+		background: var(--bg-card);
+		border: 1px solid var(--border);
+		border-radius: 12px;
+		padding: 1rem 1.25rem;
+		text-align: center;
+		min-width: 80px;
+	}
+
+	.comp-count {
+		display: block;
+		font-size: 1.5rem;
+		font-weight: 700;
+	}
+
+	.comp-label {
+		font-size: 0.8rem;
+		color: var(--text-secondary);
+	}
+
+	.comp-item.concordou .comp-count { color: #16a34a; }
+	.comp-item.discordou .comp-count { color: #dc2626; }
+	.comp-item.total .comp-count { color: var(--link); }
+
+	.filter-toggles {
+		display: flex;
+		gap: 1rem;
+		flex-wrap: wrap;
+	}
+
+	/* User vote on cards */
+	.voto-card.card-concordou {
+		border-left: 3px solid #16a34a;
+	}
+
+	.voto-card.card-discordou {
+		border-left: 3px solid #dc2626;
+	}
+
+	.meu-voto-row {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin-top: 0.4rem;
+	}
+
+	.meu-voto-label {
+		font-size: 0.8rem;
+		color: var(--text-secondary);
+		font-weight: 500;
+	}
+
+	.match-badge {
+		font-size: 0.7rem;
+		font-weight: 700;
+		padding: 0.1rem 0.5rem;
+		border-radius: 20px;
+	}
+
+	.match-concordou {
+		background: #16a34a1a;
+		color: #16a34a;
+	}
+
+	.match-discordou {
+		background: #dc26261a;
+		color: #dc2626;
+	}
 
 	.loading, .empty {
 		text-align: center;
