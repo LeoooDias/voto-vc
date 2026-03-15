@@ -36,6 +36,9 @@
 					{#if perfilEnabled}
 						<a href="/parlamentares">Parlamentares</a>
 						<a href="/partidos">Partidos</a>
+					{:else}
+						<span class="nav-disabled">Parlamentares</span>
+						<span class="nav-disabled">Partidos</span>
 					{/if}
 					<a href="/proposicoes">Proposições</a>
 					<span class="nav-sep">|</span>
