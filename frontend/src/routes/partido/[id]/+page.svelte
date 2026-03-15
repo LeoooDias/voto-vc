@@ -64,21 +64,7 @@
 	let hasMore = $derived(votosFiltrados.length > showLimit);
 	let countSubstantivas = $derived(allVotos.filter((v) => v.substantiva).length);
 
-	let comparacao = $derived.by(() => {
-		let concordou = 0;
-		let discordou = 0;
-		for (const voto of allVotos) {
-			const meuVoto = userVotoMap.get(voto.proposicao_id);
-			if (!meuVoto) continue;
-			const mv = mainVoto(voto.breakdown);
-			if (mv !== 'sim' && mv !== 'nao') continue;
-			if (meuVoto === mv) concordou++;
-			else discordou++;
-		}
-		const total = concordou + discordou;
-		const score = total > 0 ? Math.round(((concordou - discordou) / total + 1) * 50 * 10) / 10 : null;
-		return { concordou, discordou, total, score };
-	});
+	let comparacao = $state<{ concordou: number; discordou: number; total: number; score: number | null; parlamentares_comparados?: number }>({ concordou: 0, discordou: 0, total: 0, score: null });
 
 	function buildUserVotoMap(lista: Array<{ proposicao_id: number; voto: string; peso: number }>) {
 		const map = new Map<number, 'sim' | 'nao'>();
@@ -90,11 +76,24 @@
 		userVotoMap = map;
 	}
 
+	let userRespostas: Array<{ proposicao_id: number; voto: string; peso: number }> = [];
+
+	async function loadComparacao() {
+		if (userRespostas.length === 0) return;
+		try {
+			const ufParam = escopo === 'estado' && ufSelecionada ? ufSelecionada : undefined;
+			comparacao = await api.post(`/partidos/${page.params.id}/comparacao`, { respostas: userRespostas, uf: ufParam });
+		} catch (e) {
+			console.error('Failed to load comparação:', e);
+		}
+	}
+
 	async function loadPartido() {
 		try {
 			const ufParam = escopo === 'estado' && ufSelecionada ? `?uf=${ufSelecionada}` : '';
 			showLimit = 100;
 			partido = await api.get<PartidoDetail>(`/partidos/${page.params.id}${ufParam}`);
+			loadComparacao();
 		} catch (e) {
 			console.error('Failed to load partido:', e);
 			error = true;
@@ -123,6 +122,7 @@
 		const storeRespostas = get(respostas);
 		if (storeRespostas.length > 0) {
 			buildUserVotoMap(storeRespostas);
+			userRespostas = storeRespostas;
 		}
 
 		// Esperar auth resolver para ter UF do perfil
@@ -140,6 +140,7 @@
 					if (r.length > 0) {
 						respostas.set(r);
 						buildUserVotoMap(r);
+						userRespostas = r;
 					}
 				});
 			}

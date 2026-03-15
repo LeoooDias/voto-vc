@@ -193,19 +193,6 @@
 		<h1>Seu alinhamento político</h1>
 		<p class="subtitle">Baseado nos seus {totalRespostas} votos</p>
 
-		<div class="escopo-toggle">
-			<button
-				class="escopo-btn"
-				class:active={escopo === 'brasil'}
-				onclick={() => setEscopo('brasil')}
-			>Brasil</button>
-			<button
-				class="escopo-btn"
-				class:active={escopo === 'estado'}
-				onclick={() => setEscopo('estado')}
-			>Meu estado{ufSelecionada ? ` (${ufSelecionada})` : ''}</button>
-		</div>
-
 		<div class="tabs">
 			<button class="tab" class:active={tab === 'partidos'} onclick={() => selectTab('partidos')}>
 				Partidos
@@ -217,6 +204,21 @@
 				Votos
 			</button>
 		</div>
+
+		{#if tab !== 'votos'}
+			<div class="escopo-toggle">
+				<button
+					class="escopo-btn"
+					class:active={escopo === 'brasil'}
+					onclick={() => setEscopo('brasil')}
+				>Brasil</button>
+				<button
+					class="escopo-btn"
+					class:active={escopo === 'estado'}
+					onclick={() => setEscopo('estado')}
+				>Meu estado{ufSelecionada ? ` (${ufSelecionada})` : ''}</button>
+			</div>
+		{/if}
 
 		{#if tab === 'parlamentares'}
 			<div class="lista">

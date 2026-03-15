@@ -1,15 +1,28 @@
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from app.database import get_db
+from app.models.base import VotoUsuario
 from app.models.parlamentar import Parlamentar
 from app.models.proposicao import Proposicao
 from app.models.votacao import Votacao, VotoParlamentar
+from app.services.matching import comparar_parlamentar
 from app.utils import url_camara_from_id_externo
 
 router = APIRouter()
+
+
+class RespostaItem(BaseModel):
+    proposicao_id: int
+    voto: VotoUsuario
+    peso: float = 1.0
+
+
+class CompararRequest(BaseModel):
+    respostas: list[RespostaItem]
 
 
 @router.get("/")
@@ -121,3 +134,12 @@ async def obter_parlamentar(parlamentar_id: int, db: AsyncSession = Depends(get_
         "stats": stats,
         "votos": votos_history,
     }
+
+
+@router.post("/{parlamentar_id}/comparacao")
+async def comparar(
+    parlamentar_id: int,
+    body: CompararRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    return await comparar_parlamentar(db, parlamentar_id, body.respostas)

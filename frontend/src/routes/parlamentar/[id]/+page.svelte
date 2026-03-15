@@ -6,7 +6,6 @@
 	import { getTema } from '$lib/constants';
 	import { respostas, carregarRespostas } from '$lib/stores/questionario';
 	import { authUser, authLoading } from '$lib/stores/auth';
-	import { resultados } from '$lib/stores/resultado';
 
 	interface ParlamentarDetail {
 		id: number;
@@ -63,32 +62,7 @@
 		allVotos.filter((v: VotoHistory) => v.substantiva).length
 	);
 
-	let comparacao = $derived.by(() => {
-		let concordou = 0;
-		let discordou = 0;
-		const seen = new Set<number>();
-		for (const voto of allVotos) {
-			if (!voto.proposicao_id) continue;
-			if (seen.has(voto.proposicao_id)) continue;
-			const meuVoto = userVotoMap.get(voto.proposicao_id);
-			if (!meuVoto) continue;
-			if (voto.voto !== 'sim' && voto.voto !== 'nao') continue;
-			seen.add(voto.proposicao_id);
-			if (meuVoto === voto.voto) concordou++;
-			else discordou++;
-		}
-		const total = concordou + discordou;
-		const score = total > 0 ? Math.round(((concordou - discordou) / total + 1) * 50 * 10) / 10 : null;
-		return { concordou, discordou, total, score };
-	});
-
-	// Score from matching results (if available)
-	let matchScore = $derived.by(() => {
-		const id = parlamentar?.id;
-		if (!id) return null;
-		const match = get(resultados).find((r) => r.parlamentar_id === id);
-		return match?.score ?? null;
-	});
+	let comparacao = $state<{ concordou: number; discordou: number; total: number; score: number | null }>({ concordou: 0, discordou: 0, total: 0, score: null });
 
 	function buildUserVotoMap(lista: Array<{ proposicao_id: number; voto: string; peso: number }>) {
 		const map = new Map<number, 'sim' | 'nao'>();
@@ -100,26 +74,34 @@
 		userVotoMap = map;
 	}
 
+	async function loadComparacao(lista: Array<{ proposicao_id: number; voto: string; peso: number }>) {
+		if (lista.length === 0) return;
+		try {
+			comparacao = await api.post(`/parlamentares/${page.params.id}/comparacao`, { respostas: lista });
+		} catch (e) {
+			console.error('Failed to load comparação:', e);
+		}
+	}
+
 	onMount(async () => {
 		// Load user votes
-		const storeRespostas = get(respostas);
-		if (storeRespostas.length > 0) {
-			buildUserVotoMap(storeRespostas);
-		} else {
+		let userRespostas = get(respostas);
+		if (userRespostas.length === 0) {
 			// Try loading from DB for logged-in users
-			function tryLoadRespostas() {
+			async function tryLoadRespostas() {
 				const user = get(authUser);
 				if (user) {
-					carregarRespostas().then((r) => {
-						if (r.length > 0) {
-							respostas.set(r);
-							buildUserVotoMap(r);
-						}
-					});
+					const r = await carregarRespostas();
+					if (r.length > 0) {
+						respostas.set(r);
+						userRespostas = r;
+						buildUserVotoMap(r);
+						loadComparacao(r);
+					}
 				}
 			}
 			if (!get(authLoading)) {
-				tryLoadRespostas();
+				await tryLoadRespostas();
 			} else {
 				const unsub = authLoading.subscribe((loading) => {
 					if (!loading) {
@@ -128,6 +110,9 @@
 					}
 				});
 			}
+		} else {
+			buildUserVotoMap(userRespostas);
+			loadComparacao(userRespostas);
 		}
 
 		// Load parlamentar
