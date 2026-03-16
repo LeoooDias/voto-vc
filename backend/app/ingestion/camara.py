@@ -41,6 +41,10 @@ class CamaraClient(BaseAPIClient):
         data = await self.get(f"votacoes/{votacao_id}/votos")
         return data.get("dados", [])
 
+    async def fetch_orientacoes(self, votacao_id: str) -> list[dict]:
+        data = await self.get(f"votacoes/{votacao_id}/orientacoes")
+        return data.get("dados", [])
+
     async def fetch_proposicao(self, proposicao_id: str) -> dict:
         data = await self.get(f"proposicoes/{proposicao_id}")
         return data.get("dados", {})

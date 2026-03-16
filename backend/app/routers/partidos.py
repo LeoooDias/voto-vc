@@ -153,13 +153,17 @@ async def obter_partido(
         all_votacao_ids.extend(ids)
 
     if all_votacao_ids:
-        orientacoes = await _orientacao_efetiva_batch(db, partido.sigla, all_votacao_ids)
-        for prop_id, vot_ids in prop_votacao_ids.items():
-            for vot_id in vot_ids:
-                o = orientacoes.get(vot_id)
-                if o is not None:
-                    prop_map[prop_id]["orientacao"] = o.value
-                    break
+        try:
+            orientacoes = await _orientacao_efetiva_batch(db, partido.sigla, all_votacao_ids)
+            for prop_id, vot_ids in prop_votacao_ids.items():
+                for vot_id in vot_ids:
+                    o = orientacoes.get(vot_id)
+                    if o is not None:
+                        prop_map[prop_id]["orientacao"] = o.value
+                        break
+        except Exception:
+            # Table may not exist yet (migration pending)
+            pass
 
     return {
         "id": partido.id,
