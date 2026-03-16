@@ -34,9 +34,14 @@ def upgrade() -> None:
     )
     op.create_index("ix_blocos_parlamentares_sigla_csv", "blocos_parlamentares", ["sigla_csv"])
 
-    # Create orientacao enum
+    # Create orientacao enum (DO block handles "already exists" gracefully)
+    op.execute(
+        "DO $$ BEGIN "
+        "CREATE TYPE orientacao AS ENUM ('sim', 'nao', 'abstencao', 'obstrucao', 'liberado'); "
+        "EXCEPTION WHEN duplicate_object THEN null; "
+        "END $$;"
+    )
     orientacao_enum = sa.Enum("sim", "nao", "abstencao", "obstrucao", "liberado", name="orientacao")
-    orientacao_enum.create(op.get_bind(), checkfirst=True)
 
     # Create orientacoes_bancada table
     op.create_table(
@@ -58,7 +63,7 @@ def downgrade() -> None:
     op.drop_index("idx_orientacoes_votacao", "orientacoes_bancada")
     op.drop_table("orientacoes_bancada")
 
-    sa.Enum(name="orientacao").drop(op.get_bind(), checkfirst=True)
+    op.execute("DROP TYPE IF EXISTS orientacao")
 
     op.drop_index("ix_blocos_parlamentares_sigla_csv", "blocos_parlamentares")
     op.drop_column("blocos_parlamentares", "sigla_csv")
