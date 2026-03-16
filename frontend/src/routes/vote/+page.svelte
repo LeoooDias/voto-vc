@@ -125,6 +125,19 @@
 		}
 	}
 
+	function avancar() {
+		if (idx + 1 < currentItems.length) {
+			currentIndex.set(idx + 1);
+		}
+	}
+
+	let canAdvance = $derived.by(() => {
+		if (idx + 1 >= currentItems.length) return false;
+		const pid = currentItems[idx]?.proposicao_id;
+		if (!pid) return false;
+		return get(respostas).some((r) => r.proposicao_id === pid);
+	});
+
 	function votar(voto: 'sim' | 'nao' | 'pular') {
 		if (!currentItems[idx]) return;
 
@@ -210,12 +223,12 @@
 		{#if reachedTier3}
 			<div class="meta-banner success">
 				Perfil expert! {answeredCount} respostas. Altíssima precisão.
-				<button class="btn-resultado" onclick={verResultado}>Ver meu resultado</button>
+				<button class="btn-resultado" onclick={verResultado}>Ver meu perfil</button>
 			</div>
 		{:else if reachedTier2}
 			<div class="meta-banner success">
 				Perfil avançado! Quanto mais você responder, mais preciso fica.
-				<button class="btn-resultado" onclick={verResultado}>Ver meu resultado</button>
+				<button class="btn-resultado" onclick={verResultado}>Ver meu perfil</button>
 			</div>
 		{:else if canFinish}
 			<div class="meta-banner ready">
@@ -245,10 +258,11 @@
 		</div>
 
 		<div class="actions">
-			<button class="btn-voltar" onclick={voltar} disabled={idx === 0} aria-label="Voltar">&#8592;</button>
+			<button class="btn-nav" onclick={voltar} disabled={idx === 0} aria-label="Voltar">&#8592;</button>
 			<button class="btn nao" class:selected={respostaAtual?.voto === 'nao'} onclick={() => votar('nao')}>Contra</button>
 			<button class="btn pular" class:selected={respostaAtual?.voto === 'pular'} onclick={() => votar('pular')}>Pular</button>
 			<button class="btn sim" class:selected={respostaAtual?.voto === 'sim'} onclick={() => votar('sim')}>A favor</button>
+			<button class="btn-nav" onclick={avancar} disabled={!canAdvance} aria-label="Avançar">&#8594;</button>
 		</div>
 	</div>
 {/if}
@@ -423,15 +437,14 @@
 
 	.actions {
 		display: flex;
-		gap: 0.75rem;
+		gap: 0.5rem;
 		margin-top: 1.5rem;
 		justify-content: center;
-		align-items: center;
+		align-items: stretch;
 	}
 
-	.btn-voltar {
+	.btn-nav {
 		width: 44px;
-		height: 44px;
 		flex-shrink: 0;
 		border: 1px solid var(--border);
 		border-radius: 12px;
@@ -445,18 +458,18 @@
 		justify-content: center;
 	}
 
-	.btn-voltar:hover:not(:disabled) {
+	.btn-nav:hover:not(:disabled) {
 		border-color: var(--link);
 		color: var(--text-primary);
 	}
 
-	.btn-voltar:disabled {
+	.btn-nav:disabled {
 		opacity: 0.3;
 		cursor: default;
 	}
 
 	.btn {
-		padding: 0.875rem 2rem;
+		padding: 0.875rem 0.5rem;
 		border: 2px solid transparent;
 		border-radius: 12px;
 		font-size: 1rem;

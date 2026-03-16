@@ -6,16 +6,58 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.proposicao import Proposicao
 from app.utils import url_camara_from_id_externo
 
+# 25 proposições âncora — sempre apresentadas primeiro a novos usuários.
+# Selecionadas manualmente por relevância pública e cobertura de votações nominais.
+ANCHOR_IDS: set[int] = {
+    173,  # PEC 18/2025 — PEC da Segurança Pública
+    174,  # PL 6139/2023 — Marco do Crédito à Exportação
+    1192,  # PL 2159/2021 — Lei do Licenciamento Ambiental
+    1285,  # PL 4015/2023 — Proteção a Agentes Públicos
+    1288,  # PLP 93/2023 — Novo Arcabouço Fiscal
+    1297,  # PL 1891/2023 — Estupro Virtual
+    1298,  # PL 3050/2023 — Inclusão Escolar do Autismo
+    1300,  # PL 1825/2023 — Semana Cultural nas Escolas
+    1309,  # PL 3626/2023 — Lei das Apostas (Bets)
+    1316,  # PLP 68/2024 — Reforma Tributária do Consumo
+    1336,  # PLP 121/2024 — Renegociação das Dívidas dos Estados
+    1416,  # PL 4392/2025 — Estatuto do Pantanal
+    1426,  # MPV 1301/2025 — Programa Agora Tem Especialistas
+    1427,  # PL 358/2025 — Regras da COP30
+    1430,  # PL 1087/2025 — IR Mais Justo
+    1433,  # MPV 1303/2025 — Tributação de Investimentos
+    1434,  # PL 1924/2025 — Lei da Primeira Infância
+    1449,  # PL 420/2025 — Infraestrutura Sustentável
+    1456,  # PL 2947/2025 — Educação Climática nas Empresas
+    1468,  # PL 4709/2025 — Golpe do Falso Advogado
+    1473,  # PL 5582/2025 — Lei Antifacções
+    1477,  # MPV 1308/2025 — Licenciamento Simplificado
+    1482,  # PLP 128/2025 — Corte de Benefícios Fiscais
+    1487,  # PL 68/2026 — Remédio Mais Barato (Quebra de Patente)
+    1494,  # PL 278/2026 — Lei do Datacenter
+}
+
+
+def _serialize(p: Proposicao) -> dict:
+    return {
+        "proposicao_id": p.id,
+        "tipo": p.tipo,
+        "numero": p.numero,
+        "ano": p.ano,
+        "resumo": p.resumo_cidadao,
+        "descricao_detalhada": p.descricao_detalhada,
+        "tema": p.tema or "geral",
+        "url_camara": url_camara_from_id_externo(p.id_externo),
+    }
+
 
 async def montar_questionario(
     db: AsyncSession,
-    n_items: int = 25,
+    n_items: int = 50,
 ) -> list[dict]:
     """Select proposições for the questionnaire.
 
-    Fetches all available proposições, then selects n_items ensuring
-    topic diversity: picks round-robin from each topic before filling
-    remaining slots with the most divisive ones.
+    Phase 1: all anchor proposições (shuffled).
+    Phase 2: round-robin by tema, ordered by relevancia_score DESC.
     """
     substantive_types = ["PL", "PEC", "MPV", "PLP", "PDL", "MIP"]
     query = (
@@ -28,23 +70,26 @@ async def montar_questionario(
     result = await db.execute(query)
     all_props = result.scalars().all()
 
-    # Group by topic (from DB column, fallback to "geral")
+    # Phase 1: anchors first (shuffled)
+    anchors = [p for p in all_props if p.id in ANCHOR_IDS]
+    random.shuffle(anchors)
+
+    selected: list = list(anchors)
+    selected_ids: set[int] = {p.id for p in anchors}
+
+    if len(selected) >= n_items:
+        return [_serialize(p) for p in selected[:n_items]]
+
+    # Phase 2: round-robin by tema, ordered by relevancia_score DESC
+    # (all_props already sorted by relevancia_score DESC from the query)
     by_topic: dict[str, list] = {}
     for p in all_props:
+        if p.id in selected_ids:
+            continue
         topic = p.tema or "geral"
         by_topic.setdefault(topic, []).append(p)
 
-    # Shuffle within each topic
-    for props in by_topic.values():
-        random.shuffle(props)
-
-    # Round-robin: pick one from each topic until we have enough
-    selected: list = []
-    selected_ids: set[int] = set()
-    topics = list(by_topic.keys())
-    random.shuffle(topics)
-
-    # Phase 1: round-robin across topics (ensures diversity)
+    topics = sorted(by_topic.keys())
     round_idx = 0
     while len(selected) < n_items:
         added_any = False
@@ -53,37 +98,10 @@ async def montar_questionario(
                 break
             pool = by_topic[topic]
             if round_idx < len(pool):
-                p = pool[round_idx]
-                if p.id not in selected_ids:
-                    selected.append(p)
-                    selected_ids.add(p.id)
-                    added_any = True
+                selected.append(pool[round_idx])
+                added_any = True
         round_idx += 1
         if not added_any:
             break
 
-    # Phase 2: fill remaining slots with most divisive not yet selected
-    if len(selected) < n_items:
-        for p in all_props:
-            if len(selected) >= n_items:
-                break
-            if p.id not in selected_ids:
-                selected.append(p)
-                selected_ids.add(p.id)
-
-    # Shuffle final order so user doesn't see topic clustering
-    random.shuffle(selected)
-
-    return [
-        {
-            "proposicao_id": p.id,
-            "tipo": p.tipo,
-            "numero": p.numero,
-            "ano": p.ano,
-            "resumo": p.resumo_cidadao,
-            "descricao_detalhada": p.descricao_detalhada,
-            "tema": p.tema or "geral",
-            "url_camara": url_camara_from_id_externo(p.id_externo),
-        }
-        for p in selected
-    ]
+    return [_serialize(p) for p in selected]

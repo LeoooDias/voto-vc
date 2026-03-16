@@ -41,3 +41,6 @@ select = ["E", "F", "I", "N", "W", "UP"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+filterwarnings = [
+    "ignore:'crypt' is deprecated:DeprecationWarning",
+]

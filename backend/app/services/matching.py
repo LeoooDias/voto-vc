@@ -296,7 +296,7 @@ async def calcular_matching(
                 partido_scores[partido_id].append(result)
 
     # --- Parlamentar results ---
-    parl_scores.sort(key=lambda x: x[1], reverse=True)
+    parl_scores.sort(key=lambda x: (-x[1], x[0]))
     top_ids = [s[0] for s in parl_scores[:limit]]
 
     parlamentar_results = []
@@ -355,6 +355,7 @@ async def calcular_matching(
         key=lambda x: (
             -x["score"] if x["score"] is not None else float("inf"),
             x["sigla"],
+            x["partido_id"],
         )
     )
 
