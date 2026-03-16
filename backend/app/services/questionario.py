@@ -43,6 +43,7 @@ def _serialize(p: Proposicao) -> dict:
         "tipo": p.tipo,
         "numero": p.numero,
         "ano": p.ano,
+        "ementa": p.ementa,
         "resumo": p.resumo_cidadao,
         "descricao_detalhada": p.descricao_detalhada,
         "tema": p.tema or "geral",
