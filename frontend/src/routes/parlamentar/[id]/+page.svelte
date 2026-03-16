@@ -58,6 +58,20 @@
 	let votosVisiveis = $derived(votosFiltrados.slice(0, showLimit));
 	let hasMore = $derived(votosFiltrados.length > showLimit);
 
+	// Track first occurrence of each proposicao_id (most recent vote, used for comparison)
+	let firstOccurrence = $derived.by(() => {
+		const set = new Set<number>();
+		const first = new Set<number>();
+		for (let i = 0; i < votosFiltrados.length; i++) {
+			const pid = votosFiltrados[i].proposicao_id;
+			if (pid && !set.has(pid)) {
+				set.add(pid);
+				first.add(i);
+			}
+		}
+		return first;
+	});
+
 	let countSubstantivas = $derived(
 		allVotos.filter((v: VotoHistory) => v.substantiva).length
 	);
@@ -247,7 +261,8 @@
 					{@const hasDetails = voto.substantiva && (voto.resumo_cidadao || voto.descricao_detalhada)}
 					{@const isExpanded = expandedIdx === idx}
 					{@const meuVoto = voto.proposicao_id ? userVotoMap.get(voto.proposicao_id) : undefined}
-					{@const comparavel = meuVoto && (voto.voto === 'sim' || voto.voto === 'nao')}
+					{@const isFirst = firstOccurrence.has(idx)}
+					{@const comparavel = isFirst && meuVoto && (voto.voto === 'sim' || voto.voto === 'nao')}
 					{@const concordou = comparavel && meuVoto === voto.voto}
 					<button
 						type="button"
