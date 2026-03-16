@@ -30,6 +30,7 @@
 		descricao_votacao: string | null;
 		substantiva: boolean;
 		breakdown: VotoBreakdown;
+		orientacao: 'sim' | 'nao' | 'abstencao' | 'obstrucao' | 'liberado' | null;
 	}
 
 	interface PartidoDetail {
@@ -66,6 +67,26 @@
 
 	let comparacao = $state<{ concordou: number; discordou: number; total: number; score: number | null; parlamentares_comparados?: number }>({ concordou: 0, discordou: 0, total: 0, score: null });
 
+	interface AlinhamentoResult {
+		sigla_partido: string;
+		alinhamento_score: number | null;
+		metodo: string;
+		votacoes_consideradas: number;
+		votacoes_liberadas: number;
+		votacoes_sem_orientacao: number;
+		votacoes_com_divergencia: number;
+		votacoes_fallback_distribuicao: number;
+	}
+
+	interface DisciplinaResult {
+		disciplina: number | null;
+		votacoes_analisadas: number;
+		votacoes_liberadas: number;
+	}
+
+	let alinhamento = $state<AlinhamentoResult | null>(null);
+	let disciplina = $state<DisciplinaResult | null>(null);
+
 	function buildUserVotoMap(lista: Array<{ proposicao_id: number; voto: string; peso: number }>) {
 		const map = new Map<number, 'sim' | 'nao'>();
 		for (const r of lista) {
@@ -88,12 +109,31 @@
 		}
 	}
 
+	async function loadAlinhamento() {
+		if (userRespostas.length === 0 || !partido) return;
+		try {
+			alinhamento = await api.post<AlinhamentoResult>(`/partidos/${partido.sigla}/alinhamento`, { respostas: userRespostas });
+		} catch (e) {
+			console.error('Failed to load alinhamento:', e);
+		}
+	}
+
+	async function loadDisciplina() {
+		try {
+			disciplina = await api.get<DisciplinaResult>(`/partidos/${page.params.id}/disciplina`);
+		} catch (e) {
+			console.error('Failed to load disciplina:', e);
+		}
+	}
+
 	async function loadPartido() {
 		try {
 			const ufParam = escopo === 'estado' && ufSelecionada ? `?uf=${ufSelecionada}` : '';
 			showLimit = 100;
 			partido = await api.get<PartidoDetail>(`/partidos/${page.params.id}${ufParam}`);
 			loadComparacao();
+			loadAlinhamento();
+			loadDisciplina();
 		} catch (e) {
 			console.error('Failed to load partido:', e);
 			error = true;
@@ -191,7 +231,7 @@
 		return 'bd-outro';
 	}
 
-	function mainVoto(bd: VotoBreakdown): string {
+	function mainVotoFromBreakdown(bd: VotoBreakdown): string {
 		const sim = bd.sim ?? 0;
 		const nao = bd.nao ?? 0;
 		const abs = (bd.abstencao ?? 0) + (bd.obstrucao ?? 0) + (bd.ausente ?? 0) + (bd.presente_sem_voto ?? 0);
@@ -200,18 +240,42 @@
 		return 'dividido';
 	}
 
-	function mainVotoLabel(bd: VotoBreakdown): string {
-		const v = mainVoto(bd);
-		if (v === 'sim') return 'A favor';
-		if (v === 'nao') return 'Contra';
+	function posicaoPartido(voto: PartidoVoto): string {
+		if (voto.orientacao === 'sim' || voto.orientacao === 'nao') return voto.orientacao;
+		if (voto.orientacao === 'liberado') return 'liberado';
+		if (voto.orientacao === 'abstencao' || voto.orientacao === 'obstrucao') return 'outro';
+		return mainVotoFromBreakdown(voto.breakdown);
+	}
+
+	function posicaoLabel(voto: PartidoVoto): string {
+		const p = posicaoPartido(voto);
+		if (voto.orientacao && voto.orientacao !== 'liberado') {
+			if (p === 'sim') return 'A favor';
+			if (p === 'nao') return 'Contra';
+			return 'Abstenção';
+		}
+		if (p === 'liberado') return 'Liberado';
+		if (p === 'sim') return 'A favor';
+		if (p === 'nao') return 'Contra';
 		return 'Dividido';
 	}
 
-	function mainVotoClass(bd: VotoBreakdown): string {
-		const v = mainVoto(bd);
-		if (v === 'sim') return 'voto-sim';
-		if (v === 'nao') return 'voto-nao';
+	function posicaoClass(voto: PartidoVoto): string {
+		const p = posicaoPartido(voto);
+		if (p === 'sim') return 'voto-sim';
+		if (p === 'nao') return 'voto-nao';
 		return 'voto-outro';
+	}
+
+	function bancadaDivergiu(voto: PartidoVoto): boolean {
+		if (!voto.orientacao || voto.orientacao === 'liberado') return false;
+		if (voto.orientacao !== 'sim' && voto.orientacao !== 'nao') return false;
+		const maioria = mainVotoFromBreakdown(voto.breakdown);
+		return maioria !== voto.orientacao && maioria !== 'dividido';
+	}
+
+	function temOrientacao(voto: PartidoVoto): boolean {
+		return voto.orientacao != null && voto.orientacao !== 'liberado';
 	}
 
 	function votoLabel(voto: string): string {
@@ -283,9 +347,47 @@
 			>Meu estado{ufSelecionada ? ` (${ufSelecionada})` : ''}</button>
 		</div>
 
+		{#if alinhamento?.alinhamento_score != null || disciplina?.disciplina != null}
+			<div class="metricas">
+				<div class="metricas-grid">
+					{#if alinhamento?.alinhamento_score != null}
+						<div class="metrica-card" class:high={alinhamento.alinhamento_score >= 70} class:mid={alinhamento.alinhamento_score >= 40 && alinhamento.alinhamento_score < 70} class:low={alinhamento.alinhamento_score < 40}>
+							<span class="metrica-valor">{alinhamento.alinhamento_score}%</span>
+							<span class="metrica-nome">Alinhamento</span>
+							<span class="metrica-detalhe">
+								{alinhamento.votacoes_consideradas} votações comparadas
+							</span>
+						</div>
+					{/if}
+					{#if disciplina?.disciplina != null}
+						<div class="metrica-card" class:high={disciplina.disciplina >= 80} class:mid={disciplina.disciplina >= 60 && disciplina.disciplina < 80} class:low={disciplina.disciplina < 60}>
+							<span class="metrica-valor">{disciplina.disciplina}%</span>
+							<span class="metrica-nome">Disciplina</span>
+							<span class="metrica-detalhe" title="Percentual de vezes que os parlamentares votaram de acordo com a orientação oficial da bancada">
+								{disciplina.votacoes_analisadas} votações analisadas
+							</span>
+						</div>
+					{/if}
+				</div>
+				{#if alinhamento && (alinhamento.votacoes_liberadas > 0 || alinhamento.votacoes_sem_orientacao > 0 || alinhamento.votacoes_com_divergencia > 0)}
+					<div class="metricas-footnote">
+						{#if alinhamento.votacoes_liberadas > 0}
+							<span>{alinhamento.votacoes_liberadas} liberada{alinhamento.votacoes_liberadas !== 1 ? 's' : ''}</span>
+						{/if}
+						{#if alinhamento.votacoes_sem_orientacao > 0}
+							<span>{alinhamento.votacoes_sem_orientacao} sem orientação</span>
+						{/if}
+						{#if alinhamento.votacoes_com_divergencia > 0}
+							<span title="Votações onde mais de 30% dos parlamentares divergiram da orientação oficial">{alinhamento.votacoes_com_divergencia} com divergência</span>
+						{/if}
+					</div>
+				{/if}
+			</div>
+		{/if}
+
 		{#if Object.keys(partido.stats).length > 0}
 			<div class="stats">
-				<h2>Resumo de votações</h2>
+				<h2>Como votaram os parlamentares</h2>
 				<div class="stats-grid">
 					{#each Object.entries(partido.stats) as [voto, count]}
 						<div class="stat-item {votoClass(voto)}">
@@ -294,32 +396,15 @@
 						</div>
 					{/each}
 				</div>
-			</div>
-		{/if}
-
-		{#if comparacao.total > 0}
-			<div class="comparacao">
-				<h2>Comparação com seus votos</h2>
-				<div class="comparacao-stats">
-					{#if comparacao.score != null}
-						<div class="comp-item alinhamento" class:high={comparacao.score >= 70} class:mid={comparacao.score >= 40 && comparacao.score < 70} class:low={comparacao.score < 40}>
-							<span class="comp-count">{comparacao.score}%</span>
-							<span class="comp-label">Alinhamento</span>
-						</div>
-					{/if}
-					<div class="comp-item concordou">
-						<span class="comp-count">{comparacao.concordou}</span>
-						<span class="comp-label">Concordaram</span>
+				{#if comparacao.total > 0}
+					<div class="comparacao-resumo">
+						<span class="comparacao-concordou">{comparacao.concordou} concordaram</span>
+						<span class="comparacao-sep">·</span>
+						<span class="comparacao-discordou">{comparacao.discordou} discordaram</span>
+						<span class="comparacao-sep">·</span>
+						<span class="comparacao-total">{comparacao.total} comparados</span>
 					</div>
-					<div class="comp-item discordou">
-						<span class="comp-count">{comparacao.discordou}</span>
-						<span class="comp-label">Discordaram</span>
-					</div>
-					<div class="comp-item total">
-						<span class="comp-count">{comparacao.total}</span>
-						<span class="comp-label">Comparados</span>
-					</div>
-				</div>
+				{/if}
 			</div>
 		{/if}
 
@@ -347,9 +432,10 @@
 					{@const hasDetails = voto.substantiva && (voto.resumo_cidadao || voto.descricao_detalhada)}
 					{@const isExpanded = expandedIdx === idx}
 					{@const meuVoto = userVotoMap.get(voto.proposicao_id)}
-					{@const mv = mainVoto(voto.breakdown)}
-					{@const comparavel = meuVoto && (mv === 'sim' || mv === 'nao')}
-					{@const concordou = comparavel && meuVoto === mv}
+					{@const pos = posicaoPartido(voto)}
+					{@const comparavel = meuVoto && (pos === 'sim' || pos === 'nao')}
+					{@const concordou = comparavel && meuVoto === pos}
+					{@const divergiu = bancadaDivergiu(voto)}
 					<button
 						type="button"
 						class="voto-card"
@@ -360,7 +446,7 @@
 						onclick={() => hasDetails && toggleExpand(idx)}
 					>
 						<div class="voto-main">
-							<span class="voto-badge {mainVotoClass(voto.breakdown)}">{mainVotoLabel(voto.breakdown)}</span>
+							<span class="voto-badge {posicaoClass(voto)}">{posicaoLabel(voto)}</span>
 							<div class="voto-info">
 								<div class="voto-top">
 									{#if voto.proposicao_tipo}
@@ -388,6 +474,9 @@
 											<span class="legend-item {breakdownClass(tipo)}">{breakdownLabel(tipo)}: {n}</span>
 										{/if}
 									{/each}
+								{#if divergiu}
+									<span class="legend-divergencia" title="A maioria dos parlamentares votou diferente da orientação oficial">Bancada divergiu</span>
+								{/if}
 								</div>
 								{#if meuVoto}
 									<div class="meu-voto-row">
@@ -672,6 +761,15 @@
 	.legend-item.bd-nao { color: #dc2626; }
 	.legend-item.bd-outro { color: var(--text-secondary); }
 
+	.legend-divergencia {
+		font-size: 0.7rem;
+		font-weight: 600;
+		color: #d97706;
+		background: #d976061a;
+		padding: 0.05rem 0.4rem;
+		border-radius: 4px;
+	}
+
 	.voto-data {
 		font-size: 0.8rem;
 		color: var(--text-secondary);
@@ -747,48 +845,71 @@
 		border-color: var(--link);
 	}
 
-	/* Comparação */
-	.comparacao {
+	/* Métricas (alinhamento + disciplina) */
+	.metricas {
 		margin-bottom: 2rem;
 	}
 
-	.comparacao h2 {
-		margin-bottom: 1rem;
-	}
-
-	.comparacao-stats {
-		display: flex;
+	.metricas-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
 		gap: 0.75rem;
-		flex-wrap: wrap;
 	}
 
-	.comp-item {
+	.metrica-card {
 		background: var(--bg-card);
 		border: 1px solid var(--border);
 		border-radius: 12px;
-		padding: 0.75rem 1rem;
+		padding: 1.25rem 1rem;
 		text-align: center;
-		min-width: 70px;
 	}
 
-	.comp-count {
+	.metrica-valor {
 		display: block;
-		font-size: 1.25rem;
+		font-size: 2rem;
 		font-weight: 700;
+		line-height: 1;
 	}
 
-	.comp-label {
-		font-size: 0.75rem;
+	.metrica-nome {
+		display: block;
+		font-size: 0.875rem;
+		font-weight: 600;
+		color: var(--text-primary);
+		margin-top: 0.25rem;
+	}
+
+	.metrica-detalhe {
+		display: block;
+		font-size: 0.7rem;
+		color: var(--text-secondary);
+		margin-top: 0.25rem;
+	}
+
+	.metrica-card.high .metrica-valor { color: #16a34a; }
+	.metrica-card.mid .metrica-valor { color: #ca8a04; }
+	.metrica-card.low .metrica-valor { color: #dc2626; }
+
+	.metricas-footnote {
+		display: flex;
+		gap: 1rem;
+		flex-wrap: wrap;
+		margin-top: 0.5rem;
+		font-size: 0.7rem;
 		color: var(--text-secondary);
 	}
 
-	.comp-item.concordou .comp-count { color: #16a34a; }
-	.comp-item.discordou .comp-count { color: #dc2626; }
-	.comp-item.total .comp-count { color: var(--link); }
-	.comp-item.alinhamento .comp-count { font-size: 1.5rem; }
-	.comp-item.alinhamento.high .comp-count { color: #16a34a; }
-	.comp-item.alinhamento.mid .comp-count { color: #ca8a04; }
-	.comp-item.alinhamento.low .comp-count { color: #dc2626; }
+	/* Comparação inline (dentro de stats) */
+	.comparacao-resumo {
+		margin-top: 0.75rem;
+		font-size: 0.8rem;
+		color: var(--text-secondary);
+	}
+
+	.comparacao-concordou { color: #16a34a; font-weight: 600; }
+	.comparacao-discordou { color: #dc2626; font-weight: 600; }
+	.comparacao-total { color: var(--text-secondary); }
+	.comparacao-sep { color: var(--border); margin: 0 0.15rem; }
 
 	.filter-toggles {
 		display: flex;

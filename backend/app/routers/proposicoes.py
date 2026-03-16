@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models.proposicao import Proposicao
+from app.services.orientacao import orientacoes_por_proposicao
 from app.utils import url_camara_from_id_externo
 
 router = APIRouter()
@@ -121,6 +122,15 @@ async def batch_proposicoes(
         }
         for p in props
     ]
+
+
+@router.get("/{proposicao_id}/partidos")
+async def partidos_por_proposicao(
+    proposicao_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    """Orientações e distribuição de votos por partido para uma proposição."""
+    return await orientacoes_por_proposicao(db, proposicao_id)
 
 
 @router.get("/filtros")
