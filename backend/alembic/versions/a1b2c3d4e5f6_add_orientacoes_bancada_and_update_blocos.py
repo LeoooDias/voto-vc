@@ -34,28 +34,26 @@ def upgrade() -> None:
     )
     op.create_index("ix_blocos_parlamentares_sigla_csv", "blocos_parlamentares", ["sigla_csv"])
 
-    # Create orientacao enum (DO block handles "already exists" gracefully)
+    # Create orientacao enum — use DO block so it's idempotent
+    # (Base.metadata may auto-create it via before_create events on earlier migrations)
     op.execute(
         "DO $$ BEGIN "
         "CREATE TYPE orientacao AS ENUM ('sim', 'nao', 'abstencao', 'obstrucao', 'liberado'); "
         "EXCEPTION WHEN duplicate_object THEN null; "
         "END $$;"
     )
-    orientacao_enum = sa.Enum(
-        "sim", "nao", "abstencao", "obstrucao", "liberado",
-        name="orientacao", create_type=False,
-    )
 
-    # Create orientacoes_bancada table
-    op.create_table(
-        "orientacoes_bancada",
-        sa.Column("id_votacao", sa.String(length=50), nullable=False),
-        sa.Column("sigla_bancada", sa.String(length=100), nullable=False),
-        sa.Column("uri_bancada", sa.Text(), nullable=True),
-        sa.Column("orientacao_raw", sa.String(length=50), nullable=False),
-        sa.Column("orientacao", orientacao_enum, nullable=False),
-        sa.Column("sigla_orgao", sa.String(length=20), nullable=True),
-        sa.PrimaryKeyConstraint("id_votacao", "sigla_bancada"),
+    # Create orientacoes_bancada table using raw SQL to avoid
+    # SQLAlchemy's sa.Enum triggering a duplicate CREATE TYPE
+    op.execute(
+        "CREATE TABLE orientacoes_bancada ("
+        "id_votacao VARCHAR(50) NOT NULL, "
+        "sigla_bancada VARCHAR(100) NOT NULL, "
+        "uri_bancada TEXT, "
+        "orientacao_raw VARCHAR(50) NOT NULL, "
+        "orientacao orientacao NOT NULL, "
+        "sigla_orgao VARCHAR(20), "
+        "PRIMARY KEY (id_votacao, sigla_bancada))"
     )
     op.create_index("idx_orientacoes_votacao", "orientacoes_bancada", ["id_votacao"])
     op.create_index("idx_orientacoes_bancada", "orientacoes_bancada", ["sigla_bancada"])
