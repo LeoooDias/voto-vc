@@ -153,9 +153,7 @@ async def obter_partido(
         all_votacao_ids.extend(ids)
 
     if all_votacao_ids:
-        orientacoes = await _orientacao_efetiva_batch(
-            db, partido.sigla, all_votacao_ids
-        )
+        orientacoes = await _orientacao_efetiva_batch(db, partido.sigla, all_votacao_ids)
         for prop_id, vot_ids in prop_votacao_ids.items():
             for vot_id in vot_ids:
                 o = orientacoes.get(vot_id)
