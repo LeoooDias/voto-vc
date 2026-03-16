@@ -102,7 +102,9 @@ async def ensure_blocos(
     for sigla in party_siglas:
         partido_id = partido_map.get(sigla)
         if partido_id:
-            await db.execute(bloco_partido.insert().values(bloco_id=bloco.id, partido_id=partido_id))
+            await db.execute(
+                bloco_partido.insert().values(bloco_id=bloco.id, partido_id=partido_id)
+            )
 
     logger.info(f"  Created bloco '{sigla_csv}' with parties: {party_siglas}")
 
@@ -150,7 +152,9 @@ async def import_orientacoes_year(
                 if orientacao_raw and orientacao_raw != "-":
                     skipped_orientacao += 1
                     if skipped_orientacao <= 10:
-                        logger.warning(f"  Unknown orientação: '{orientacao_raw}' (bancada={sigla_bancada})")
+                        logger.warning(
+                            f"  Unknown orientação: '{orientacao_raw}' (bancada={sigla_bancada})"
+                        )
                 continue
 
             # Try to create bloco for federations
@@ -205,7 +209,9 @@ async def import_orientacoes(
 
         total = 0
         for ano in range(start_year, end_year + 1):
-            count = await import_orientacoes_year(db, ano, data_dir, existing_votacao_ids, partido_map)
+            count = await import_orientacoes_year(
+                db, ano, data_dir, existing_votacao_ids, partido_map
+            )
             total += count
 
         logger.info(f"\n{'=' * 60}")
@@ -213,7 +219,9 @@ async def import_orientacoes(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Import orientações de bancada from Câmara CSV files")
+    parser = argparse.ArgumentParser(
+        description="Import orientações de bancada from Câmara CSV files"
+    )
     parser.add_argument("--start-year", type=int, default=2003)
     parser.add_argument("--end-year", type=int, default=2026)
     parser.add_argument("--data-dir", default=DEFAULT_DATA_DIR)
