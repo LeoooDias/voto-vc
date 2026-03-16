@@ -41,7 +41,10 @@ def upgrade() -> None:
         "EXCEPTION WHEN duplicate_object THEN null; "
         "END $$;"
     )
-    orientacao_enum = sa.Enum("sim", "nao", "abstencao", "obstrucao", "liberado", name="orientacao")
+    orientacao_enum = sa.Enum(
+        "sim", "nao", "abstencao", "obstrucao", "liberado",
+        name="orientacao", create_type=False,
+    )
 
     # Create orientacoes_bancada table
     op.create_table(
