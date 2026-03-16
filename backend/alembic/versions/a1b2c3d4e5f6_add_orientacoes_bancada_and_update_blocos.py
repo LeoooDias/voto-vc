@@ -38,7 +38,7 @@ def upgrade() -> None:
     # (Base.metadata may auto-create it via before_create events on earlier migrations)
     op.execute(
         "DO $$ BEGIN "
-        "CREATE TYPE orientacao AS ENUM ('sim', 'nao', 'abstencao', 'obstrucao', 'liberado'); "
+        "CREATE TYPE orientacao AS ENUM ('SIM', 'NAO', 'ABSTENCAO', 'OBSTRUCAO', 'LIBERADO'); "
         "EXCEPTION WHEN duplicate_object THEN null; "
         "END $$;"
     )

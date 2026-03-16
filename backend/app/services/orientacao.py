@@ -162,14 +162,83 @@ async def _detectar_divergencia_batch(
     return divergentes
 
 
+async def _distribuicao_votos_partido_batch(
+    db: AsyncSession,
+    sigla_partido: str,
+    id_votacoes: list[str],
+    threshold: float = 0.7,
+) -> dict[str, Orientacao | None]:
+    """Infere orientação a partir da distribuição de votos do partido.
+
+    Para cada votação, se >= threshold dos votos substantivos (sim+nao) forem
+    numa direção, retorna essa direção como orientação inferida.
+    Retorna None se não houver maioria clara.
+    """
+    if not id_votacoes:
+        return {}
+
+    votacao_query = select(Votacao.id, Votacao.id_externo).where(
+        Votacao.id_externo.in_(id_votacoes)
+    )
+    votacao_result = await db.execute(votacao_query)
+    externo_to_id = {row[1]: row[0] for row in votacao_result.all()}
+
+    votacao_ids = list(externo_to_id.values())
+    if not votacao_ids:
+        return {}
+
+    votos_query = (
+        select(
+            VotoParlamentar.votacao_id,
+            VotoParlamentar.voto,
+            func.count(VotoParlamentar.id),
+        )
+        .where(
+            VotoParlamentar.votacao_id.in_(votacao_ids),
+            VotoParlamentar.partido_na_epoca == sigla_partido,
+        )
+        .group_by(VotoParlamentar.votacao_id, VotoParlamentar.voto)
+    )
+    votos_result = await db.execute(votos_query)
+
+    votos_por_votacao: dict[int, dict[str, int]] = defaultdict(lambda: defaultdict(int))
+    for votacao_id, voto, count in votos_result.all():
+        votos_por_votacao[votacao_id][voto.value] = count
+
+    id_to_externo = {v: k for k, v in externo_to_id.items()}
+    resultado: dict[str, Orientacao | None] = {}
+
+    for votacao_id, dist in votos_por_votacao.items():
+        id_externo = id_to_externo.get(votacao_id)
+        if not id_externo:
+            continue
+        n_sim = dist.get("sim", 0)
+        n_nao = dist.get("nao", 0)
+        total = n_sim + n_nao
+        if total < 3:
+            resultado[id_externo] = None
+            continue
+        if n_sim / total >= threshold:
+            resultado[id_externo] = Orientacao.SIM
+        elif n_nao / total >= threshold:
+            resultado[id_externo] = Orientacao.NAO
+        else:
+            resultado[id_externo] = None
+
+    return resultado
+
+
 async def alinhamento_por_orientacao(
     db: AsyncSession,
     sigla_partido: str,
     respostas: list,
     divergencia_threshold: float = 0.3,
+    fallback_threshold: float = 0.7,
 ) -> dict:
     """Calcula alinhamento usuário–partido usando orientações de bancada.
 
+    Usa orientações oficiais como âncora principal, com fallback para
+    distribuição de votos quando não há orientação disponível.
     Retorna dict com score, contadores e detalhamento.
     """
     user_votes = {r.proposicao_id: (r.voto, r.peso) for r in respostas}
@@ -202,6 +271,11 @@ async def alinhamento_por_orientacao(
         db, sigla_partido, orientacoes, divergencia_threshold
     )
 
+    # Carregar fallback por distribuição de votos para todas as votações
+    fallback_dist = await _distribuicao_votos_partido_batch(
+        db, sigla_partido, all_id_externo, fallback_threshold
+    )
+
     # Calcular alinhamento
     total_score = 0.0
     total_weight = 0.0
@@ -224,6 +298,7 @@ async def alinhamento_por_orientacao(
 
         # Buscar orientação efetiva (primeira votação com orientação disponível)
         orientacao_usada = None
+        usou_fallback = False
         for id_ext in votacoes_prop:
             o = orientacoes.get(id_ext)
             if o is not None and id_ext not in divergencias:
@@ -231,7 +306,7 @@ async def alinhamento_por_orientacao(
                 break
 
         if orientacao_usada is None:
-            # Verificar se todas são liberadas, sem orientação, ou com divergência
+            # Verificar se todas são liberadas
             todas_liberadas = all(
                 orientacoes.get(v) == Orientacao.LIBERADO
                 for v in votacoes_prop
@@ -239,14 +314,19 @@ async def alinhamento_por_orientacao(
             )
             if todas_liberadas and any(orientacoes.get(v) for v in votacoes_prop):
                 votacoes_liberadas += 1
-            else:
-                # Sem orientação ou com divergência — candidato a fallback
-                has_divergencia = any(v in divergencias for v in votacoes_prop)
-                if has_divergencia:
-                    votacoes_fallback += 1
-                else:
-                    votacoes_sem_orientacao += 1
-            continue
+                continue
+
+            # Fallback: inferir pela distribuição de votos do partido
+            for id_ext in votacoes_prop:
+                fb = fallback_dist.get(id_ext)
+                if fb is not None:
+                    orientacao_usada = fb
+                    usou_fallback = True
+                    break
+
+            if orientacao_usada is None:
+                votacoes_sem_orientacao += 1
+                continue
 
         if orientacao_usada == Orientacao.LIBERADO:
             votacoes_liberadas += 1
@@ -254,6 +334,8 @@ async def alinhamento_por_orientacao(
 
         # Comparar voto do usuário com orientação
         total_weight += peso
+        if usou_fallback:
+            votacoes_fallback += 1
         if user_voto.value == orientacao_usada.value:
             concordou += 1
             total_score += peso
@@ -270,7 +352,9 @@ async def alinhamento_por_orientacao(
     return {
         "sigla_partido": sigla_partido,
         "alinhamento_score": score,
-        "metodo": "orientacao",
+        "metodo": (
+            "orientacao" if votacoes_fallback < concordou + discordou else "fallback_distribuicao"
+        ),
         "votacoes_consideradas": votacoes_consideradas,
         "votacoes_liberadas": votacoes_liberadas,
         "votacoes_sem_orientacao": votacoes_sem_orientacao,
