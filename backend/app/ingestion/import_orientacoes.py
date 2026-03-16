@@ -18,7 +18,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import async_session
-from app.models.base import ORIENTACAO_NORMALIZADA
+from app.models.base import ORIENTACAO_NORMALIZADA, Orientacao
 from app.models.partido import BlocoParlamentar, OrientacaoBancada, Partido, bloco_partido
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -169,7 +169,7 @@ async def import_orientacoes_year(
                 sigla_bancada=sigla_bancada,
                 uri_bancada=row.get("uriBancada", "").strip() or None,
                 orientacao_raw=orientacao_raw,
-                orientacao=orientacao_norm,
+                orientacao=Orientacao(orientacao_norm),
                 sigla_orgao=row.get("siglaOrgao", "").strip() or None,
             )
             await db.merge(orientacao_obj)
