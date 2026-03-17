@@ -26,6 +26,13 @@
 	let scopeLoading = $state(false);
 	let totalRespostas = $state(0);
 	let tab: 'parlamentares' | 'partidos' | 'votos' = $state('partidos');
+	let casaFilter: 'todos' | 'camara' | 'senado' = $state('todos');
+
+	let parlFiltered = $derived(
+		casaFilter === 'todos' ? parlResults : parlResults.filter((r) => r.casa === casaFilter)
+	);
+	let countCamara = $derived(parlResults.filter((r) => r.casa === 'camara').length);
+	let countSenado = $derived(parlResults.filter((r) => r.casa === 'senado').length);
 
 	// Escopo
 	let escopo: 'brasil' | 'estado' = $state('brasil');
@@ -225,8 +232,19 @@
 		{/if}
 
 		{#if tab === 'parlamentares'}
+			<div class="casa-filter">
+				<button class="casa-btn" class:active={casaFilter === 'todos'} onclick={() => casaFilter = 'todos'}>
+					Todos ({parlResults.length})
+				</button>
+				<button class="casa-btn" class:active={casaFilter === 'camara'} onclick={() => casaFilter = 'camara'}>
+					Câmara ({countCamara})
+				</button>
+				<button class="casa-btn" class:active={casaFilter === 'senado'} onclick={() => casaFilter = 'senado'}>
+					Senado ({countSenado})
+				</button>
+			</div>
 			<div class="lista">
-				{#each parlResults as result, i}
+				{#each parlFiltered as result, i}
 					<a href="/parlamentar/{result.parlamentar_id}" class="result-card">
 						<span class="rank">#{i + 1}</span>
 						<div class="info">
@@ -406,6 +424,36 @@
 	.tab.active {
 		color: var(--link);
 		border-bottom-color: var(--link);
+	}
+
+	/* Casa filter */
+	.casa-filter {
+		display: flex;
+		gap: 0.5rem;
+		margin-bottom: 1rem;
+	}
+
+	.casa-btn {
+		padding: 0.4rem 0.875rem;
+		border: 1px solid var(--border);
+		border-radius: 20px;
+		background: var(--bg-card);
+		font-size: 0.813rem;
+		font-weight: 600;
+		color: var(--text-secondary);
+		cursor: pointer;
+		transition: all 0.2s;
+	}
+
+	.casa-btn:hover {
+		border-color: var(--link);
+		color: var(--text-primary);
+	}
+
+	.casa-btn.active {
+		background: var(--link);
+		border-color: var(--link);
+		color: white;
 	}
 
 	/* Result cards */

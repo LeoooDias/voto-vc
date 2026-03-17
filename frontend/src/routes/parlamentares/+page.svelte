@@ -18,9 +18,17 @@
 	let ufSelecionada = $state('');
 	let showUfPicker = $state(false);
 	let scopeLoading = $state(false);
+	let casaFilter: 'todos' | 'camara' | 'senado' = $state('todos');
+
+	let filtered = $derived(
+		casaFilter === 'todos' ? results : results.filter((r) => r.casa === casaFilter)
+	);
+
+	let countCamara = $derived(results.filter((r) => r.casa === 'camara').length);
+	let countSenado = $derived(results.filter((r) => r.casa === 'senado').length);
 
 	let sorted = $derived(
-		[...results].sort((a, b) => {
+		[...filtered].sort((a, b) => {
 			const va = a[sortKey] ?? '';
 			const vb = b[sortKey] ?? '';
 			if (typeof va === 'string' && typeof vb === 'string') {
@@ -55,8 +63,13 @@
 
 	$effect(() => {
 		perPage;
+		casaFilter;
 		currentPage = 1;
 	});
+
+	function setCasaFilter(f: typeof casaFilter) {
+		casaFilter = f;
+	}
 
 	let userRespostas: { proposicao_id: number; voto: string; peso: number }[] = [];
 
@@ -175,6 +188,18 @@
 			>Meu estado{ufSelecionada ? ` (${ufSelecionada})` : ''}</button>
 		</div>
 
+		<div class="casa-filter">
+			<button class="casa-btn" class:active={casaFilter === 'todos'} onclick={() => setCasaFilter('todos')}>
+				Todos ({results.length})
+			</button>
+			<button class="casa-btn" class:active={casaFilter === 'camara'} onclick={() => setCasaFilter('camara')}>
+				Câmara ({countCamara})
+			</button>
+			<button class="casa-btn" class:active={casaFilter === 'senado'} onclick={() => setCasaFilter('senado')}>
+				Senado ({countSenado})
+			</button>
+		</div>
+
 		<div class="table-wrap">
 			<table>
 				<thead>
@@ -289,6 +314,35 @@
 
 	.escopo-btn:hover { color: var(--text-primary); }
 	.escopo-btn.active { color: var(--link); border-bottom-color: var(--link); }
+
+	.casa-filter {
+		display: flex;
+		gap: 0.5rem;
+		margin-bottom: 1rem;
+	}
+
+	.casa-btn {
+		padding: 0.4rem 0.875rem;
+		border: 1px solid var(--border);
+		border-radius: 20px;
+		background: var(--bg-card);
+		font-size: 0.813rem;
+		font-weight: 600;
+		color: var(--text-secondary);
+		cursor: pointer;
+		transition: all 0.2s;
+	}
+
+	.casa-btn:hover {
+		border-color: var(--link);
+		color: var(--text-primary);
+	}
+
+	.casa-btn.active {
+		background: var(--link);
+		border-color: var(--link);
+		color: white;
+	}
 
 	.table-wrap { overflow-x: auto; }
 
