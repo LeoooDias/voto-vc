@@ -250,7 +250,7 @@
 						<div class="info">
 							<div class="nome">{result.nome}</div>
 							<div class="meta">
-								{result.partido ?? 'Sem partido'} · {result.uf} · {result.casa === 'camara' ? (result.sexo === 'F' ? 'Deputada' : 'Deputado') : (result.sexo === 'F' ? 'Senadora' : 'Senador')} · {result.votos_comparados} voto{result.votos_comparados !== 1 ? 's' : ''} em comum
+								{result.partido ?? 'Sem partido'} · {result.uf} · {result.casa === 'camara' ? (result.sexo === 'F' ? 'Deputada' : 'Deputado') : (result.sexo === 'F' ? 'Senadora' : 'Senador')} · {result.concordou}/{result.votos_comparados} votos em comum
 							</div>
 						</div>
 						<div class="score" class:high={!scopeLoading && result.score >= 70} class:mid={!scopeLoading && result.score >= 40 && result.score < 70} class:low={!scopeLoading && result.score < 40}>

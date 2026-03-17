@@ -30,6 +30,7 @@ export interface MatchResult {
 	foto_url: string | null;
 	score: number;
 	votos_comparados: number;
+	concordou: number;
 }
 
 export interface PartidoMatchResult {

@@ -10,7 +10,7 @@
 
 	let results: MatchResult[] = $state([]);
 	let isLoading = $state(true);
-	let sortKey: 'nome' | 'score' | 'partido' | 'uf' | 'votos_comparados' = $state('score');
+	let sortKey: 'nome' | 'score' | 'partido' | 'uf' | 'votos_comparados' | 'concordou' = $state('score');
 	let sortAsc = $state(false);
 	let perPage = $state(25);
 	let currentPage = $state(1);
@@ -209,7 +209,8 @@
 						<th class="col-partido sortable" onclick={() => toggleSort('partido')}>Partido{sortIndicator('partido')}</th>
 						<th class="col-uf sortable" onclick={() => toggleSort('uf')}>UF{sortIndicator('uf')}</th>
 						<th class="col-casa">Casa</th>
-						<th class="col-num sortable" onclick={() => toggleSort('votos_comparados')}>Votos{sortIndicator('votos_comparados')}</th>
+						<th class="col-num sortable" onclick={() => toggleSort('votos_comparados')}>Comparados{sortIndicator('votos_comparados')}</th>
+						<th class="col-num sortable" onclick={() => toggleSort('concordou')}>Em Comum{sortIndicator('concordou')}</th>
 						<th class="col-score sortable" onclick={() => toggleSort('score')}>Alinhamento{sortIndicator('score')}</th>
 					</tr>
 				</thead>
@@ -222,6 +223,7 @@
 							<td class="col-uf">{result.uf}</td>
 							<td class="col-casa">{casaLabel(result.casa, result.sexo)}</td>
 							<td class="col-num">{result.votos_comparados}</td>
+						<td class="col-num">{result.concordou}</td>
 							<td class="col-score">
 								{#if scopeLoading}
 									<span class="spinner"></span>

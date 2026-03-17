@@ -23,11 +23,12 @@ def _score_parlamentar(
     user_votes: dict,
     prop_votes: dict[int, list[TipoVoto]],
     min_compared: int,
-) -> tuple[float, int] | None:
-    """Score a single parlamentar. Returns (normalized_score, props_compared) or None."""
+) -> tuple[float, int, int] | None:
+    """Score a single parlamentar. Returns (normalized_score, props_compared, concordou) or None."""
     total_score = 0.0
     total_weight = 0.0
     props_compared = 0
+    concordou = 0
 
     for prop_id, votos_for_prop in prop_votes.items():
         if prop_id not in user_votes:
@@ -51,6 +52,7 @@ def _score_parlamentar(
             user_voto.value == "nao" and parl_vote == TipoVoto.NAO
         ):
             total_score += peso
+            concordou += 1
         elif (user_voto.value == "sim" and parl_vote == TipoVoto.NAO) or (
             user_voto.value == "nao" and parl_vote == TipoVoto.SIM
         ):
@@ -58,7 +60,7 @@ def _score_parlamentar(
 
     if total_weight > 0 and props_compared >= min_compared:
         normalized = ((total_score / total_weight) + 1) * 50
-        return normalized, props_compared
+        return normalized, props_compared, concordou
     return None
 
 
@@ -431,7 +433,7 @@ async def calcular_matching(
     for parl_id, prop_votes in parlamentar_votos.items():
         result = _score_parlamentar(user_votes, prop_votes, min_compared)
         if result:
-            parl_scores.append((parl_id, result[0], result[1]))
+            parl_scores.append((parl_id, result[0], result[1], result[2]))
         partido_id = parl_to_partido.get(parl_id)
         if partido_id:
             partido_parl_ids[partido_id].add(parl_id)
@@ -451,7 +453,7 @@ async def calcular_matching(
         parl_result = await db.execute(parl_query)
         parlamentares = {p.id: p for p in parl_result.scalars().unique().all()}
 
-        for parl_id, score, n_votos in parl_scores[:limit]:
+        for parl_id, score, n_votos, n_concordou in parl_scores[:limit]:
             p = parlamentares.get(parl_id)
             if not p:
                 continue
@@ -466,6 +468,7 @@ async def calcular_matching(
                     "foto_url": p.foto_url,
                     "score": round(score, 1),
                     "votos_comparados": n_votos,
+                    "concordou": n_concordou,
                 }
             )
 
@@ -493,7 +496,7 @@ async def calcular_matching(
 
     # Count parlamentares_comparados per partido (parlamentares meeting threshold)
     partido_n_comparados: dict[int, int] = defaultdict(int)
-    for parl_id, score, _ in parl_scores:
+    for parl_id, score, *_ in parl_scores:
         pid = parl_to_partido.get(parl_id)
         if pid:
             partido_n_comparados[pid] += 1
