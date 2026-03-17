@@ -2,9 +2,7 @@
 
 from urllib.parse import quote
 
-_CAMARA_FICHA = (
-    "https://www.camara.leg.br/proposicoesWeb/fichadetramitacao?idProposicao="
-)
+_CAMARA_FICHA = "https://www.camara.leg.br/proposicoesWeb/fichadetramitacao?idProposicao="
 _CAMARA_BUSCA = "https://www.camara.leg.br/propostas-legislativas/busca?termo="
 _SENADO_FICHA = "https://www25.senado.leg.br/web/atividade/materias/-/materia/"
 _SENADO_BUSCA = (
