@@ -309,7 +309,7 @@ async def import_senado(start_year: int = 2003, end_year: int = 2026):
                     existing_vot_ids.add(id_externo)
 
                     # Process inline votes
-                    votos_raw = raw.get("votos", [])
+                    votos_raw = raw.get("votos") or []
                     for vr in votos_raw:
                         voto_data = normalize_voto_senado(vr, id_externo)
                         parl_db_id = parl_map.get(voto_data["parlamentar_id_externo"])

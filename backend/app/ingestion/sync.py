@@ -353,7 +353,7 @@ async def sync_votacoes_senado(
             existing_vot_ids.add(id_externo)
 
             # Process inline votes
-            votos_raw = raw.get("votos", [])
+            votos_raw = raw.get("votos") or []
             for vr in votos_raw:
                 voto_data = normalize_voto_senado(vr, id_externo)
                 parl_db_id = parl_map.get(voto_data["parlamentar_id_externo"])
