@@ -9,6 +9,15 @@ from app.models.parlamentar import Parlamentar
 from app.models.partido import BlocoParlamentar, OrientacaoBancada, Partido, bloco_partido
 from app.models.votacao import Votacao, VotoParlamentar
 
+# Bayesian confidence dampening: blends raw score toward 50% (neutral prior)
+# when few votes are compared, preventing high-score-low-data from dominating rankings.
+_CONFIDENCE_K = 5
+
+
+def _confidence_score(raw_score: float, n_compared: int) -> float:
+    """Adjust score for ranking: penalizes low sample sizes."""
+    return (raw_score * n_compared + 50 * _CONFIDENCE_K) / (n_compared + _CONFIDENCE_K)
+
 
 def _score_parlamentar(
     user_votes: dict,
@@ -428,7 +437,8 @@ async def calcular_matching(
             partido_parl_ids[partido_id].add(parl_id)
 
     # --- Parlamentar results ---
-    parl_scores.sort(key=lambda x: (-x[1], x[0]))
+    # Sort by confidence-adjusted score (penalizes low sample sizes)
+    parl_scores.sort(key=lambda x: (-_confidence_score(x[1], x[2]), -x[1], x[0]))
     top_ids = [s[0] for s in parl_scores[:limit]]
 
     parlamentar_results = []
