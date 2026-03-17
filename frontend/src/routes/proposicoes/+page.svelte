@@ -204,7 +204,7 @@
 								<p class="detail-descricao">{p.descricao_detalhada}</p>
 							{/if}
 							{#if url}
-								<a href={url} target="_blank" rel="noopener" class="link-camara" onclick={(e) => e.stopPropagation()}>Ver na Câmara</a>
+								<a href={url} target="_blank" rel="noopener" class="link-tramitacao" onclick={(e) => e.stopPropagation()}>Ver tramitação</a>
 							{/if}
 						</div>
 					{/if}
@@ -392,13 +392,13 @@
 		margin: 0 0 0.75rem;
 	}
 
-	.link-camara {
+	.link-tramitacao {
 		color: #2563eb;
 		font-size: 0.8rem;
 		text-decoration: none;
 	}
 
-	.link-camara:hover {
+	.link-tramitacao:hover {
 		text-decoration: underline;
 	}
 
