@@ -6,7 +6,7 @@
 	import type { PartidoMatchResult, MatchResponse } from '$lib/types';
 	import { goto } from '$app/navigation';
 	import { get } from 'svelte/store';
-	import { UF_SIGLAS } from '$lib/constants';
+	import { UF_SIGLAS, fmtPct } from '$lib/constants';
 
 	let results: PartidoMatchResult[] = $state([]);
 	let isLoading = $state(true);
@@ -192,7 +192,7 @@
 							<td class="col-score">
 								{#if result.score != null}
 									<span class="score" class:high={result.score >= 70} class:mid={result.score >= 40 && result.score < 70} class:low={result.score < 40}>
-										{result.score}%
+										{fmtPct(result.score)}
 									</span>
 								{:else}
 									<span class="score-na" title="Dados insuficientes">N/A</span>

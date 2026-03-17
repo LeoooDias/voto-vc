@@ -10,6 +10,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.base import Orientacao
+from app.models.parlamentar import Parlamentar
 from app.models.partido import BlocoParlamentar, OrientacaoBancada, Partido, bloco_partido
 from app.models.votacao import Votacao, VotoParlamentar
 
@@ -83,11 +84,30 @@ async def _orientacao_efetiva_batch(
     return resultado
 
 
+async def _parlamentar_ids_by_uf(db: AsyncSession, sigla_partido: str, uf: str) -> set[int]:
+    """Retorna IDs de parlamentares do partido filtrados por UF."""
+    partido_id_subq = select(Partido.id).where(Partido.sigla == sigla_partido).scalar_subquery()
+    query = select(Parlamentar.id).where(
+        Parlamentar.partido_id == partido_id_subq,
+        Parlamentar.uf == uf.upper(),
+    )
+    result = await db.execute(query)
+    return {row[0] for row in result.all()}
+
+
+def _apply_uf_filter(query, parl_ids: set[int] | None):
+    """Adiciona filtro de parlamentar_id à query se parl_ids fornecido."""
+    if parl_ids is not None:
+        return query.where(VotoParlamentar.parlamentar_id.in_(parl_ids))
+    return query
+
+
 async def _detectar_divergencia_batch(
     db: AsyncSession,
     sigla_partido: str,
     orientacoes: dict[str, Orientacao | None],
     threshold: float = 0.3,
+    parl_ids: set[int] | None = None,
 ) -> set[str]:
     """Retorna set de id_votacao onde há divergência significativa
     entre orientação e comportamento real da bancada.
@@ -123,6 +143,7 @@ async def _detectar_divergencia_batch(
         )
         .group_by(VotoParlamentar.votacao_id, VotoParlamentar.voto)
     )
+    votos_query = _apply_uf_filter(votos_query, parl_ids)
     votos_result = await db.execute(votos_query)
 
     # Agrupar por votação
@@ -167,6 +188,7 @@ async def _distribuicao_votos_partido_batch(
     sigla_partido: str,
     id_votacoes: list[str],
     threshold: float = 0.7,
+    parl_ids: set[int] | None = None,
 ) -> dict[str, Orientacao | None]:
     """Infere orientação a partir da distribuição de votos do partido.
 
@@ -199,6 +221,7 @@ async def _distribuicao_votos_partido_batch(
         )
         .group_by(VotoParlamentar.votacao_id, VotoParlamentar.voto)
     )
+    votos_query = _apply_uf_filter(votos_query, parl_ids)
     votos_result = await db.execute(votos_query)
 
     votos_por_votacao: dict[int, dict[str, int]] = defaultdict(lambda: defaultdict(int))
@@ -234,11 +257,13 @@ async def alinhamento_por_orientacao(
     respostas: list,
     divergencia_threshold: float = 0.3,
     fallback_threshold: float = 0.7,
+    uf: str | None = None,
 ) -> dict:
     """Calcula alinhamento usuário–partido usando orientações de bancada.
 
     Usa orientações oficiais como âncora principal, com fallback para
     distribuição de votos quando não há orientação disponível.
+    Quando uf é fornecido, o fallback considera apenas parlamentares daquele estado.
     Retorna dict com score, contadores e detalhamento.
     """
     user_votes = {r.proposicao_id: (r.voto, r.peso) for r in respostas}
@@ -263,17 +288,20 @@ async def alinhamento_por_orientacao(
     # Pegar todos os id_externo
     all_id_externo = [row[1] for row in votacao_rows]
 
-    # Buscar orientações
+    # Resolver parlamentar IDs se filtro UF ativo
+    parl_ids = await _parlamentar_ids_by_uf(db, sigla_partido, uf) if uf else None
+
+    # Buscar orientações (nacionais — orientação é do partido, não do estado)
     orientacoes = await _orientacao_efetiva_batch(db, sigla_partido, all_id_externo)
 
-    # Detectar divergências
+    # Detectar divergências (filtra por UF se aplicável)
     divergencias = await _detectar_divergencia_batch(
-        db, sigla_partido, orientacoes, divergencia_threshold
+        db, sigla_partido, orientacoes, divergencia_threshold, parl_ids
     )
 
-    # Carregar fallback por distribuição de votos para todas as votações
+    # Carregar fallback por distribuição de votos (filtra por UF se aplicável)
     fallback_dist = await _distribuicao_votos_partido_batch(
-        db, sigla_partido, all_id_externo, fallback_threshold
+        db, sigla_partido, all_id_externo, fallback_threshold, parl_ids
     )
 
     # Calcular alinhamento
@@ -519,10 +547,12 @@ async def orientacoes_por_proposicao(
 async def calcular_disciplina(
     db: AsyncSession,
     sigla_partido: str,
+    uf: str | None = None,
 ) -> dict:
     """Calcula a disciplina partidária: % de vezes que os parlamentares
     votaram de acordo com a orientação oficial da bancada.
 
+    Quando uf é fornecido, considera apenas parlamentares daquele estado.
     Considera apenas votações com orientação sim/nao (exclui liberado/abstencao/obstrucao).
     """
     # Buscar todas as orientações do partido
@@ -577,6 +607,9 @@ async def calcular_disciplina(
     if not votacao_ids:
         return {"disciplina": None, "votacoes_analisadas": 0, "votacoes_liberadas": 0}
 
+    # Resolver parlamentar IDs se filtro UF ativo
+    parl_ids = await _parlamentar_ids_by_uf(db, sigla_partido, uf) if uf else None
+
     # Buscar votos dos parlamentares do partido
     votos_query = (
         select(
@@ -590,6 +623,7 @@ async def calcular_disciplina(
         )
         .group_by(VotoParlamentar.votacao_id, VotoParlamentar.voto)
     )
+    votos_query = _apply_uf_filter(votos_query, parl_ids)
     votos_result = await db.execute(votos_query)
 
     votos_por_votacao: dict[int, dict[str, int]] = defaultdict(lambda: defaultdict(int))

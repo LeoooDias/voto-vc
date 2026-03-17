@@ -7,7 +7,7 @@
 	import type { MatchResult, PartidoMatchResult, MatchResponse, RespostaItem } from '$lib/types';
 	import { goto } from '$app/navigation';
 	import { get } from 'svelte/store';
-	import { UF_SIGLAS, getTema } from '$lib/constants';
+	import { UF_SIGLAS, getTema, fmtPct } from '$lib/constants';
 
 	interface ProposicaoInfo {
 		proposicao_id: number;
@@ -232,7 +232,7 @@
 							</div>
 						</div>
 						<div class="score" class:high={result.score >= 70} class:mid={result.score >= 40 && result.score < 70} class:low={result.score < 40}>
-							{result.score}%
+							{fmtPct(result.score)}
 						</div>
 					</a>
 				{/each}
@@ -248,7 +248,7 @@
 						</div>
 						{#if result.score != null}
 							<div class="score" class:high={result.score >= 70} class:mid={result.score >= 40 && result.score < 70} class:low={result.score < 40}>
-								{result.score}%
+								{fmtPct(result.score)}
 							</div>
 						{:else}
 							<div class="score score-na" title="Dados insuficientes">N/A</div>

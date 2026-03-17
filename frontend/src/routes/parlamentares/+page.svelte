@@ -6,7 +6,7 @@
 	import type { MatchResult, MatchResponse } from '$lib/types';
 	import { goto } from '$app/navigation';
 	import { get } from 'svelte/store';
-	import { UF_SIGLAS } from '$lib/constants';
+	import { UF_SIGLAS, fmtPct } from '$lib/constants';
 
 	let results: MatchResult[] = $state([]);
 	let isLoading = $state(true);
@@ -195,7 +195,7 @@
 							<td class="col-num">{result.votos_comparados}</td>
 							<td class="col-score">
 								<span class="score" class:high={result.score >= 70} class:mid={result.score >= 40 && result.score < 70} class:low={result.score < 40}>
-									{result.score}%
+									{fmtPct(result.score)}
 								</span>
 							</td>
 						</tr>

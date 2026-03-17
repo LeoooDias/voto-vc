@@ -58,3 +58,9 @@ export function getTema(slug: string | null | undefined) {
 export const TIER1 = 10;
 export const TIER2 = 25;
 export const TIER3 = 50;
+
+/** Formata número como percentual brasileiro: vírgula decimal, sempre 1 casa. Ex: 75,0% */
+export function fmtPct(value: number | null | undefined): string {
+	if (value == null) return 'N/A';
+	return value.toFixed(1).replace('.', ',') + '%';
+}

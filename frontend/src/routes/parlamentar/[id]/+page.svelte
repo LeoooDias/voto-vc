@@ -3,7 +3,7 @@
 	import { page } from '$app/state';
 	import { get } from 'svelte/store';
 	import { api } from '$lib/api';
-	import { getTema } from '$lib/constants';
+	import { getTema, fmtPct } from '$lib/constants';
 	import { respostas, carregarRespostas } from '$lib/stores/questionario';
 	import { authUser, authLoading } from '$lib/stores/auth';
 
@@ -217,7 +217,7 @@
 				<div class="comparacao-stats">
 					{#if comparacao.score != null}
 						<div class="comp-item alinhamento" class:high={comparacao.score >= 70} class:mid={comparacao.score >= 40 && comparacao.score < 70} class:low={comparacao.score < 40}>
-							<span class="comp-count">{comparacao.score}%</span>
+							<span class="comp-count">{fmtPct(comparacao.score)}</span>
 							<span class="comp-label">Alinhamento</span>
 						</div>
 					{/if}

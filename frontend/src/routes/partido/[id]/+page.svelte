@@ -5,7 +5,7 @@
 	import { authUser, authLoading } from '$lib/stores/auth';
 	import { selectedUf, respostas, carregarRespostas } from '$lib/stores/questionario';
 	import { get } from 'svelte/store';
-	import { UF_SIGLAS, getTema } from '$lib/constants';
+	import { UF_SIGLAS, getTema, fmtPct } from '$lib/constants';
 
 	interface VotoBreakdown {
 		sim?: number;
@@ -112,7 +112,8 @@
 	async function loadAlinhamento() {
 		if (userRespostas.length === 0 || !partido) return;
 		try {
-			alinhamento = await api.post<AlinhamentoResult>(`/partidos/${partido.sigla}/alinhamento`, { respostas: userRespostas });
+			const ufParam = escopo === 'estado' && ufSelecionada ? ufSelecionada : undefined;
+			alinhamento = await api.post<AlinhamentoResult>(`/partidos/${partido.sigla}/alinhamento`, { respostas: userRespostas, uf: ufParam });
 		} catch (e) {
 			console.error('Failed to load alinhamento:', e);
 		}
@@ -120,7 +121,8 @@
 
 	async function loadDisciplina() {
 		try {
-			disciplina = await api.get<DisciplinaResult>(`/partidos/${page.params.id}/disciplina`);
+			const ufParam = escopo === 'estado' && ufSelecionada ? `?uf=${ufSelecionada}` : '';
+			disciplina = await api.get<DisciplinaResult>(`/partidos/${page.params.id}/disciplina${ufParam}`);
 		} catch (e) {
 			console.error('Failed to load disciplina:', e);
 		}
@@ -352,7 +354,7 @@
 				<div class="metricas-grid">
 					{#if alinhamento?.alinhamento_score != null}
 						<div class="metrica-card" class:high={alinhamento.alinhamento_score >= 70} class:mid={alinhamento.alinhamento_score >= 40 && alinhamento.alinhamento_score < 70} class:low={alinhamento.alinhamento_score < 40}>
-							<span class="metrica-valor">{alinhamento.alinhamento_score}%</span>
+							<span class="metrica-valor">{fmtPct(alinhamento.alinhamento_score)}</span>
 							<span class="metrica-nome">Alinhamento</span>
 							<span class="metrica-detalhe">
 								{alinhamento.votacoes_consideradas} votações comparadas
@@ -361,7 +363,7 @@
 					{/if}
 					{#if disciplina?.disciplina != null}
 						<div class="metrica-card" class:high={disciplina.disciplina >= 80} class:mid={disciplina.disciplina >= 60 && disciplina.disciplina < 80} class:low={disciplina.disciplina < 60}>
-							<span class="metrica-valor">{disciplina.disciplina}%</span>
+							<span class="metrica-valor">{fmtPct(disciplina.disciplina)}</span>
 							<span class="metrica-nome">Disciplina</span>
 							<span class="metrica-detalhe" title="Percentual de vezes que os parlamentares votaram de acordo com a orientação oficial da bancada">
 								{disciplina.votacoes_analisadas} votações analisadas

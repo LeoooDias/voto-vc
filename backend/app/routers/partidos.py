@@ -197,12 +197,13 @@ async def alinhamento_partido(
     if not partido:
         raise HTTPException(status_code=404, detail="Partido não encontrado")
 
-    return await alinhamento_por_orientacao(db, partido.sigla, body.respostas)
+    return await alinhamento_por_orientacao(db, partido.sigla, body.respostas, uf=body.uf)
 
 
 @router.get("/{partido_id}/disciplina")
 async def disciplina_partido(
     partido_id: int,
+    uf: str | None = None,
     db: AsyncSession = Depends(get_db),
 ):
     """Disciplina partidária: % de vezes que parlamentares seguiram a orientação."""
@@ -211,4 +212,4 @@ async def disciplina_partido(
     if not partido:
         raise HTTPException(status_code=404, detail="Partido não encontrado")
 
-    return await calcular_disciplina(db, partido.sigla)
+    return await calcular_disciplina(db, partido.sigla, uf=uf)
