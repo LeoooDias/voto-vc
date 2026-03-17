@@ -53,29 +53,26 @@
 
 	async function loadQuestions() {
 		try {
-			const data = await api.get<QuestionarioItem[]>('/vote/items?n_items=50');
-
-			// Se logado, carregar respostas salvas do DB
+			// Coletar IDs já respondidos (do DB para logado, ou do store/localStorage)
 			const user = get(authUser);
+			let existing = get(respostas);
 			if (user) {
 				const saved = await carregarRespostas();
 				if (saved.length > 0) {
 					respostas.set(saved);
-					const answeredIds = new Set(saved.map((r) => r.proposicao_id));
-					const remaining = data.filter((q) => !answeredIds.has(q.proposicao_id));
-					items.set(remaining);
-					currentItems = remaining;
-					currentIndex.set(0);
-					answeredCount = saved.filter((r) => r.voto !== 'pular').length;
-					loaded = true;
-					return;
+					existing = saved;
 				}
 			}
 
+			// Pedir ao backend que exclua proposições já respondidas
+			const excludeIds = existing.map((r) => r.proposicao_id);
+			const excludeParam = excludeIds.length > 0 ? `&exclude=${excludeIds.join(',')}` : '';
+			const data = await api.get<QuestionarioItem[]>(`/vote/items?n_items=50${excludeParam}`);
+
+			answeredCount = existing.filter((r) => r.voto !== 'pular').length;
 			items.set(data);
 			currentItems = data;
-			const existing = get(respostas);
-			answeredCount = existing.filter((r) => r.voto !== 'pular').length;
+			currentIndex.set(0);
 			loaded = true;
 		} catch (e) {
 			console.error('Failed to load questionnaire:', e);

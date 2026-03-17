@@ -35,7 +35,7 @@ pnpm check        # svelte-check
 - **Frontend**: SvelteKit 5, TypeScript, adapter-node, Svelte 5 runes (`$state`, `$derived`)
 - **Infra**: AWS us-east-1, Terraform, EC2 t4g.small (ARM64), CloudFront, Route 53
 - **CI/CD**: GitHub Actions on push to main → rsync → docker build → compose up
-- **Auth**: JWT (python-jose) + bcrypt (passlib) — not yet active in MVP
+- **Auth**: JWT (python-jose) + bcrypt (passlib) + Google OAuth 2.0
 
 ## Key conventions
 
@@ -45,7 +45,7 @@ pnpm check        # svelte-check
 - Python 3.12+, type hints throughout
 - SQLAlchemy models use `Mapped[]` annotations
 - Frontend uses Svelte 5 runes syntax (`$state`, `$derived`, `$effect`), NOT legacy `$:` reactive declarations
-- API routes prefixed with `/api/` (e.g., `/api/questionario/items`, `/api/matching/calcular`)
+- API routes prefixed with `/api/` (e.g., `/api/vote/items`, `/api/matching/calcular`)
 - Enum values in DB are UPPERCASE (e.g., `TipoVoto.SIM`, `Casa.CAMARA`)
 - `id_externo` format: `camara_{id}` or `senado_{id}`
 - Name normalization: title case with lowercase prepositions (de, da, do, dos, das)
@@ -57,16 +57,26 @@ pnpm check        # svelte-check
 - `votacoes` — roll call votes linked to proposições
 - `votos_parlamentares` — individual votes (enum: SIM, NAO, ABSTENCAO, AUSENTE, OBSTRUCAO, PRESENTE_SEM_VOTO)
 - `partidos` — parties with `sigla`
+- `usuarios` — user accounts (Google OAuth or email/password), `uf`, `provedor_auth`
+- `respostas_usuarios` — user answers to proposições (`usuario_id`, `proposicao_id`, `voto`, `peso`)
 
 ## Important files
 
 - `backend/app/services/matching.py` — alignment scoring engine
-- `backend/app/services/questionario.py` — topic-diverse question selection
+- `backend/app/services/questionario.py` — topic-diverse question selection (anchors + round-robin by tema)
 - `backend/app/ingestion/normalize.py` — API data normalization
 - `backend/app/routers/parlamentares.py` — parlamentar detail + voting history
-- `frontend/src/routes/questionario/+page.svelte` — UF selector + question cards
-- `frontend/src/routes/resultado/+page.svelte` — ranked results
+- `backend/app/routers/partidos.py` — partido detail + aggregated voting + disciplina
+- `backend/app/routers/auth.py` — Google OAuth + JWT auth + user profile
+- `backend/app/routers/questionario.py` — vote endpoints (items, responder, respostas)
+- `backend/app/utils.py` — URL generation (`url_proposicao`, `urls_por_casa`)
+- `frontend/src/routes/vote/+page.svelte` — UF selector + question cards
+- `frontend/src/routes/perfil/+page.svelte` — ranked results (parlamentares, partidos, votos tabs)
 - `frontend/src/routes/parlamentar/[id]/+page.svelte` — parlamentar profile with expandable votes
+- `frontend/src/routes/partido/[id]/+page.svelte` — partido profile with aggregated votes + disciplina
+- `frontend/src/lib/stores/questionario.ts` — respostas/UF stores with localStorage persistence
+- `frontend/src/lib/stores/auth.ts` — auth state (authUser, checkAuth, logout)
+- `frontend/src/routes/auth/callback/+page.svelte` — OAuth callback + anonymous data migration
 - `infra/cloudfront.tf` — CDN + SSL config
 - `.github/workflows/deploy.yml` — CI/CD pipeline
 
@@ -78,6 +88,13 @@ pnpm check        # svelte-check
 - Docker containers: votovc-backend-1, votovc-frontend-1, votovc-db-1, votovc-nginx-1
 - DB access: `docker exec votovc-db-1 psql -U votovc -d votovc`
 - Terraform state in `infra/terraform.tfstate` (local, gitignored)
+
+## Key patterns
+
+- Anonymous users: respostas + UF persisted in localStorage, migrated to DB on login
+- Questionnaire: backend accepts `exclude` param with already-answered IDs to always serve fresh questions
+- Casa pills: proposições link to both Câmara and Senado pages via `urls_por_casa()` (direct URL or search fallback)
+- Vote endpoints mounted at `/api/vote/` (router in `questionario.py`)
 
 ## Don't
 

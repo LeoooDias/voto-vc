@@ -57,6 +57,7 @@ def _serialize(p: Proposicao, casas: list[str] | None = None) -> dict:
 async def montar_questionario(
     db: AsyncSession,
     n_items: int = 50,
+    exclude_ids: set[int] | None = None,
 ) -> list[dict]:
     """Select proposições for the questionnaire.
 
@@ -73,6 +74,10 @@ async def montar_questionario(
     )
     result = await db.execute(query)
     all_props = result.scalars().all()
+
+    # Remove already-answered proposições
+    if exclude_ids:
+        all_props = [p for p in all_props if p.id not in exclude_ids]
 
     # Build mapping of proposição → list of casas that voted on it
     casas_query = (

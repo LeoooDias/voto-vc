@@ -16,9 +16,16 @@ router = APIRouter()
 @router.get("/items")
 async def obter_questionario(
     n_items: int = 25,
+    exclude: str | None = None,
     db: AsyncSession = Depends(get_db),
 ):
-    items = await montar_questionario(db, n_items=n_items)
+    exclude_ids = set()
+    if exclude:
+        try:
+            exclude_ids = {int(x) for x in exclude.split(",") if x.strip()}
+        except ValueError:
+            pass
+    items = await montar_questionario(db, n_items=n_items, exclude_ids=exclude_ids)
     return items
 
 
