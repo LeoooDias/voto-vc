@@ -58,20 +58,6 @@
 	let votosVisiveis = $derived(votosFiltrados.slice(0, showLimit));
 	let hasMore = $derived(votosFiltrados.length > showLimit);
 
-	// Track first occurrence of each proposicao_id (most recent vote, used for comparison)
-	let firstOccurrence = $derived.by(() => {
-		const set = new Set<number>();
-		const first = new Set<number>();
-		for (let i = 0; i < votosFiltrados.length; i++) {
-			const pid = votosFiltrados[i].proposicao_id;
-			if (pid && !set.has(pid)) {
-				set.add(pid);
-				first.add(i);
-			}
-		}
-		return first;
-	});
-
 	let countSubstantivas = $derived(
 		allVotos.filter((v: VotoHistory) => v.substantiva).length
 	);
@@ -160,6 +146,18 @@
 		return 'voto-outro';
 	}
 
+	function statTooltip(voto: string): string {
+		const map: Record<string, string> = {
+			sim: 'Vezes que votou a favor da proposta',
+			nao: 'Vezes que votou contra a proposta',
+			abstencao: 'Vezes que se absteve de votar',
+			obstrucao: 'Vezes que obstruiu a votação como estratégia política',
+			ausente: 'Vezes que não compareceu à votação',
+			presente_sem_voto: 'Esteve presente na sessão mas não registrou voto'
+		};
+		return map[voto] || '';
+	}
+
 	function formatDate(iso: string | null): string {
 		if (!iso) return '';
 		try {
@@ -202,7 +200,7 @@
 				<h2>Resumo de votações</h2>
 				<div class="stats-grid">
 					{#each Object.entries(parlamentar.stats) as [voto, count]}
-						<div class="stat-item {votoClass(voto)}">
+						<div class="stat-item {votoClass(voto)}" title={statTooltip(voto)}>
 							<span class="stat-count">{count}</span>
 							<span class="stat-label">{votoLabel(voto)}</span>
 						</div>
@@ -216,20 +214,20 @@
 				<h2>Comparação com seus votos</h2>
 				<div class="comparacao-stats">
 					{#if comparacao.score != null}
-						<div class="comp-item alinhamento" class:high={comparacao.score >= 70} class:mid={comparacao.score >= 40 && comparacao.score < 70} class:low={comparacao.score < 40}>
+						<div class="comp-item alinhamento" class:high={comparacao.score >= 70} class:mid={comparacao.score >= 40 && comparacao.score < 70} class:low={comparacao.score < 40} title="Quanto esse parlamentar votou parecido com você nas proposições em comum">
 							<span class="comp-count">{fmtPct(comparacao.score)}</span>
 							<span class="comp-label">Alinhamento</span>
 						</div>
 					{/if}
-					<div class="comp-item concordou">
+					<div class="comp-item concordou" title="Proposições em que vocês dois votaram igual">
 						<span class="comp-count">{comparacao.concordou}</span>
 						<span class="comp-label">Concordaram</span>
 					</div>
-					<div class="comp-item discordou">
+					<div class="comp-item discordou" title="Proposições em que vocês dois votaram diferente">
 						<span class="comp-count">{comparacao.discordou}</span>
 						<span class="comp-label">Discordaram</span>
 					</div>
-					<div class="comp-item total">
+					<div class="comp-item total" title="Total de proposições em que ambos votaram">
 						<span class="comp-count">{comparacao.total}</span>
 						<span class="comp-label">Comparados</span>
 					</div>
@@ -261,16 +259,17 @@
 					{@const hasDetails = voto.substantiva && (voto.resumo_cidadao || voto.descricao_detalhada)}
 					{@const isExpanded = expandedIdx === idx}
 					{@const meuVoto = voto.proposicao_id ? userVotoMap.get(voto.proposicao_id) : undefined}
-					{@const isFirst = firstOccurrence.has(idx)}
-					{@const comparavel = isFirst && meuVoto && (voto.voto === 'sim' || voto.voto === 'nao')}
+					{@const parlVotou = voto.voto === 'sim' || voto.voto === 'nao'}
+					{@const comparavel = meuVoto && parlVotou}
 					{@const concordou = comparavel && meuVoto === voto.voto}
+					{@const naoVotou = meuVoto && !parlVotou}
 					<button
 						type="button"
 						class="voto-card"
 						class:expandable={hasDetails}
 						class:expanded={isExpanded}
 						class:card-concordou={comparavel && concordou}
-						class:card-discordou={comparavel && !concordou}
+						class:card-discordou={(comparavel && !concordou) || naoVotou}
 						onclick={() => hasDetails && toggleExpand(idx)}
 					>
 						<div class="voto-main">
@@ -295,6 +294,8 @@
 											<span class="match-badge {concordou ? 'match-concordou' : 'match-discordou'}">
 												{concordou ? 'Concordou' : 'Discordou'}
 											</span>
+										{:else if naoVotou}
+											<span class="match-badge match-naovotou">Não votou</span>
 										{/if}
 									</div>
 								{/if}
@@ -677,6 +678,11 @@
 	.match-discordou {
 		background: #dc26261a;
 		color: #dc2626;
+	}
+
+	.match-naovotou {
+		background: #6b72801a;
+		color: var(--text-secondary);
 	}
 
 	.loading, .empty {

@@ -278,6 +278,18 @@
 		return 'voto-outro';
 	}
 
+	function statTooltip(voto: string): string {
+		const map: Record<string, string> = {
+			sim: 'Vezes que parlamentares do partido votaram a favor da proposta',
+			nao: 'Vezes que parlamentares do partido votaram contra a proposta',
+			abstencao: 'Vezes que parlamentares do partido se abstiveram de votar',
+			obstrucao: 'Vezes que parlamentares do partido obstruíram a votação como estratégia política',
+			ausente: 'Vezes que parlamentares do partido não compareceram à votação',
+			presente_sem_voto: 'Parlamentares presentes na sessão mas que não registraram voto'
+		};
+		return map[voto] || '';
+	}
+
 </script>
 
 <svelte:head>
@@ -333,7 +345,7 @@
 			<div class="metricas">
 				<div class="metricas-grid">
 					{#if comparacao.score != null}
-						<div class="metrica-card" class:high={!scopeLoading && comparacao.score >= 70} class:mid={!scopeLoading && comparacao.score >= 40 && comparacao.score < 70} class:low={!scopeLoading && comparacao.score < 40}>
+						<div class="metrica-card" class:high={!scopeLoading && comparacao.score >= 70} class:mid={!scopeLoading && comparacao.score >= 40 && comparacao.score < 70} class:low={!scopeLoading && comparacao.score < 40} title="Quanto o partido votou parecido com você nas proposições em comum">
 							<span class="metrica-valor">{#if scopeLoading}<span class="spinner lg"></span>{:else}{fmtPct(comparacao.score)}{/if}</span>
 							<span class="metrica-nome">Alinhamento</span>
 							<span class="metrica-detalhe">
@@ -342,7 +354,7 @@
 						</div>
 					{/if}
 					{#if disciplina?.disciplina != null}
-						<div class="metrica-card" class:high={!scopeLoading && disciplina.disciplina >= 80} class:mid={!scopeLoading && disciplina.disciplina >= 60 && disciplina.disciplina < 80} class:low={!scopeLoading && disciplina.disciplina < 60}>
+						<div class="metrica-card" class:high={!scopeLoading && disciplina.disciplina >= 80} class:mid={!scopeLoading && disciplina.disciplina >= 60 && disciplina.disciplina < 80} class:low={!scopeLoading && disciplina.disciplina < 60} title="Com que frequência os parlamentares seguem a orientação oficial do partido">
 							<span class="metrica-valor">{#if scopeLoading}<span class="spinner lg"></span>{:else}{fmtPct(disciplina.disciplina)}{/if}</span>
 							<span class="metrica-nome">Disciplina</span>
 							<span class="metrica-detalhe" title="Percentual de vezes que os parlamentares votaram de acordo com a orientação oficial da bancada">
@@ -359,7 +371,7 @@
 				<h2>Como votaram os parlamentares</h2>
 				<div class="stats-grid">
 					{#each Object.entries(partido.stats) as [voto, count]}
-						<div class="stat-item {votoClass(voto)}">
+						<div class="stat-item {votoClass(voto)}" title={statTooltip(voto)}>
 							<span class="stat-count">{#if scopeLoading}<span class="spinner"></span>{:else}{count}{/if}</span>
 							<span class="stat-label">{votoLabel(voto)}</span>
 						</div>
@@ -370,11 +382,11 @@
 						{#if scopeLoading}
 							<span class="spinner"></span>
 						{:else}
-							<span class="comparacao-concordou">{comparacao.concordou} concordaram</span>
+							<span class="comparacao-concordou" title="Proposições em que o partido votou igual a você">{comparacao.concordou} concordaram</span>
 							<span class="comparacao-sep">·</span>
-							<span class="comparacao-discordou">{comparacao.discordou} discordaram</span>
+							<span class="comparacao-discordou" title="Proposições em que o partido votou diferente de você">{comparacao.discordou} discordaram</span>
 							<span class="comparacao-sep">·</span>
-							<span class="comparacao-total">{comparacao.total} comparados</span>
+							<span class="comparacao-total" title="Total de proposições em que ambos votaram">{comparacao.total} comparados</span>
 						{/if}
 					</div>
 				{/if}
