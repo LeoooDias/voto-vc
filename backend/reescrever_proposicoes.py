@@ -113,7 +113,7 @@ def rewrite_item(client: anthropic.Anthropic, item: dict) -> dict:
     user_prompt = build_user_prompt(item, web_context)
 
     response = client.messages.create(
-        model="claude-opus-4-20250514",
+        model="claude-opus-4-6",
         max_tokens=800,
         system=SYSTEM_PROMPT,
         messages=[{"role": "user", "content": user_prompt}],
@@ -137,7 +137,9 @@ def main():
     parser = argparse.ArgumentParser(description="Rewrite proposição content with Claude Opus 4.6")
     parser.add_argument("--start-from", type=int, default=0, help="Start from this proposição ID")
     parser.add_argument("--only-raw", action="store_true", help="Only process items with resumo = ementa")
+    parser.add_argument("--only-custom", action="store_true", help="Only process items with existing custom resumo")
     parser.add_argument("--limit", type=int, default=0, help="Limit number of items to process")
+    parser.add_argument("--output", type=str, default=OUTPUT_FILE, help="Output file path")
     parser.add_argument("--dry-run", action="store_true", help="Show what would be processed without calling API")
     args = parser.parse_args()
 
@@ -149,10 +151,12 @@ def main():
     with open(INPUT_FILE) as f:
         items = json.load(f)
 
+    output_file = args.output
+
     # Load existing results
     existing = {}
-    if os.path.exists(OUTPUT_FILE):
-        with open(OUTPUT_FILE) as f:
+    if os.path.exists(output_file):
+        with open(output_file) as f:
             for item in json.load(f):
                 existing[item["id"]] = item
 
@@ -164,6 +168,8 @@ def main():
         if args.start_from and item["id"] < args.start_from:
             continue
         if args.only_raw and item.get("has_custom"):
+            continue
+        if args.only_custom and not item.get("has_custom"):
             continue
         to_process.append(item)
 
@@ -202,7 +208,7 @@ def main():
             existing[item["id"]] = result
 
             # Save after each item
-            with open(OUTPUT_FILE, "w") as f:
+            with open(output_file, "w") as f:
                 json.dump(results, f, ensure_ascii=False, indent=2)
 
             print(f"✓ {rewritten['titulo'][:50]}")
@@ -219,7 +225,7 @@ def main():
                 result = {**item, "novo_titulo": rewritten["titulo"], "nova_descricao": rewritten["descricao"]}
                 results.append(result)
                 existing[item["id"]] = result
-                with open(OUTPUT_FILE, "w") as f:
+                with open(output_file, "w") as f:
                     json.dump(results, f, ensure_ascii=False, indent=2)
                 print(f"✓ (retry) {rewritten['titulo'][:50]}")
             except Exception as e2:
@@ -229,7 +235,7 @@ def main():
             print(f"Error: {e}")
             continue
 
-    print(f"\nCompleto! {len(results)} proposições salvas em {OUTPUT_FILE}")
+    print(f"\nCompleto! {len(results)} proposições salvas em {output_file}")
 
 
 if __name__ == "__main__":
