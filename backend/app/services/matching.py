@@ -514,6 +514,8 @@ async def calcular_matching(
                     "nome": p.nome,
                     "score": None,
                     "parlamentares_comparados": 0,
+                    "votos_comparados": 0,
+                    "concordou": 0,
                 }
             )
             continue
@@ -523,8 +525,10 @@ async def calcular_matching(
         if n_comparados == 0:
             # No parlamentares met comparison threshold — score not meaningful
             score = None
+            p_concordou = 0
+            p_discordou = 0
         else:
-            score, _, _ = _score_partido_hybrid(
+            score, p_concordou, p_discordou = _score_partido_hybrid(
                 user_votes,
                 proposicao_ids,
                 p.sigla,
@@ -542,6 +546,8 @@ async def calcular_matching(
                 "nome": p.nome,
                 "score": score,
                 "parlamentares_comparados": n_comparados,
+                "votos_comparados": p_concordou + p_discordou,
+                "concordou": p_concordou,
             }
         )
 

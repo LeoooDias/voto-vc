@@ -10,7 +10,7 @@
 
 	let results: PartidoMatchResult[] = $state([]);
 	let isLoading = $state(true);
-	let sortKey: 'sigla' | 'score' | 'parlamentares_comparados' = $state('score');
+	let sortKey: 'sigla' | 'score' | 'parlamentares_comparados' | 'votos_comparados' | 'concordou' = $state('score');
 	let sortAsc = $state(false);
 	let perPage = $state(25);
 	let currentPage = $state(1);
@@ -179,7 +179,9 @@
 					<tr>
 						<th class="col-rank">#</th>
 						<th class="col-name sortable" onclick={() => toggleSort('sigla')}>Partido{sortIndicator('sigla')}</th>
-						<th class="col-num sortable" onclick={() => toggleSort('parlamentares_comparados')}>Comparados{sortIndicator('parlamentares_comparados')}</th>
+						<th class="col-num sortable" onclick={() => toggleSort('parlamentares_comparados')}>Parlamentares{sortIndicator('parlamentares_comparados')}</th>
+						<th class="col-num sortable" onclick={() => toggleSort('votos_comparados')}>Votos Comparados{sortIndicator('votos_comparados')}</th>
+						<th class="col-num sortable" onclick={() => toggleSort('concordou')}>Votos Em Comum{sortIndicator('concordou')}</th>
 						<th class="col-score sortable" onclick={() => toggleSort('score')}>Alinhamento{sortIndicator('score')}</th>
 					</tr>
 				</thead>
@@ -192,6 +194,8 @@
 								<span class="nome-full">{result.nome}</span>
 							</td>
 							<td class="col-num">{#if scopeLoading}<span class="spinner"></span>{:else}{result.parlamentares_comparados}{/if}</td>
+							<td class="col-num">{#if scopeLoading}<span class="spinner"></span>{:else}{result.votos_comparados}{/if}</td>
+							<td class="col-num">{#if scopeLoading}<span class="spinner"></span>{:else}{result.concordou}{/if}</td>
 							<td class="col-score">
 								{#if scopeLoading}
 									<span class="spinner"></span>

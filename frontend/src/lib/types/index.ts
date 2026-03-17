@@ -39,6 +39,8 @@ export interface PartidoMatchResult {
 	nome: string;
 	score: number | null;
 	parlamentares_comparados: number;
+	votos_comparados: number;
+	concordou: number;
 }
 
 export interface MatchResponse {

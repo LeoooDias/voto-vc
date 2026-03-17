@@ -209,8 +209,8 @@
 						<th class="col-partido sortable" onclick={() => toggleSort('partido')}>Partido{sortIndicator('partido')}</th>
 						<th class="col-uf sortable" onclick={() => toggleSort('uf')}>UF{sortIndicator('uf')}</th>
 						<th class="col-casa">Casa</th>
-						<th class="col-num sortable" onclick={() => toggleSort('votos_comparados')}>Comparados{sortIndicator('votos_comparados')}</th>
-						<th class="col-num sortable" onclick={() => toggleSort('concordou')}>Em Comum{sortIndicator('concordou')}</th>
+						<th class="col-num sortable" onclick={() => toggleSort('votos_comparados')}>Votos Comparados{sortIndicator('votos_comparados')}</th>
+						<th class="col-num sortable" onclick={() => toggleSort('concordou')}>Votos Em Comum{sortIndicator('concordou')}</th>
 						<th class="col-score sortable" onclick={() => toggleSort('score')}>Alinhamento{sortIndicator('score')}</th>
 					</tr>
 				</thead>
