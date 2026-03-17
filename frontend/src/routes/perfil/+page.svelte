@@ -23,6 +23,7 @@
 	let parlResults: MatchResult[] = $state([]);
 	let partidoResults: PartidoMatchResult[] = $state([]);
 	let isLoading = $state(true);
+	let scopeLoading = $state(false);
 	let totalRespostas = $state(0);
 	let tab: 'parlamentares' | 'partidos' | 'votos' = $state('partidos');
 
@@ -52,7 +53,9 @@
 	loading.subscribe((v) => (isLoading = v));
 
 	async function loadMatching() {
-		loading.set(true);
+		const isInitial = parlResults.length === 0 && partidoResults.length === 0;
+		if (isInitial) loading.set(true);
+		scopeLoading = true;
 		try {
 			const data = await api.post<MatchResponse>('/matching/calcular', {
 				respostas: userRespostas,
@@ -64,6 +67,7 @@
 			console.error('Failed to calculate matching:', e);
 		} finally {
 			loading.set(false);
+			scopeLoading = false;
 		}
 	}
 
@@ -231,8 +235,8 @@
 								{result.partido ?? 'Sem partido'} · {result.uf} · {result.casa === 'camara' ? (result.sexo === 'F' ? 'Deputada' : 'Deputado') : (result.sexo === 'F' ? 'Senadora' : 'Senador')}
 							</div>
 						</div>
-						<div class="score" class:high={result.score >= 70} class:mid={result.score >= 40 && result.score < 70} class:low={result.score < 40}>
-							{fmtPct(result.score)}
+						<div class="score" class:high={!scopeLoading && result.score >= 70} class:mid={!scopeLoading && result.score >= 40 && result.score < 70} class:low={!scopeLoading && result.score < 40}>
+							{#if scopeLoading}<span class="spinner"></span>{:else}{fmtPct(result.score)}{/if}
 						</div>
 					</a>
 				{/each}
@@ -246,7 +250,9 @@
 							<div class="nome">{result.sigla}</div>
 							<div class="meta">{result.nome} · {result.parlamentares_comparados} comparado{result.parlamentares_comparados !== 1 ? 's' : ''}</div>
 						</div>
-						{#if result.score != null}
+						{#if scopeLoading}
+							<div class="score"><span class="spinner"></span></div>
+						{:else if result.score != null}
 							<div class="score" class:high={result.score >= 70} class:mid={result.score >= 40 && result.score < 70} class:low={result.score < 40}>
 								{fmtPct(result.score)}
 							</div>
@@ -679,5 +685,20 @@
 
 	.uf-cancel:hover {
 		color: var(--text-primary);
+	}
+
+	.spinner {
+		display: inline-block;
+		width: 1em;
+		height: 1em;
+		border: 2px solid var(--border);
+		border-top-color: var(--link);
+		border-radius: 50%;
+		animation: spin 0.6s linear infinite;
+		vertical-align: middle;
+	}
+
+	@keyframes spin {
+		to { transform: rotate(360deg); }
 	}
 </style>

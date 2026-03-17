@@ -17,6 +17,7 @@
 	let escopo: 'brasil' | 'estado' = $state('brasil');
 	let ufSelecionada = $state('');
 	let showUfPicker = $state(false);
+	let scopeLoading = $state(false);
 
 	let sorted = $derived(
 		[...results].sort((a, b) => {
@@ -58,9 +59,10 @@
 	let userRespostas: { proposicao_id: number; voto: string; peso: number }[] = [];
 
 	async function loadData() {
-		isLoading = true;
+		const isInitial = results.length === 0;
+		if (isInitial) isLoading = true;
+		scopeLoading = true;
 		try {
-			const uf = escopo === 'estado' && ufSelecionada ? ufSelecionada : (escopo === 'brasil' ? undefined : get(selectedUf) || undefined);
 			const data = await api.post<MatchResponse>('/matching/calcular', {
 				respostas: userRespostas,
 				uf: escopo === 'estado' ? (ufSelecionada || undefined) : undefined,
@@ -71,6 +73,7 @@
 			console.error('Failed to load:', e);
 		} finally {
 			isLoading = false;
+			scopeLoading = false;
 		}
 	}
 
@@ -188,9 +191,11 @@
 								<a href="/partido/{result.partido_id}">{result.sigla}</a>
 								<span class="nome-full">{result.nome}</span>
 							</td>
-							<td class="col-num">{result.parlamentares_comparados}</td>
+							<td class="col-num">{#if scopeLoading}<span class="spinner"></span>{:else}{result.parlamentares_comparados}{/if}</td>
 							<td class="col-score">
-								{#if result.score != null}
+								{#if scopeLoading}
+									<span class="spinner"></span>
+								{:else if result.score != null}
 									<span class="score" class:high={result.score >= 70} class:mid={result.score >= 40 && result.score < 70} class:low={result.score < 40}>
 										{fmtPct(result.score)}
 									</span>
@@ -412,4 +417,19 @@
 	}
 
 	.uf-cancel:hover { color: var(--text-primary); }
+
+	.spinner {
+		display: inline-block;
+		width: 1em;
+		height: 1em;
+		border: 2px solid var(--border);
+		border-top-color: var(--link);
+		border-radius: 50%;
+		animation: spin 0.6s linear infinite;
+		vertical-align: middle;
+	}
+
+	@keyframes spin {
+		to { transform: rotate(360deg); }
+	}
 </style>

@@ -50,6 +50,7 @@
 	let escopo: 'brasil' | 'estado' = $state('brasil');
 	let ufSelecionada = $state('');
 	let showUfPicker = $state(false);
+	let scopeLoading = $state(false);
 	let userVotoMap = $state<Map<number, 'sim' | 'nao'>>(new Map());
 
 	let showLimit = $state(100);
@@ -67,24 +68,12 @@
 
 	let comparacao = $state<{ concordou: number; discordou: number; total: number; score: number | null; parlamentares_comparados?: number }>({ concordou: 0, discordou: 0, total: 0, score: null });
 
-	interface AlinhamentoResult {
-		sigla_partido: string;
-		alinhamento_score: number | null;
-		metodo: string;
-		votacoes_consideradas: number;
-		votacoes_liberadas: number;
-		votacoes_sem_orientacao: number;
-		votacoes_com_divergencia: number;
-		votacoes_fallback_distribuicao: number;
-	}
-
 	interface DisciplinaResult {
 		disciplina: number | null;
 		votacoes_analisadas: number;
 		votacoes_liberadas: number;
 	}
 
-	let alinhamento = $state<AlinhamentoResult | null>(null);
 	let disciplina = $state<DisciplinaResult | null>(null);
 
 	function buildUserVotoMap(lista: Array<{ proposicao_id: number; voto: string; peso: number }>) {
@@ -109,16 +98,6 @@
 		}
 	}
 
-	async function loadAlinhamento() {
-		if (userRespostas.length === 0 || !partido) return;
-		try {
-			const ufParam = escopo === 'estado' && ufSelecionada ? ufSelecionada : undefined;
-			alinhamento = await api.post<AlinhamentoResult>(`/partidos/${partido.sigla}/alinhamento`, { respostas: userRespostas, uf: ufParam });
-		} catch (e) {
-			console.error('Failed to load alinhamento:', e);
-		}
-	}
-
 	async function loadDisciplina() {
 		try {
 			const ufParam = escopo === 'estado' && ufSelecionada ? `?uf=${ufSelecionada}` : '';
@@ -132,13 +111,14 @@
 		try {
 			const ufParam = escopo === 'estado' && ufSelecionada ? `?uf=${ufSelecionada}` : '';
 			showLimit = 100;
+			scopeLoading = true;
 			partido = await api.get<PartidoDetail>(`/partidos/${page.params.id}${ufParam}`);
-			loadComparacao();
-			loadAlinhamento();
-			loadDisciplina();
+			await Promise.all([loadComparacao(), loadDisciplina()]);
 		} catch (e) {
 			console.error('Failed to load partido:', e);
 			error = true;
+		} finally {
+			scopeLoading = false;
 		}
 	}
 
@@ -328,7 +308,7 @@
 				<h1>{partido.nome}</h1>
 				<p class="meta">{partido.sigla}</p>
 				<p class="meta-count">
-					{partido.total_parlamentares} parlamentar{partido.total_parlamentares !== 1 ? 'es' : ''}
+					{#if scopeLoading}<span class="spinner"></span>{:else}{partido.total_parlamentares} parlamentar{partido.total_parlamentares !== 1 ? 'es' : ''}{/if}
 					{#if escopo === 'estado' && ufSelecionada}
 						em {ufSelecionada}
 					{/if}
@@ -349,41 +329,28 @@
 			>Meu estado{ufSelecionada ? ` (${ufSelecionada})` : ''}</button>
 		</div>
 
-		{#if alinhamento?.alinhamento_score != null || disciplina?.disciplina != null}
+		{#if comparacao.score != null || disciplina?.disciplina != null}
 			<div class="metricas">
 				<div class="metricas-grid">
-					{#if alinhamento?.alinhamento_score != null}
-						<div class="metrica-card" class:high={alinhamento.alinhamento_score >= 70} class:mid={alinhamento.alinhamento_score >= 40 && alinhamento.alinhamento_score < 70} class:low={alinhamento.alinhamento_score < 40}>
-							<span class="metrica-valor">{fmtPct(alinhamento.alinhamento_score)}</span>
+					{#if comparacao.score != null}
+						<div class="metrica-card" class:high={!scopeLoading && comparacao.score >= 70} class:mid={!scopeLoading && comparacao.score >= 40 && comparacao.score < 70} class:low={!scopeLoading && comparacao.score < 40}>
+							<span class="metrica-valor">{#if scopeLoading}<span class="spinner lg"></span>{:else}{fmtPct(comparacao.score)}{/if}</span>
 							<span class="metrica-nome">Alinhamento</span>
 							<span class="metrica-detalhe">
-								{alinhamento.votacoes_consideradas} votações comparadas
+								{#if !scopeLoading}{comparacao.total} votações comparadas{/if}
 							</span>
 						</div>
 					{/if}
 					{#if disciplina?.disciplina != null}
-						<div class="metrica-card" class:high={disciplina.disciplina >= 80} class:mid={disciplina.disciplina >= 60 && disciplina.disciplina < 80} class:low={disciplina.disciplina < 60}>
-							<span class="metrica-valor">{fmtPct(disciplina.disciplina)}</span>
+						<div class="metrica-card" class:high={!scopeLoading && disciplina.disciplina >= 80} class:mid={!scopeLoading && disciplina.disciplina >= 60 && disciplina.disciplina < 80} class:low={!scopeLoading && disciplina.disciplina < 60}>
+							<span class="metrica-valor">{#if scopeLoading}<span class="spinner lg"></span>{:else}{fmtPct(disciplina.disciplina)}{/if}</span>
 							<span class="metrica-nome">Disciplina</span>
 							<span class="metrica-detalhe" title="Percentual de vezes que os parlamentares votaram de acordo com a orientação oficial da bancada">
-								{disciplina.votacoes_analisadas} votações analisadas
+								{#if !scopeLoading}{disciplina.votacoes_analisadas} votações analisadas{/if}
 							</span>
 						</div>
 					{/if}
 				</div>
-				{#if alinhamento && (alinhamento.votacoes_liberadas > 0 || alinhamento.votacoes_sem_orientacao > 0 || alinhamento.votacoes_com_divergencia > 0)}
-					<div class="metricas-footnote">
-						{#if alinhamento.votacoes_liberadas > 0}
-							<span>{alinhamento.votacoes_liberadas} liberada{alinhamento.votacoes_liberadas !== 1 ? 's' : ''}</span>
-						{/if}
-						{#if alinhamento.votacoes_sem_orientacao > 0}
-							<span>{alinhamento.votacoes_sem_orientacao} sem orientação</span>
-						{/if}
-						{#if alinhamento.votacoes_com_divergencia > 0}
-							<span title="Votações onde mais de 30% dos parlamentares divergiram da orientação oficial">{alinhamento.votacoes_com_divergencia} com divergência</span>
-						{/if}
-					</div>
-				{/if}
 			</div>
 		{/if}
 
@@ -393,18 +360,22 @@
 				<div class="stats-grid">
 					{#each Object.entries(partido.stats) as [voto, count]}
 						<div class="stat-item {votoClass(voto)}">
-							<span class="stat-count">{count}</span>
+							<span class="stat-count">{#if scopeLoading}<span class="spinner"></span>{:else}{count}{/if}</span>
 							<span class="stat-label">{votoLabel(voto)}</span>
 						</div>
 					{/each}
 				</div>
 				{#if comparacao.total > 0}
 					<div class="comparacao-resumo">
-						<span class="comparacao-concordou">{comparacao.concordou} concordaram</span>
-						<span class="comparacao-sep">·</span>
-						<span class="comparacao-discordou">{comparacao.discordou} discordaram</span>
-						<span class="comparacao-sep">·</span>
-						<span class="comparacao-total">{comparacao.total} comparados</span>
+						{#if scopeLoading}
+							<span class="spinner"></span>
+						{:else}
+							<span class="comparacao-concordou">{comparacao.concordou} concordaram</span>
+							<span class="comparacao-sep">·</span>
+							<span class="comparacao-discordou">{comparacao.discordou} discordaram</span>
+							<span class="comparacao-sep">·</span>
+							<span class="comparacao-total">{comparacao.total} comparados</span>
+						{/if}
 					</div>
 				{/if}
 			</div>
@@ -1020,5 +991,27 @@
 
 	.uf-cancel:hover {
 		color: var(--text-primary);
+	}
+
+	/* Spinner */
+	.spinner {
+		display: inline-block;
+		width: 1em;
+		height: 1em;
+		border: 2px solid var(--border);
+		border-top-color: var(--link);
+		border-radius: 50%;
+		animation: spin 0.6s linear infinite;
+		vertical-align: middle;
+	}
+
+	.spinner.lg {
+		width: 1.5em;
+		height: 1.5em;
+		border-width: 3px;
+	}
+
+	@keyframes spin {
+		to { transform: rotate(360deg); }
 	}
 </style>

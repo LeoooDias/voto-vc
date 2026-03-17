@@ -1,0 +1,35 @@
+"""Constants shared across ingestion scripts."""
+
+# Mapping of party sigla → full official name.
+# Used when creating new Partido rows so nome is set correctly.
+PARTIDO_NOMES: dict[str, str] = {
+    "AVANTE": "Avante",
+    "CIDADANIA": "Cidadania",
+    "DEM": "Democratas",
+    "MDB": "Movimento Democrático Brasileiro",
+    "NOVO": "Partido Novo",
+    "PATRIOTA": "Patriota",
+    "PCdoB": "Partido Comunista do Brasil",
+    "PDT": "Partido Democrático Trabalhista",
+    "PL": "Partido Liberal",
+    "PODE": "Podemos",
+    "PODEMOS": "Podemos",
+    "PP": "Progressistas",
+    "PRD": "Partido Renovação Democrática",
+    "PROS": "Partido Republicano da Ordem Social",
+    "PSB": "Partido Socialista Brasileiro",
+    "PSC": "Partido Social Cristão",
+    "PSD": "Partido Social Democrático",
+    "PSDB": "Partido da Social Democracia Brasileira",
+    "PSL": "Partido Social Liberal",
+    "PSOL": "Partido Socialismo e Liberdade",
+    "PT": "Partido dos Trabalhadores",
+    "PTB": "Partido Trabalhista Brasileiro",
+    "PV": "Partido Verde",
+    "REDE": "Rede Sustentabilidade",
+    "REPUBLICANOS": "Republicanos",
+    "SOLIDARIEDADE": "Solidariedade",
+    "UNIÃO": "União Brasil",
+    "S.PART.": "Sem Partido",
+    "S/Partido": "Sem Partido",
+}

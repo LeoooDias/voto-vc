@@ -19,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.classification.classifier import classify_proposicao
 from app.database import async_session
+from app.ingestion.constants import PARTIDO_NOMES
 from app.models.parlamentar import Parlamentar
 from app.models.partido import Partido
 from app.models.proposicao import Proposicao
@@ -307,7 +308,7 @@ async def import_year(
                 partido_id = None
                 if sigla:
                     if sigla not in partido_map:
-                        partido = Partido(sigla=sigla, nome=sigla)
+                        partido = Partido(sigla=sigla, nome=PARTIDO_NOMES.get(sigla, sigla))
                         db.add(partido)
                         await db.flush()
                         partido_map[sigla] = partido.id

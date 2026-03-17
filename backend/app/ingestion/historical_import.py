@@ -19,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.classification.classifier import classify_proposicao
 from app.database import async_session
 from app.ingestion.base import BaseAPIClient
+from app.ingestion.constants import PARTIDO_NOMES
 from app.models.parlamentar import Parlamentar
 from app.models.proposicao import Proposicao
 from app.models.topico import ProposicaoTopico, Topico
@@ -385,7 +386,9 @@ async def ensure_parlamentar(db: AsyncSession, dep_data: dict, parl_mapping: dic
         result = await db.execute(select(Partido).where(Partido.sigla == partido_sigla))
         partido = result.scalar_one_or_none()
         if not partido:
-            partido = Partido(sigla=partido_sigla, nome=partido_sigla)
+            partido = Partido(
+                sigla=partido_sigla, nome=PARTIDO_NOMES.get(partido_sigla, partido_sigla)
+            )
             db.add(partido)
             await db.flush()
         parlamentar.partido_id = partido.id

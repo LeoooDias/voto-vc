@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.classification.classifier import classify_proposicao
 from app.database import async_session
 from app.ingestion.camara import CamaraClient
+from app.ingestion.constants import PARTIDO_NOMES
 from app.ingestion.normalize import (
     normalize_deputado,
     normalize_senador,
@@ -37,7 +38,7 @@ async def sync_partidos(db: AsyncSession, parlamentares_data: list[dict]) -> dic
         result = await db.execute(select(Partido).where(Partido.sigla == sigla))
         partido = result.scalar_one_or_none()
         if not partido:
-            partido = Partido(sigla=sigla, nome=sigla)
+            partido = Partido(sigla=sigla, nome=PARTIDO_NOMES.get(sigla, sigla))
             db.add(partido)
             await db.flush()
         mapping[sigla] = partido.id

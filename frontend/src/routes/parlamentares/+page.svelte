@@ -17,6 +17,7 @@
 	let escopo: 'brasil' | 'estado' = $state('brasil');
 	let ufSelecionada = $state('');
 	let showUfPicker = $state(false);
+	let scopeLoading = $state(false);
 
 	let sorted = $derived(
 		[...results].sort((a, b) => {
@@ -60,7 +61,9 @@
 	let userRespostas: { proposicao_id: number; voto: string; peso: number }[] = [];
 
 	async function loadData() {
-		isLoading = true;
+		const isInitial = results.length === 0;
+		if (isInitial) isLoading = true;
+		scopeLoading = true;
 		try {
 			const data = await api.post<MatchResponse>('/matching/calcular', {
 				respostas: userRespostas,
@@ -72,6 +75,7 @@
 			console.error('Failed to load:', e);
 		} finally {
 			isLoading = false;
+			scopeLoading = false;
 		}
 	}
 
@@ -194,9 +198,13 @@
 							<td class="col-casa">{casaLabel(result.casa, result.sexo)}</td>
 							<td class="col-num">{result.votos_comparados}</td>
 							<td class="col-score">
-								<span class="score" class:high={result.score >= 70} class:mid={result.score >= 40 && result.score < 70} class:low={result.score < 40}>
-									{fmtPct(result.score)}
-								</span>
+								{#if scopeLoading}
+									<span class="spinner"></span>
+								{:else}
+									<span class="score" class:high={result.score >= 70} class:mid={result.score >= 40 && result.score < 70} class:low={result.score < 40}>
+										{fmtPct(result.score)}
+									</span>
+								{/if}
 							</td>
 						</tr>
 					{/each}
@@ -406,4 +414,19 @@
 	}
 
 	.uf-cancel:hover { color: var(--text-primary); }
+
+	.spinner {
+		display: inline-block;
+		width: 1em;
+		height: 1em;
+		border: 2px solid var(--border);
+		border-top-color: var(--link);
+		border-radius: 50%;
+		animation: spin 0.6s linear infinite;
+		vertical-align: middle;
+	}
+
+	@keyframes spin {
+		to { transform: rotate(360deg); }
+	}
 </style>
