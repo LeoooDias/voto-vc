@@ -81,7 +81,9 @@ async def montar_questionario(
         .group_by(Votacao.proposicao_id)
     )
     casas_result = await db.execute(casas_query)
-    casas_by_prop: dict[int, list[str]] = {row[0]: sorted(row[1]) for row in casas_result.all()}
+    casas_by_prop: dict[int, list[str]] = {
+        row[0]: sorted(c.lower() for c in row[1]) for row in casas_result.all()
+    }
 
     # Identify bicameral proposições (voted in both Câmara and Senado)
     bicameral_ids = {pid for pid, casas in casas_by_prop.items() if len(casas) > 1}
