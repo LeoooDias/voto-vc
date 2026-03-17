@@ -165,7 +165,7 @@
 </script>
 
 <svelte:head>
-	<title>Seu resultado — voto.vc</title>
+	<title>Meu Perfil — voto.vc</title>
 </svelte:head>
 
 {#if showUfPicker}
@@ -189,7 +189,7 @@
 		<a href="/vote">Tentar novamente</a>
 	</div>
 {:else}
-	<div class="resultado">
+	<div class="perfil-page">
 		<h1>Seu alinhamento político</h1>
 		<p class="subtitle">Baseado nos seus {totalRespostas} votos</p>
 
@@ -244,7 +244,7 @@
 						<span class="rank">#{i + 1}</span>
 						<div class="info">
 							<div class="nome">{result.sigla}</div>
-							<div class="meta">{result.nome} · {result.parlamentares_comparados} parlamentar{result.parlamentares_comparados !== 1 ? 'es' : ''}</div>
+							<div class="meta">{result.nome} · {result.parlamentares_comparados} comparado{result.parlamentares_comparados !== 1 ? 's' : ''}</div>
 						</div>
 						{#if result.score != null}
 							<div class="score" class:high={result.score >= 70} class:mid={result.score >= 40 && result.score < 70} class:low={result.score < 40}>
@@ -324,7 +324,7 @@
 {/if}
 
 <style>
-	.resultado {
+	.perfil-page {
 		max-width: 700px;
 		margin: 0 auto;
 	}

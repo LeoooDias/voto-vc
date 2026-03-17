@@ -58,7 +58,7 @@
 					<span class="nav-sep">|</span>
 					<a href="/sobre" onclick={closeMenu}>Sobre</a>
 					{#if perfilEnabled}
-						<a href="/resultado" class="nav-perfil" onclick={closeMenu}>Meu Perfil</a>
+						<a href="/perfil" class="nav-perfil" onclick={closeMenu}>Meu Perfil</a>
 					{:else}
 						<span class="nav-disabled">Meu Perfil</span>
 					{/if}

@@ -332,7 +332,7 @@
 			<p class="empty-votos">Nenhum voto registrado.</p>
 		{/if}
 
-		<a href="/resultado" class="back">Voltar ao resultado</a>
+		<a href="/perfil" class="back">Voltar ao perfil</a>
 	</div>
 {/if}
 

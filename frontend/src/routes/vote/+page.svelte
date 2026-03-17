@@ -169,14 +169,14 @@
 		}
 
 		if (idx + 1 >= currentItems.length) {
-			goto('/resultado');
+			goto('/perfil');
 		} else {
 			currentIndex.set(idx + 1);
 		}
 	}
 
 	function verResultado() {
-		goto('/resultado');
+		goto('/perfil');
 	}
 
 </script>

@@ -176,7 +176,7 @@
 					<tr>
 						<th class="col-rank">#</th>
 						<th class="col-name sortable" onclick={() => toggleSort('sigla')}>Partido{sortIndicator('sigla')}</th>
-						<th class="col-num sortable" onclick={() => toggleSort('parlamentares_comparados')}>Parlamentares{sortIndicator('parlamentares_comparados')}</th>
+						<th class="col-num sortable" onclick={() => toggleSort('parlamentares_comparados')}>Comparados{sortIndicator('parlamentares_comparados')}</th>
 						<th class="col-score sortable" onclick={() => toggleSort('score')}>Alinhamento{sortIndicator('score')}</th>
 					</tr>
 				</thead>

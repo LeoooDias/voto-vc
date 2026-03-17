@@ -301,7 +301,7 @@
 </script>
 
 <svelte:head>
-	<title>{partido?.sigla ?? 'Partido'} — voto.vc</title>
+	<title>{partido?.nome ?? 'Partido'} — voto.vc</title>
 </svelte:head>
 
 {#if showUfPicker}
@@ -325,8 +325,8 @@
 	<div class="perfil">
 		<div class="header">
 			<div class="header-info">
-				<h1>{partido.sigla}</h1>
-				<p class="meta">{partido.nome}</p>
+				<h1>{partido.nome}</h1>
+				<p class="meta">{partido.sigla}</p>
 				<p class="meta-count">
 					{partido.total_parlamentares} parlamentar{partido.total_parlamentares !== 1 ? 'es' : ''}
 					{#if escopo === 'estado' && ufSelecionada}
@@ -524,7 +524,7 @@
 			<p class="empty-votos">Nenhum voto registrado{escopo === 'estado' && ufSelecionada ? ` para ${ufSelecionada}` : ''}.</p>
 		{/if}
 
-		<a href="/resultado" class="back">Voltar ao resultado</a>
+		<a href="/perfil" class="back">Voltar ao perfil</a>
 	</div>
 {/if}
 
