@@ -3,6 +3,11 @@
 	import { api } from '$lib/api';
 	import { TEMAS, getTema } from '$lib/constants';
 
+	interface CasaInfo {
+		casa: string;
+		url: string | null;
+	}
+
 	interface Proposicao {
 		id: number;
 		id_externo: string | null;
@@ -14,6 +19,7 @@
 		descricao_detalhada: string | null;
 		tema: string | null;
 		substantiva: boolean;
+		casas: CasaInfo[];
 	}
 
 	interface ProposicoesResponse {
@@ -100,12 +106,6 @@
 		expandedId = expandedId === id ? null : id;
 	}
 
-	function camaraUrl(idExterno: string | null): string | null {
-		if (!idExterno?.startsWith('camara_prop_')) return null;
-		const numId = idExterno.replace('camara_prop_', '');
-		return `https://www.camara.leg.br/proposicoesWeb/fichadetramitacao?idProposicao=${numId}`;
-	}
-
 	onMount(async () => {
 		const [, f] = await Promise.all([
 			loadProposicoes(),
@@ -171,7 +171,6 @@
 			{#each proposicoes as p}
 				{@const hasDetails = p.substantiva && (p.resumo_cidadao || p.descricao_detalhada)}
 				{@const isExpanded = expandedId === p.id}
-				{@const url = camaraUrl(p.id_externo)}
 				<button
 					type="button"
 					class="prop-card"
@@ -183,6 +182,13 @@
 						<div class="prop-info">
 							<div class="prop-top">
 								<span class="prop-tipo">{p.tipo} {p.numero}/{p.ano}</span>
+								{#each p.casas as c}
+									{#if c.url}
+										<a href={c.url} target="_blank" rel="noopener" class="casa-pill {c.casa}" onclick={(e) => e.stopPropagation()}>{c.casa === 'camara' ? 'Câmara' : 'Senado'}</a>
+									{:else}
+										<span class="casa-pill {c.casa}">{c.casa === 'camara' ? 'Câmara' : 'Senado'}</span>
+									{/if}
+								{/each}
 								{#if p.tema}
 									{@const info = getTema(p.tema)}
 									<span class="tema-tag" style="background: {info.cor}1a; color: {info.cor}; border-color: {info.cor}33">{info.label}</span>
@@ -198,14 +204,9 @@
 						{/if}
 					</div>
 
-					{#if isExpanded}
+					{#if isExpanded && p.descricao_detalhada}
 						<div class="prop-details">
-							{#if p.descricao_detalhada}
-								<p class="detail-descricao">{p.descricao_detalhada}</p>
-							{/if}
-							{#if url}
-								<a href={url} target="_blank" rel="noopener" class="link-tramitacao" onclick={(e) => e.stopPropagation()}>Ver tramitação</a>
-							{/if}
+							<p class="detail-descricao">{p.descricao_detalhada}</p>
 						</div>
 					{/if}
 				</button>
@@ -392,14 +393,43 @@
 		margin: 0 0 0.75rem;
 	}
 
-	.link-tramitacao {
-		color: #2563eb;
-		font-size: 0.8rem;
+	.casa-pill {
+		display: inline-block;
+		font-size: 0.7rem;
+		font-weight: 700;
+		padding: 0.15rem 0.5rem;
+		border-radius: 10px;
 		text-decoration: none;
+		line-height: 1.4;
 	}
 
-	.link-tramitacao:hover {
-		text-decoration: underline;
+	.casa-pill.camara {
+		background: #2563eb1a;
+		color: #2563eb;
+		border: 1px solid #2563eb33;
+	}
+
+	.casa-pill.senado {
+		background: #db27781a;
+		color: #db2778;
+		border: 1px solid #db277833;
+	}
+
+	a.casa-pill:hover {
+		filter: brightness(0.85);
+	}
+
+	@media (prefers-color-scheme: dark) {
+		.casa-pill.camara {
+			background: #2563eb33;
+			color: #60a5fa;
+			border-color: #2563eb55;
+		}
+		.casa-pill.senado {
+			background: #db277833;
+			color: #f472b6;
+			border-color: #db277855;
+		}
 	}
 
 	.pagination {

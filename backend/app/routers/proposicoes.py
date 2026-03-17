@@ -5,8 +5,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models.proposicao import Proposicao
+from app.models.votacao import Votacao
 from app.services.orientacao import orientacoes_por_proposicao
-from app.utils import url_proposicao
+from app.utils import urls_por_casa
 
 router = APIRouter()
 
@@ -69,10 +70,23 @@ async def listar_proposicoes(
     result = await db.execute(query)
     props = result.scalars().all()
 
-    return {
-        "total": total,
-        "paginas": (total + itens - 1) // itens,
-        "items": [
+    # Build casas mapping for these proposições
+    prop_ids = [p.id for p in props]
+    casas_by_prop: dict[int, list[str]] = {}
+    if prop_ids:
+        casas_query = (
+            select(Votacao.proposicao_id, func.array_agg(func.distinct(Votacao.casa)))
+            .where(Votacao.proposicao_id.in_(prop_ids))
+            .group_by(Votacao.proposicao_id)
+        )
+        casas_result = await db.execute(casas_query)
+        casas_by_prop = {row[0]: sorted(c.lower() for c in row[1]) for row in casas_result.all()}
+
+    items = []
+    for p in props:
+        prop_urls = urls_por_casa(p.id_externo, p.tipo, p.numero, p.ano)
+        casas = [{"casa": c, "url": prop_urls.get(c)} for c in casas_by_prop.get(p.id, [])]
+        items.append(
             {
                 "id": p.id,
                 "id_externo": p.id_externo,
@@ -86,9 +100,14 @@ async def listar_proposicoes(
                 "descricao_detalhada": p.descricao_detalhada,
                 "tema": p.tema,
                 "substantiva": p.tipo in SUBSTANTIVE_TYPES,
+                "casas": casas,
             }
-            for p in props
-        ],
+        )
+
+    return {
+        "total": total,
+        "paginas": (total + itens - 1) // itens,
+        "items": items,
     }
 
 
@@ -109,19 +128,23 @@ async def batch_proposicoes(
     result = await db.execute(query)
     props = result.scalars().all()
 
-    return [
-        {
-            "proposicao_id": p.id,
-            "tipo": p.tipo,
-            "numero": p.numero,
-            "ano": p.ano,
-            "resumo": p.resumo_cidadao,
-            "descricao_detalhada": p.descricao_detalhada,
-            "tema": p.tema or "geral",
-            "url_proposicao": url_proposicao(p.id_externo),
-        }
-        for p in props
-    ]
+    items = []
+    for p in props:
+        prop_urls = urls_por_casa(p.id_externo, p.tipo, p.numero, p.ano)
+        casas = [{"casa": c, "url": u} for c, u in prop_urls.items() if u]
+        items.append(
+            {
+                "proposicao_id": p.id,
+                "tipo": p.tipo,
+                "numero": p.numero,
+                "ano": p.ano,
+                "resumo": p.resumo_cidadao,
+                "descricao_detalhada": p.descricao_detalhada,
+                "tema": p.tema or "geral",
+                "casas": casas,
+            }
+        )
+    return items
 
 
 @router.get("/{proposicao_id}/partidos")
