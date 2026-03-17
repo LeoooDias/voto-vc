@@ -364,6 +364,9 @@ async def comparar_partido(
         and _score_parlamentar(user_votes, parlamentar_votos[parl_id], min_compared) is not None
     )
 
+    if n_comparados == 0:
+        return empty
+
     score, concordou, discordou = _score_partido_hybrid(
         user_votes,
         proposicao_ids,
@@ -500,16 +503,22 @@ async def calcular_matching(
             )
             continue
 
-        score, _, _ = _score_partido_hybrid(
-            user_votes,
-            proposicao_ids,
-            p.sigla,
-            p_parl_ids,
-            parlamentar_votos,
-            prop_to_votacoes,
-            orientacoes,
-            partido_para_blocos,
-        )
+        n_comparados = partido_n_comparados.get(partido_id, 0)
+
+        if n_comparados == 0:
+            # No parlamentares met comparison threshold — score not meaningful
+            score = None
+        else:
+            score, _, _ = _score_partido_hybrid(
+                user_votes,
+                proposicao_ids,
+                p.sigla,
+                p_parl_ids,
+                parlamentar_votos,
+                prop_to_votacoes,
+                orientacoes,
+                partido_para_blocos,
+            )
 
         partido_results.append(
             {
@@ -517,7 +526,7 @@ async def calcular_matching(
                 "sigla": p.sigla,
                 "nome": p.nome,
                 "score": score,
-                "parlamentares_comparados": partido_n_comparados.get(partido_id, 0),
+                "parlamentares_comparados": n_comparados,
             }
         )
 
