@@ -542,6 +542,18 @@
 		box-shadow: 0 0 0 3px var(--bg-page), 0 0 0 5px currentColor;
 	}
 
+	.sim.selected {
+		box-shadow: 0 0 0 3px var(--bg-page), 0 0 0 5px #16a34a;
+	}
+
+	.nao.selected {
+		box-shadow: 0 0 0 3px var(--bg-page), 0 0 0 5px #dc2626;
+	}
+
+	.pular.selected {
+		box-shadow: 0 0 0 3px var(--bg-page), 0 0 0 5px #888;
+	}
+
 	.loading,
 	.empty {
 		text-align: center;
