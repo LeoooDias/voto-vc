@@ -180,8 +180,8 @@
 						<th class="col-rank">#</th>
 						<th class="col-name sortable" onclick={() => toggleSort('sigla')}>Partido{sortIndicator('sigla')}</th>
 						<th class="col-num sortable" onclick={() => toggleSort('parlamentares_comparados')}>Parlamentares{sortIndicator('parlamentares_comparados')}</th>
-						<th class="col-num sortable" onclick={() => toggleSort('votos_comparados')}>Votos Comparados{sortIndicator('votos_comparados')}</th>
-						<th class="col-num sortable" onclick={() => toggleSort('concordou')}>Votos Em Comum{sortIndicator('concordou')}</th>
+						<th class="col-num sortable" onclick={() => toggleSort('votos_comparados')}>Posições Comparadas{sortIndicator('votos_comparados')}</th>
+						<th class="col-num sortable" onclick={() => toggleSort('concordou')}>Posições Em Comum{sortIndicator('concordou')}</th>
 						<th class="col-score sortable" onclick={() => toggleSort('score')}>Alinhamento{sortIndicator('score')}</th>
 					</tr>
 				</thead>

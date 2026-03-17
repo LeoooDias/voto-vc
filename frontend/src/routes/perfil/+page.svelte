@@ -266,7 +266,7 @@
 						<span class="rank">#{i + 1}</span>
 						<div class="info">
 							<div class="nome">{result.sigla}</div>
-							<div class="meta">{result.nome} · {result.parlamentares_comparados} comparado{result.parlamentares_comparados !== 1 ? 's' : ''}</div>
+							<div class="meta">{result.nome} · {result.concordou}/{result.votos_comparados} posições em comum</div>
 						</div>
 						{#if scopeLoading}
 							<div class="score"><span class="spinner"></span></div>

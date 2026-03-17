@@ -28,6 +28,10 @@ class ResponderRequest(BaseModel):
     peso: float = 1.0
 
 
+class ResponderBatchRequest(BaseModel):
+    respostas: list[ResponderRequest]
+
+
 @router.post("/responder")
 async def responder(
     request: ResponderRequest,
@@ -50,6 +54,31 @@ async def responder(
     await db.execute(stmt)
     await db.commit()
     return {"ok": True}
+
+
+@router.post("/responder/batch")
+async def responder_batch(
+    request: ResponderBatchRequest,
+    usuario: Usuario = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    for r in request.respostas:
+        stmt = (
+            insert(RespostaUsuario)
+            .values(
+                usuario_id=usuario.id,
+                proposicao_id=r.proposicao_id,
+                voto=r.voto,
+                peso=r.peso,
+            )
+            .on_conflict_do_update(
+                constraint="uq_resposta_usuario",
+                set_={"voto": r.voto, "peso": r.peso},
+            )
+        )
+        await db.execute(stmt)
+    await db.commit()
+    return {"ok": True, "count": len(request.respostas)}
 
 
 @router.get("/respostas")
