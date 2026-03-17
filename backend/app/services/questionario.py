@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.proposicao import Proposicao
 from app.models.votacao import Votacao
-from app.utils import url_proposicao
+from app.utils import urls_por_casa
 
 # 25 proposições âncora — sempre apresentadas primeiro a novos usuários.
 # Selecionadas manualmente por relevância pública e cobertura de votações nominais.
@@ -39,6 +39,8 @@ ANCHOR_IDS: set[int] = {
 
 
 def _serialize(p: Proposicao, casas: list[str] | None = None) -> dict:
+    urls = urls_por_casa(p.id_externo, p.tipo, p.numero, p.ano)
+    casas_list = [{"casa": c, "url": urls.get(c)} for c in (casas or [])]
     return {
         "proposicao_id": p.id,
         "tipo": p.tipo,
@@ -48,8 +50,7 @@ def _serialize(p: Proposicao, casas: list[str] | None = None) -> dict:
         "resumo": p.resumo_cidadao,
         "descricao_detalhada": p.descricao_detalhada,
         "tema": p.tema or "geral",
-        "url_proposicao": url_proposicao(p.id_externo),
-        "casas": casas or [],
+        "casas": casas_list,
     }
 
 
@@ -80,9 +81,7 @@ async def montar_questionario(
         .group_by(Votacao.proposicao_id)
     )
     casas_result = await db.execute(casas_query)
-    casas_by_prop: dict[int, list[str]] = {
-        row[0]: sorted(row[1]) for row in casas_result.all()
-    }
+    casas_by_prop: dict[int, list[str]] = {row[0]: sorted(row[1]) for row in casas_result.all()}
 
     # Identify bicameral proposições (voted in both Câmara and Senado)
     bicameral_ids = {pid for pid, casas in casas_by_prop.items() if len(casas) > 1}

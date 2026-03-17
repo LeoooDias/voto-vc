@@ -250,18 +250,17 @@
 			{#if currentItems[idx].descricao_detalhada}
 				<p class="descricao">{currentItems[idx].descricao_detalhada}</p>
 			{/if}
-			<div class="card-footer">
-				{#if currentItems[idx].casas.length > 0}
-					<div class="casa-pills">
-						{#each currentItems[idx].casas as casa}
-							<span class="casa-pill" class:camara={casa === 'camara'} class:senado={casa === 'senado'}>{casa === 'camara' ? 'Câmara' : 'Senado'}</span>
-						{/each}
-					</div>
-				{/if}
-				{#if currentItems[idx].url_proposicao}
-					<a href={currentItems[idx].url_proposicao} target="_blank" rel="noopener" class="link-tramitacao">Ver tramitação</a>
-				{/if}
-			</div>
+			{#if currentItems[idx].casas.length > 0}
+				<div class="casa-pills">
+					{#each currentItems[idx].casas as info}
+						{#if info.url}
+							<a href={info.url} target="_blank" rel="noopener" class="casa-pill" class:camara={info.casa === 'camara'} class:senado={info.casa === 'senado'}>{info.casa === 'camara' ? 'Câmara' : 'Senado'}</a>
+						{:else}
+							<span class="casa-pill" class:camara={info.casa === 'camara'} class:senado={info.casa === 'senado'}>{info.casa === 'camara' ? 'Câmara' : 'Senado'}</span>
+						{/if}
+					{/each}
+				</div>
+			{/if}
 		</div>
 
 		<div class="actions">
@@ -426,16 +425,10 @@
 		line-height: 1.6;
 	}
 
-	.card-footer {
-		display: flex;
-		align-items: center;
-		gap: 0.75rem;
-		margin-top: 0.75rem;
-	}
-
 	.casa-pills {
 		display: flex;
 		gap: 0.25rem;
+		margin-top: 0.75rem;
 	}
 
 	.casa-pill {
@@ -444,6 +437,12 @@
 		padding: 0.15rem 0.5rem;
 		border-radius: 10px;
 		border: 1px solid;
+		text-decoration: none;
+		transition: opacity 0.2s;
+	}
+
+	a.casa-pill:hover {
+		opacity: 0.8;
 	}
 
 	.casa-pill.camara {
@@ -468,17 +467,6 @@
 		background: #4a1942;
 		color: #f9a8d4;
 		border-color: #be185d44;
-	}
-
-	.link-tramitacao {
-		color: var(--link);
-		font-size: 0.8rem;
-		text-decoration: none;
-		margin-left: auto;
-	}
-
-	.link-tramitacao:hover {
-		text-decoration: underline;
 	}
 
 	.actions {

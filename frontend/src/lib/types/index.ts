@@ -1,3 +1,8 @@
+export interface CasaInfo {
+	casa: string;
+	url: string | null;
+}
+
 export interface QuestionarioItem {
 	proposicao_id: number;
 	tipo: string;
@@ -6,8 +11,7 @@ export interface QuestionarioItem {
 	resumo: string;
 	descricao_detalhada: string | null;
 	tema: string;
-	url_proposicao: string | null;
-	casas: string[];
+	casas: CasaInfo[];
 }
 
 export interface RespostaItem {
