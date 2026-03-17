@@ -25,7 +25,7 @@
 		resumo_cidadao: string | null;
 		descricao_detalhada: string | null;
 		tema: string | null;
-		url_camara: string | null;
+		url_proposicao: string | null;
 		data: string | null;
 		descricao_votacao: string | null;
 		substantiva: boolean;
@@ -38,6 +38,8 @@
 		sigla: string;
 		nome: string;
 		total_parlamentares: number;
+		deputados: number;
+		senadores: number;
 		stats: Record<string, number>;
 		votos: PartidoVoto[];
 	}
@@ -320,7 +322,15 @@
 				<h1>{partido.nome}</h1>
 				<p class="meta">{partido.sigla}</p>
 				<p class="meta-count">
-					{#if scopeLoading}<span class="spinner"></span>{:else}{partido.total_parlamentares} parlamentar{partido.total_parlamentares !== 1 ? 'es' : ''}{/if}
+					{#if scopeLoading}<span class="spinner"></span>{:else}
+						{#if partido.deputados > 0 && partido.senadores > 0}
+							{partido.deputados} deputado{partido.deputados !== 1 ? 's' : ''} e {partido.senadores} senador{partido.senadores !== 1 ? 'es' : ''}
+						{:else if partido.senadores > 0}
+							{partido.senadores} senador{partido.senadores !== 1 ? 'es' : ''}
+						{:else}
+							{partido.deputados} deputado{partido.deputados !== 1 ? 's' : ''}
+						{/if}
+					{/if}
 					{#if escopo === 'estado' && ufSelecionada}
 						em {ufSelecionada}
 					{/if}
@@ -490,8 +500,8 @@
 								{#if voto.descricao_detalhada}
 									<p class="detail-descricao">{voto.descricao_detalhada}</p>
 								{/if}
-								{#if voto.url_camara}
-									<a href={voto.url_camara} target="_blank" rel="noopener" class="link-camara" onclick={(e) => e.stopPropagation()}>Ver na Câmara</a>
+								{#if voto.url_proposicao}
+									<a href={voto.url_proposicao} target="_blank" rel="noopener" class="link-camara" onclick={(e) => e.stopPropagation()}>Ver tramitação</a>
 								{/if}
 							</div>
 						{/if}

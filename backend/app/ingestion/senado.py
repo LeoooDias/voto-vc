@@ -30,6 +30,11 @@ class SenadoClient(BaseAPIClient):
         items = votacoes.get("Votacao", [])
         return items if isinstance(items, list) else [items] if items else []
 
+    async def fetch_votacoes_ano(self, ano: int) -> list[dict]:
+        """Votações nominais de um ano (nova API, inclui votos inline)."""
+        data = await self.get(f"votacao?ano={ano}")
+        return data if isinstance(data, list) else []
+
     async def fetch_materia(self, materia_id: str) -> dict:
         data = await self.get(f"materia/{materia_id}.json")
         return data.get("DetalheMateria", {}).get("Materia", {})

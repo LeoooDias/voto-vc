@@ -16,7 +16,9 @@ from app.ingestion.normalize import (
     normalize_deputado,
     normalize_senador,
     normalize_votacao_camara,
+    normalize_votacao_senado,
     normalize_voto_camara,
+    normalize_voto_senado,
 )
 from app.ingestion.senado import SenadoClient
 from app.models.parlamentar import Parlamentar
@@ -232,6 +234,151 @@ async def sync_votacoes_camara(db: AsyncSession, camara: CamaraClient, max_pages
     await compute_relevancia(db)
 
 
+SUBSTANTIVE_TYPES = {"PL", "PEC", "MPV", "PLP", "PDL"}
+
+
+async def sync_votacoes_senado(
+    db: AsyncSession, senado: SenadoClient, anos: list[int] | None = None
+):
+    """Sync votações do Senado para anos recentes."""
+    if anos is None:
+        current_year = datetime.now().year
+        anos = [current_year - 1, current_year]
+
+    logger.info(f"Syncing Senado votações for years: {anos}")
+
+    # Build mappings
+    result = await db.execute(select(Parlamentar.id_externo, Parlamentar.id))
+    parl_map = {row[0]: row[1] for row in result.all()}
+
+    result = await db.execute(
+        select(Proposicao.id, Proposicao.tipo, Proposicao.numero, Proposicao.ano)
+    )
+    prop_map: dict[tuple[str, str, str], int] = {}
+    for row in result.all():
+        key = (str(row[1]).upper(), str(row[2]), str(row[3]))
+        prop_map[key] = row[0]
+
+    result = await db.execute(select(Votacao.id_externo))
+    existing_vot_ids = {row[0] for row in result.all()}
+
+    topico_mapping = await ensure_topicos(db)
+
+    synced = 0
+    for ano in anos:
+        votacoes_raw = await senado.fetch_votacoes_ano(ano)
+        logger.info(f"Senado {ano}: {len(votacoes_raw)} votações found")
+
+        for raw in votacoes_raw:
+            sigla = raw.get("sigla", "")
+            if sigla not in SUBSTANTIVE_TYPES:
+                continue
+            if raw.get("votacaoSecreta") == "S":
+                continue
+
+            vot_data = normalize_votacao_senado(raw)
+            id_externo = vot_data["id_externo"]
+            if id_externo in existing_vot_ids:
+                continue
+
+            # Resolve proposição
+            proposicao_id = None
+            tipo = vot_data.get("sigla_tipo", "")
+            numero = vot_data.get("numero", "")
+            prop_ano = vot_data.get("ano", "")
+            prop_key = (str(tipo).upper(), str(numero), str(prop_ano))
+            if prop_key[0] and prop_key[1] and prop_key[2]:
+                proposicao_id = prop_map.get(prop_key)
+
+            if not proposicao_id:
+                # Create new proposição if we have enough data
+                codigo_materia = vot_data.get("codigo_materia")
+                ementa = vot_data.get("ementa", "")
+                if codigo_materia and ementa:
+                    prop_id_ext = f"senado_mat_{codigo_materia}"
+                    existing_check = await db.execute(
+                        select(Proposicao.id).where(Proposicao.id_externo == prop_id_ext)
+                    )
+                    existing_prop = existing_check.one_or_none()
+                    if existing_prop:
+                        proposicao_id = existing_prop[0]
+                    else:
+                        topics = classify_proposicao(ementa, tipo)
+                        proposicao = Proposicao(
+                            id_externo=prop_id_ext,
+                            casa_origem="senado",
+                            tipo=tipo,
+                            numero=int(numero) if str(numero).isdigit() else 0,
+                            ano=int(prop_ano) if str(prop_ano).isdigit() else ano,
+                            ementa=ementa,
+                            ementa_simplificada=ementa[:200] if len(ementa) > 200 else None,
+                            resumo_cidadao=ementa,
+                        )
+                        db.add(proposicao)
+                        await db.flush()
+                        for tc in topics:
+                            if tc.slug in topico_mapping:
+                                db.add(
+                                    ProposicaoTopico(
+                                        proposicao_id=proposicao.id,
+                                        topico_id=topico_mapping[tc.slug],
+                                        confianca=tc.confianca,
+                                        metodo="heuristic",
+                                    )
+                                )
+                        proposicao_id = proposicao.id
+                        prop_map[prop_key] = proposicao.id
+
+            # Parse datetime
+            data_str = vot_data.get("data")
+            try:
+                data_dt = datetime.fromisoformat(data_str) if data_str else datetime(ano, 1, 1)
+            except (ValueError, TypeError):
+                data_dt = datetime(ano, 1, 1)
+
+            votacao = Votacao(
+                id_externo=id_externo,
+                proposicao_id=proposicao_id,
+                casa="senado",
+                data=data_dt,
+                descricao=vot_data.get("descricao"),
+                resultado=vot_data.get("resultado"),
+                total_sim=vot_data.get("total_sim", 0) or 0,
+                total_nao=vot_data.get("total_nao", 0) or 0,
+                total_abstencao=vot_data.get("total_abstencao", 0) or 0,
+                dados_brutos=vot_data.get("dados_brutos"),
+            )
+            db.add(votacao)
+            await db.flush()
+            existing_vot_ids.add(id_externo)
+
+            # Process inline votes
+            votos_raw = raw.get("votos", [])
+            for vr in votos_raw:
+                voto_data = normalize_voto_senado(vr, id_externo)
+                parl_db_id = parl_map.get(voto_data["parlamentar_id_externo"])
+                if not parl_db_id:
+                    continue
+                db.add(
+                    VotoParlamentar(
+                        votacao_id=votacao.id,
+                        parlamentar_id=parl_db_id,
+                        voto=voto_data["voto"],
+                        partido_na_epoca=voto_data.get("partido_na_epoca"),
+                        dados_brutos=voto_data.get("dados_brutos"),
+                    )
+                )
+
+            synced += 1
+            if synced % 10 == 0:
+                await db.commit()
+                logger.info(f"Synced {synced} Senado votações...")
+
+    await db.commit()
+    logger.info(f"Finished syncing {synced} new Senado votações")
+    await compute_relevancia(db)
+
+
 async def compute_relevancia(db: AsyncSession):
     """Set relevancia_score based on how divisive a vote was (close to 50/50 = more relevant)."""
     result = await db.execute(select(Votacao).where(Votacao.proposicao_id.is_not(None)))
@@ -292,9 +439,13 @@ async def run_full_sync():
             await sync_parlamentares(db, deputados + senadores)
             logger.info("Parlamentares synced successfully")
 
-        # Phase 2: Votações (recent pages)
+        # Phase 2: Votações Câmara (recent pages)
         async with async_session() as db:
             await sync_votacoes_camara(db, camara, max_pages=5)
+
+        # Phase 3: Votações Senado (recent years)
+        async with async_session() as db:
+            await sync_votacoes_senado(db, senado)
 
     finally:
         await camara.close()

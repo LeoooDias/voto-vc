@@ -15,7 +15,7 @@ from app.services.orientacao import (
     alinhamento_por_orientacao,
     calcular_disciplina,
 )
-from app.utils import url_camara_from_id_externo
+from app.utils import url_proposicao
 
 router = APIRouter()
 
@@ -52,11 +52,18 @@ async def obter_partido(
         raise HTTPException(status_code=404, detail="Partido não encontrado")
 
     # Get parlamentar IDs for this party (optionally filtered by UF)
-    parl_query = select(Parlamentar.id).where(Parlamentar.partido_id == partido_id)
+    parl_query = select(Parlamentar.id, Parlamentar.casa).where(
+        Parlamentar.partido_id == partido_id
+    )
     if uf:
         parl_query = parl_query.where(Parlamentar.uf == uf.upper())
     parl_result = await db.execute(parl_query)
-    parl_ids = [r[0] for r in parl_result.all()]
+    parl_rows = parl_result.all()
+    parl_ids = [r[0] for r in parl_rows]
+
+    # Count by casa
+    deputados = sum(1 for r in parl_rows if r[1] and r[1].value == "camara")
+    senadores = sum(1 for r in parl_rows if r[1] and r[1].value == "senado")
 
     if not parl_ids:
         return {
@@ -64,6 +71,8 @@ async def obter_partido(
             "sigla": partido.sigla,
             "nome": partido.nome,
             "total_parlamentares": 0,
+            "deputados": 0,
+            "senadores": 0,
             "stats": {},
             "votos": [],
         }
@@ -135,7 +144,7 @@ async def obter_partido(
                 "resumo_cidadao": row[5],
                 "descricao_detalhada": row[6],
                 "tema": row[7],
-                "url_camara": url_camara_from_id_externo(row[8]),
+                "url_proposicao": url_proposicao(row[8]),
                 "data": row[9].isoformat() if row[9] else None,
                 "descricao_votacao": row[10],
                 "substantiva": row[1] in SUBSTANTIVE_TYPES if row[1] else False,
@@ -170,6 +179,8 @@ async def obter_partido(
         "sigla": partido.sigla,
         "nome": partido.nome,
         "total_parlamentares": len(parl_ids),
+        "deputados": deputados,
+        "senadores": senadores,
         "stats": stats,
         "votos": list(prop_map.values()),
     }

@@ -87,6 +87,49 @@ def normalize_votacao_camara(raw: dict) -> dict:
     }
 
 
+def normalize_votacao_senado(raw: dict) -> dict:
+    """Transforma votação da nova API do Senado (/votacao?ano=)."""
+    return {
+        "id_externo": f"senado_{raw['codigoSessaoVotacao']}",
+        "casa": "senado",
+        "data": raw.get("dataSessao"),
+        "descricao": raw.get("descricaoVotacao"),
+        "resultado": raw.get("resultadoVotacao"),
+        "total_sim": raw.get("totalVotosSim", 0),
+        "total_nao": raw.get("totalVotosNao", 0),
+        "total_abstencao": raw.get("totalVotosAbstencao", 0),
+        "dados_brutos": raw,
+        # Metadados para linkagem com proposições existentes
+        "sigla_tipo": raw.get("sigla"),  # PL, PEC, PLP...
+        "numero": raw.get("numero"),
+        "ano": raw.get("ano"),
+        "codigo_materia": raw.get("codigoMateria"),
+        "ementa": raw.get("ementa"),
+    }
+
+
+def normalize_voto_senado(raw: dict, votacao_id_externo: str) -> dict:
+    """Transforma voto individual da nova API do Senado."""
+    return {
+        "parlamentar_id_externo": f"senado_{raw['codigoParlamentar']}",
+        "votacao_id_externo": votacao_id_externo,
+        "voto": _map_voto_senado(raw.get("siglaVotoParlamentar", "")),
+        "partido_na_epoca": raw.get("siglaPartidoParlamentar"),
+        "dados_brutos": raw,
+    }
+
+
+def _map_voto_senado(voto: str) -> str:
+    mapping = {
+        "Sim": "sim",
+        "Não": "nao",
+        "Abstenção": "abstencao",
+        "P-NRV": "presente_sem_voto",
+        "Presidente (art. 51 RISF)": "presente_sem_voto",
+    }
+    return mapping.get(voto, "ausente")
+
+
 def _map_voto_camara(tipo_voto: str) -> str:
     mapping = {
         "Sim": "sim",
