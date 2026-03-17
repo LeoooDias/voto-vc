@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.models.proposicao import Proposicao
 from app.services.orientacao import orientacoes_por_proposicao
-from app.utils import url_camara_from_id_externo
+from app.utils import url_proposicao
 
 router = APIRouter()
 
@@ -118,7 +118,7 @@ async def batch_proposicoes(
             "resumo": p.resumo_cidadao,
             "descricao_detalhada": p.descricao_detalhada,
             "tema": p.tema or "geral",
-            "url_camara": url_camara_from_id_externo(p.id_externo),
+            "url_proposicao": url_proposicao(p.id_externo),
         }
         for p in props
     ]

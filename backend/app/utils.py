@@ -13,7 +13,3 @@ def url_proposicao(id_externo: str | None) -> str | None:
     if id_externo.startswith("senado_mat_"):
         return _SENADO_BASE + id_externo.removeprefix("senado_mat_")
     return None
-
-
-# Alias para compatibilidade
-url_camara_from_id_externo = url_proposicao

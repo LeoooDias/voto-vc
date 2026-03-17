@@ -10,7 +10,7 @@ from app.models.parlamentar import Parlamentar
 from app.models.proposicao import Proposicao
 from app.models.votacao import Votacao, VotoParlamentar
 from app.services.matching import comparar_parlamentar
-from app.utils import url_camara_from_id_externo
+from app.utils import url_proposicao
 
 router = APIRouter()
 
@@ -103,7 +103,7 @@ async def obter_parlamentar(parlamentar_id: int, db: AsyncSession = Depends(get_
                 "resumo_cidadao": row[9],
                 "descricao_detalhada": row[10],
                 "tema": row[11],
-                "url_camara": url_camara_from_id_externo(row[12]),
+                "url_proposicao": url_proposicao(row[12]),
                 "substantiva": row[5] in substantive_types if row[5] else False,
             }
         )

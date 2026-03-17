@@ -501,7 +501,7 @@
 									<p class="detail-descricao">{voto.descricao_detalhada}</p>
 								{/if}
 								{#if voto.url_proposicao}
-									<a href={voto.url_proposicao} target="_blank" rel="noopener" class="link-camara" onclick={(e) => e.stopPropagation()}>Ver tramitação</a>
+									<a href={voto.url_proposicao} target="_blank" rel="noopener" class="link-tramitacao" onclick={(e) => e.stopPropagation()}>Ver tramitação</a>
 								{/if}
 							</div>
 						{/if}
@@ -803,13 +803,13 @@
 		margin: 0 0 0.75rem;
 	}
 
-	.link-camara {
+	.link-tramitacao {
 		color: var(--link);
 		font-size: 0.8rem;
 		text-decoration: none;
 	}
 
-	.link-camara:hover {
+	.link-tramitacao:hover {
 		text-decoration: underline;
 	}
 

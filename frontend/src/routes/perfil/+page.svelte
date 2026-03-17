@@ -17,7 +17,7 @@
 		resumo: string | null;
 		descricao_detalhada: string | null;
 		tema: string;
-		url_camara: string | null;
+		url_proposicao: string | null;
 	}
 
 	let parlResults: MatchResult[] = $state([]);
@@ -314,8 +314,8 @@
 									{#if prop.descricao_detalhada}
 										<p class="detail-descricao">{prop.descricao_detalhada}</p>
 									{/if}
-									{#if prop.url_camara}
-										<a href={prop.url_camara} target="_blank" rel="noopener" class="link-camara" onclick={(e) => e.stopPropagation()}>Ver na Câmara</a>
+									{#if prop.url_proposicao}
+										<a href={prop.url_proposicao} target="_blank" rel="noopener" class="link-tramitacao" onclick={(e) => e.stopPropagation()}>Ver tramitação</a>
 									{/if}
 									<div class="revote-actions">
 										<span class="revote-label">Mudar voto:</span>
@@ -611,7 +611,7 @@
 		margin: 0 0 0.75rem;
 	}
 
-	.link-camara {
+	.link-tramitacao {
 		color: var(--link);
 		font-size: 0.8rem;
 		text-decoration: none;
@@ -619,7 +619,7 @@
 		margin-bottom: 1rem;
 	}
 
-	.link-camara:hover {
+	.link-tramitacao:hover {
 		text-decoration: underline;
 	}
 

@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.proposicao import Proposicao
 from app.models.votacao import Votacao
-from app.utils import url_camara_from_id_externo
+from app.utils import url_proposicao
 
 # 25 proposições âncora — sempre apresentadas primeiro a novos usuários.
 # Selecionadas manualmente por relevância pública e cobertura de votações nominais.
@@ -38,7 +38,7 @@ ANCHOR_IDS: set[int] = {
 }
 
 
-def _serialize(p: Proposicao) -> dict:
+def _serialize(p: Proposicao, casas: list[str] | None = None) -> dict:
     return {
         "proposicao_id": p.id,
         "tipo": p.tipo,
@@ -48,7 +48,8 @@ def _serialize(p: Proposicao) -> dict:
         "resumo": p.resumo_cidadao,
         "descricao_detalhada": p.descricao_detalhada,
         "tema": p.tema or "geral",
-        "url_camara": url_camara_from_id_externo(p.id_externo),
+        "url_proposicao": url_proposicao(p.id_externo),
+        "casas": casas or [],
     }
 
 
@@ -72,15 +73,19 @@ async def montar_questionario(
     result = await db.execute(query)
     all_props = result.scalars().all()
 
-    # Identify bicameral proposições (voted in both Câmara and Senado)
-    bicameral_query = (
-        select(Votacao.proposicao_id)
+    # Build mapping of proposição → list of casas that voted on it
+    casas_query = (
+        select(Votacao.proposicao_id, func.array_agg(func.distinct(Votacao.casa)))
         .where(Votacao.proposicao_id.is_not(None))
         .group_by(Votacao.proposicao_id)
-        .having(func.count(func.distinct(Votacao.casa)) > 1)
     )
-    bicameral_result = await db.execute(bicameral_query)
-    bicameral_ids = {row[0] for row in bicameral_result.all()}
+    casas_result = await db.execute(casas_query)
+    casas_by_prop: dict[int, list[str]] = {
+        row[0]: sorted(row[1]) for row in casas_result.all()
+    }
+
+    # Identify bicameral proposições (voted in both Câmara and Senado)
+    bicameral_ids = {pid for pid, casas in casas_by_prop.items() if len(casas) > 1}
 
     # Phase 1: anchors first (shuffled, bicameral anchors before the rest)
     anchors_bicameral = [p for p in all_props if p.id in ANCHOR_IDS and p.id in bicameral_ids]
@@ -93,7 +98,7 @@ async def montar_questionario(
     selected_ids: set[int] = {p.id for p in anchors}
 
     if len(selected) >= n_items:
-        return [_serialize(p) for p in selected[:n_items]]
+        return [_serialize(p, casas_by_prop.get(p.id)) for p in selected[:n_items]]
 
     # Phase 2: round-robin by tema
     # Within each tema, bicameral proposições come first (sorted by relevancia_score DESC),
@@ -126,4 +131,4 @@ async def montar_questionario(
         if not added_any:
             break
 
-    return [_serialize(p) for p in selected]
+    return [_serialize(p, casas_by_prop.get(p.id)) for p in selected]

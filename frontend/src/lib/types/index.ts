@@ -6,7 +6,8 @@ export interface QuestionarioItem {
 	resumo: string;
 	descricao_detalhada: string | null;
 	tema: string;
-	url_camara: string | null;
+	url_proposicao: string | null;
+	casas: string[];
 }
 
 export interface RespostaItem {
