@@ -1,9 +1,10 @@
 import random
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.proposicao import Proposicao
+from app.models.votacao import Votacao
 from app.utils import url_camara_from_id_externo
 
 # 25 proposições âncora — sempre apresentadas primeiro a novos usuários.
@@ -71,9 +72,22 @@ async def montar_questionario(
     result = await db.execute(query)
     all_props = result.scalars().all()
 
-    # Phase 1: anchors first (shuffled)
-    anchors = [p for p in all_props if p.id in ANCHOR_IDS]
-    random.shuffle(anchors)
+    # Identify bicameral proposições (voted in both Câmara and Senado)
+    bicameral_query = (
+        select(Votacao.proposicao_id)
+        .where(Votacao.proposicao_id.is_not(None))
+        .group_by(Votacao.proposicao_id)
+        .having(func.count(func.distinct(Votacao.casa)) > 1)
+    )
+    bicameral_result = await db.execute(bicameral_query)
+    bicameral_ids = {row[0] for row in bicameral_result.all()}
+
+    # Phase 1: anchors first (shuffled, bicameral anchors before the rest)
+    anchors_bicameral = [p for p in all_props if p.id in ANCHOR_IDS and p.id in bicameral_ids]
+    anchors_other = [p for p in all_props if p.id in ANCHOR_IDS and p.id not in bicameral_ids]
+    random.shuffle(anchors_bicameral)
+    random.shuffle(anchors_other)
+    anchors = anchors_bicameral + anchors_other
 
     selected: list = list(anchors)
     selected_ids: set[int] = {p.id for p in anchors}
@@ -81,14 +95,21 @@ async def montar_questionario(
     if len(selected) >= n_items:
         return [_serialize(p) for p in selected[:n_items]]
 
-    # Phase 2: round-robin by tema, ordered by relevancia_score DESC
-    # (all_props already sorted by relevancia_score DESC from the query)
+    # Phase 2: round-robin by tema
+    # Within each tema, bicameral proposições come first (sorted by relevancia_score DESC),
+    # then single-house proposições. This strongly prioritizes bicameral coverage.
     by_topic: dict[str, list] = {}
     for p in all_props:
         if p.id in selected_ids:
             continue
         topic = p.tema or "geral"
         by_topic.setdefault(topic, []).append(p)
+
+    # Sort each topic: bicameral first, then by relevancia_score DESC (already ordered from query)
+    for topic in by_topic:
+        by_topic[topic].sort(
+            key=lambda p: (0 if p.id in bicameral_ids else 1, -(p.relevancia_score or 0))
+        )
 
     topics = sorted(by_topic.keys())
     round_idx = 0
