@@ -215,7 +215,7 @@ async def _distribuicao_votos_partido_batch(
         n_sim = dist.get("sim", 0)
         n_nao = dist.get("nao", 0)
         total = n_sim + n_nao
-        if total < 3:
+        if total < 2:
             resultado[id_externo] = None
             continue
         if n_sim / total >= threshold:

@@ -323,10 +323,11 @@ class TestDivergenciaDetectada:
     """Divergência entre orientação e votos reais → fallback."""
 
     async def test_divergencia_exclui_votacao(self, db: AsyncSession):
-        """Quando >30% dos parlamentares divergem, votação cai no fallback."""
+        """Quando >30% dos parlamentares divergem, orientação é descartada
+        e fallback por distribuição de votos é usado."""
         data = await _setup_base(db)
 
-        # PL orienta SIM nas 3 votações
+        # PT orienta SIM nas 3 votações
         for vot in data["votacoes"]:
             db.add(
                 OrientacaoBancada(
@@ -354,27 +355,33 @@ class TestDivergenciaDetectada:
         respostas = _make_respostas(data["props"], VotoUsuario.SIM)
         result = await alinhamento_por_orientacao(db, "PT", respostas)
 
-        # Votação 1 tem divergência → fallback
+        # Votação 1 tem divergência detectada
         assert result["votacoes_com_divergencia"] >= 1
+        # Fallback resolve votação 1 via distribuição (100% NAO → infere NAO)
         assert result["votacoes_fallback_distribuicao"] >= 1
-        # Só 2 votações efetivas (votações 2 e 3, sem divergência)
-        assert result["votacoes_consideradas"] == 2
+        # 3 votações consideradas: 2 via orientação + 1 via fallback
+        assert result["votacoes_consideradas"] == 3
 
 
 class TestSemOrientacao:
     """Sem orientação disponível para o partido."""
 
-    async def test_sem_orientacao_retorna_sem_dados(self, db: AsyncSession):
-        """Quando não há orientações, contadores refletem isso."""
+    async def test_sem_orientacao_usa_fallback(self, db: AsyncSession):
+        """Sem orientações oficiais, fallback por distribuição de votos é usado.
+
+        No setup todos os parlamentares PT votam SIM, então o fallback
+        infere orientação SIM. Usuário vota SIM → score 100.
+        """
         data = await _setup_base(db)
         # Nenhuma orientação inserida
 
         respostas = _make_respostas(data["props"], VotoUsuario.SIM)
         result = await alinhamento_por_orientacao(db, "PT", respostas)
 
-        assert result["alinhamento_score"] is None
-        assert result["votacoes_sem_orientacao"] == 3
-        assert result["votacoes_consideradas"] == 0
+        assert result["alinhamento_score"] == 100.0
+        assert result["votacoes_fallback_distribuicao"] == 3
+        assert result["votacoes_consideradas"] == 3
+        assert result["metodo"] == "fallback_distribuicao"
 
 
 class TestOrientacoesPorProposicao:
