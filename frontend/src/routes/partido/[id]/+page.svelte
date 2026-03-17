@@ -25,7 +25,7 @@
 		resumo_cidadao: string | null;
 		descricao_detalhada: string | null;
 		tema: string | null;
-		url_proposicao: string | null;
+		casas: Array<{ casa: string; url: string }>;
 		data: string | null;
 		descricao_votacao: string | null;
 		substantiva: boolean;
@@ -500,8 +500,12 @@
 								{#if voto.descricao_detalhada}
 									<p class="detail-descricao">{voto.descricao_detalhada}</p>
 								{/if}
-								{#if voto.url_proposicao}
-									<a href={voto.url_proposicao} target="_blank" rel="noopener" class="link-tramitacao" onclick={(e) => e.stopPropagation()}>Ver tramitação</a>
+								{#if voto.casas.length > 0}
+									<div class="casa-pills">
+										{#each voto.casas as info}
+											<a href={info.url} target="_blank" rel="noopener" class="casa-pill" class:camara={info.casa === 'camara'} class:senado={info.casa === 'senado'} onclick={(e) => e.stopPropagation()}>{info.casa === 'camara' ? 'Câmara' : 'Senado'}</a>
+										{/each}
+									</div>
 								{/if}
 							</div>
 						{/if}
@@ -803,14 +807,48 @@
 		margin: 0 0 0.75rem;
 	}
 
-	.link-tramitacao {
-		color: var(--link);
-		font-size: 0.8rem;
-		text-decoration: none;
+	.casa-pills {
+		display: flex;
+		gap: 0.25rem;
+		margin-top: 0.5rem;
 	}
 
-	.link-tramitacao:hover {
-		text-decoration: underline;
+	.casa-pill {
+		font-size: 0.7rem;
+		font-weight: 600;
+		padding: 0.15rem 0.5rem;
+		border-radius: 10px;
+		border: 1px solid;
+		text-decoration: none;
+		transition: opacity 0.2s;
+	}
+
+	a.casa-pill:hover {
+		opacity: 0.8;
+	}
+
+	.casa-pill.camara {
+		background: #dbeafe;
+		color: #1d4ed8;
+		border-color: #93c5fd;
+	}
+
+	.casa-pill.senado {
+		background: #fce7f3;
+		color: #be185d;
+		border-color: #f9a8d4;
+	}
+
+	:global([data-theme='escuro']) .casa-pill.camara {
+		background: #1e3a5f;
+		color: #93c5fd;
+		border-color: #2563eb44;
+	}
+
+	:global([data-theme='escuro']) .casa-pill.senado {
+		background: #4a1942;
+		color: #f9a8d4;
+		border-color: #be185d44;
 	}
 
 	.back {

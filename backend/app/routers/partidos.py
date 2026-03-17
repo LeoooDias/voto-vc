@@ -15,7 +15,7 @@ from app.services.orientacao import (
     alinhamento_por_orientacao,
     calcular_disciplina,
 )
-from app.utils import url_proposicao
+from app.utils import urls_por_casa
 
 router = APIRouter()
 
@@ -146,7 +146,11 @@ async def obter_partido(
                 "resumo_cidadao": row[5],
                 "descricao_detalhada": row[6],
                 "tema": row[7],
-                "url_proposicao": url_proposicao(row[8]),
+                "casas": [
+                    {"casa": casa, "url": u}
+                    for casa, u in urls_por_casa(row[8], row[1], row[2], row[3]).items()
+                    if u
+                ],
                 "data": row[9].isoformat() if row[9] else None,
                 "descricao_votacao": row[10],
                 "substantiva": row[1] in SUBSTANTIVE_TYPES if row[1] else False,
