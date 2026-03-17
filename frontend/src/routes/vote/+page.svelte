@@ -218,7 +218,7 @@
 		</div>
 
 		{#if reachedTier3}
-			<div class="meta-banner success">
+			<div class="meta-banner expert">
 				Perfil expert! {answeredCount} respostas. Altíssima precisão.
 				<button class="btn-resultado" onclick={verResultado}>Ver meu perfil</button>
 			</div>
@@ -351,6 +351,12 @@
 		background: #16a34a1a;
 		color: #16a34a;
 		border: 1px solid #16a34a33;
+	}
+
+	.meta-banner.expert {
+		background: #2563eb1a;
+		color: #2563eb;
+		border: 1px solid #2563eb33;
 	}
 
 	.btn-resultado {
