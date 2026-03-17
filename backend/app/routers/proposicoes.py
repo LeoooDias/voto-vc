@@ -75,12 +75,17 @@ async def listar_proposicoes(
     casas_by_prop: dict[int, list[str]] = {}
     if prop_ids:
         casas_query = (
-            select(Votacao.proposicao_id, func.array_agg(func.distinct(Votacao.casa)))
+            select(Votacao.proposicao_id, Votacao.casa)
             .where(Votacao.proposicao_id.in_(prop_ids))
-            .group_by(Votacao.proposicao_id)
+            .distinct()
         )
         casas_result = await db.execute(casas_query)
-        casas_by_prop = {row[0]: sorted(c.lower() for c in row[1]) for row in casas_result.all()}
+        for row in casas_result.all():
+            casas_by_prop.setdefault(row[0], []).append(
+                row[1].lower() if isinstance(row[1], str) else row[1].value.lower()
+            )
+        for k in casas_by_prop:
+            casas_by_prop[k] = sorted(set(casas_by_prop[k]))
 
     items = []
     for p in props:

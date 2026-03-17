@@ -32,7 +32,7 @@ class TestScoreParlamentar:
         }
         result = _score_parlamentar(user_votes, prop_votes, min_compared=1)
         assert result is not None
-        score, n_compared = result
+        score, n_compared, _concordou = result
         assert score == 100.0
         assert n_compared == 3
 
@@ -50,7 +50,7 @@ class TestScoreParlamentar:
         }
         result = _score_parlamentar(user_votes, prop_votes, min_compared=1)
         assert result is not None
-        score, n_compared = result
+        score, n_compared, _concordou = result
         assert score == 0.0
         assert n_compared == 3
 
@@ -71,7 +71,7 @@ class TestScoreParlamentar:
         }
         result = _score_parlamentar(user_votes, prop_votes, min_compared=1)
         assert result is not None
-        score, n_compared = result
+        score, n_compared, _concordou = result
         # 2 agree (+2), 2 disagree (-2) => total_score=0, normalized = (0/4 + 1)*50 = 50
         assert score == 50.0
         assert n_compared == 4
@@ -88,7 +88,7 @@ class TestScoreParlamentar:
         }
         result = _score_parlamentar(user_votes, prop_votes, min_compared=1)
         assert result is not None
-        score, n_compared = result
+        score, n_compared, _concordou = result
         # total_score = 3.0 - 1.0 = 2.0, total_weight = 4.0
         # normalized = (2/4 + 1) * 50 = 75.0
         assert score == 75.0
@@ -147,7 +147,7 @@ class TestScoreParlamentar:
         }
         result = _score_parlamentar(user_votes, prop_votes, min_compared=1)
         assert result is not None
-        score, n_compared = result
+        score, n_compared, _concordou = result
         assert score == 100.0
         assert n_compared == 3  # prop 1 was skipped
 
@@ -165,7 +165,7 @@ class TestScoreParlamentar:
         }
         result = _score_parlamentar(user_votes, prop_votes, min_compared=1)
         assert result is not None
-        score, n_compared = result
+        score, n_compared, _concordou = result
         assert score == 100.0
         assert n_compared == 2  # prop 1 abstention ignored
 
@@ -180,7 +180,7 @@ class TestScoreParlamentar:
         }
         result = _score_parlamentar(user_votes, prop_votes, min_compared=1)
         assert result is not None
-        score, _ = result
+        score, _, _ = result
         assert score == 100.0
 
 
