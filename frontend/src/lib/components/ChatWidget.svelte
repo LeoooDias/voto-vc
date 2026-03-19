@@ -100,6 +100,13 @@
 				return;
 			}
 
+			if (res.status === 503) {
+				error = 'Chat indisponível no momento. Tente mais tarde.';
+				messages = messages.slice(0, -1);
+				isStreaming = false;
+				return;
+			}
+
 			if (!res.ok) {
 				error = 'Erro ao conectar ao chat.';
 				messages = messages.slice(0, -1);

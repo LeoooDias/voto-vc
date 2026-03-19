@@ -18,38 +18,48 @@
 	}
 
 	const POSITIONS = [
-		{ pos: 1, label: 'Fortemente Contra', shortLabel: 'Forte', voto: 'nao' as const, peso: 1.0, cls: 'p1' },
-		{ pos: 2, label: 'Contra', shortLabel: 'Contra', voto: 'nao' as const, peso: 0.5, cls: 'p2' },
-		{ pos: 3, label: 'Neutro', shortLabel: 'Neutro', voto: 'sim' as const, peso: 0.0, cls: 'p3' },
-		{ pos: 4, label: 'A favor', shortLabel: 'A favor', voto: 'sim' as const, peso: 0.5, cls: 'p4' },
-		{ pos: 5, label: 'Fortemente A favor', shortLabel: 'Forte', voto: 'sim' as const, peso: 1.0, cls: 'p5' },
+		{ pos: 1, label: 'Forte', voto: 'nao' as const, peso: 1.0, cls: 'p1' },
+		{ pos: 2, label: 'Contra', voto: 'nao' as const, peso: 0.5, cls: 'p2' },
+		{ pos: 3, label: 'Neutro', voto: 'sim' as const, peso: 0.0, cls: 'p3' },
+		{ pos: 4, label: 'A favor', voto: 'sim' as const, peso: 0.5, cls: 'p4' },
+		{ pos: 5, label: 'Forte', voto: 'sim' as const, peso: 1.0, cls: 'p5' },
 	];
+
+	const FULL_LABELS: Record<number, string> = {
+		1: 'Fortemente Contra',
+		2: 'Contra',
+		3: 'Neutro',
+		4: 'A favor',
+		5: 'Fortemente A favor',
+	};
 
 	let { value = null, onvote, onpular, compact = false }: Props = $props();
 
-	function select(p: typeof POSITIONS[number]) {
+	function select(p: (typeof POSITIONS)[number]) {
 		onvote(p.voto, p.peso);
 	}
 </script>
 
 <div class="vote-slider" class:compact>
-	<div class="positions">
+	<div class="slider-row">
+		<div class="track-bg">
+			<div class="track-fill"></div>
+		</div>
 		{#each POSITIONS as p}
 			<button
 				class="pos-btn {p.cls}"
 				class:active={value === p.pos}
 				onclick={() => select(p)}
-				title={p.label}
+				title={FULL_LABELS[p.pos]}
 			>
 				<span class="dot"></span>
-				<span class="lbl">{compact ? p.shortLabel : p.label}</span>
+				<span class="lbl">{p.label}</span>
 			</button>
 		{/each}
 	</div>
-	<div class="track">
-		<div class="track-fill"></div>
-	</div>
-	<button class="pular-btn" onclick={onpular}>Pular</button>
+	{#if !compact}
+		<button class="pular-btn" onclick={onpular}>Pular</button>
+	{/if}
 </div>
 
 <style>
@@ -57,50 +67,49 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 0.5rem;
+		gap: 0.75rem;
 		width: 100%;
 	}
 
-	.positions {
+	.slider-row {
 		display: flex;
 		width: 100%;
 		justify-content: space-between;
 		position: relative;
+		padding: 0 4px;
 	}
 
-	.track {
-		width: calc(100% - 40px);
+	/* Track behind dots — absolutely positioned */
+	.track-bg {
+		position: absolute;
+		top: 12px;
+		left: 24px;
+		right: 24px;
 		height: 4px;
-		background: var(--border);
 		border-radius: 2px;
-		margin-top: -1.65rem;
-		margin-bottom: 1.5rem;
-		position: relative;
-		z-index: 0;
-		pointer-events: none;
+		overflow: hidden;
+		background: var(--border);
 	}
 
 	.track-fill {
 		position: absolute;
 		inset: 0;
-		border-radius: 2px;
 		background: linear-gradient(to right, #dc2626, #f87171, #d4d4d4, #4ade80, #16a34a);
-		opacity: 0.35;
+		opacity: 0.4;
 	}
 
 	.pos-btn {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 0.35rem;
+		gap: 0.3rem;
 		background: none;
 		border: none;
 		cursor: pointer;
-		padding: 0.25rem 0.15rem;
+		padding: 0;
 		position: relative;
 		z-index: 1;
-		flex: 1;
-		min-width: 0;
+		width: 48px;
 	}
 
 	.dot {
@@ -114,7 +123,7 @@
 	}
 
 	.pos-btn:hover .dot {
-		transform: scale(1.15);
+		transform: scale(1.1);
 	}
 
 	/* Colors per position */
@@ -125,7 +134,7 @@
 	.p5 .dot { border-color: #16a34a; }
 
 	.pos-btn.active .dot {
-		transform: scale(1.2);
+		transform: scale(1.15);
 	}
 
 	.p1.active .dot { background: #dc2626; border-color: #dc2626; box-shadow: 0 0 0 3px #dc262633; }
@@ -139,7 +148,8 @@
 		font-weight: 600;
 		color: var(--text-secondary);
 		text-align: center;
-		line-height: 1.2;
+		line-height: 1.15;
+		white-space: nowrap;
 		transition: color 0.15s;
 	}
 
@@ -154,7 +164,7 @@
 	.p5.active .lbl { color: #16a34a; }
 
 	.pular-btn {
-		padding: 0.4rem 1.5rem;
+		padding: 0.35rem 1.25rem;
 		background: var(--bg-card);
 		border: 1px solid var(--border);
 		border-radius: 8px;
@@ -172,33 +182,43 @@
 
 	/* Compact mode (for perfil re-vote) */
 	.compact .dot {
-		width: 22px;
-		height: 22px;
+		width: 20px;
+		height: 20px;
 		border-width: 2px;
 	}
 
+	.compact .pos-btn {
+		width: 40px;
+	}
+
 	.compact .lbl {
-		font-size: 0.6rem;
+		font-size: 0.55rem;
 	}
 
-	.compact .track {
-		margin-top: -1.35rem;
-		margin-bottom: 1.2rem;
+	.compact .track-bg {
+		top: 9px;
+		left: 20px;
+		right: 20px;
+		height: 3px;
 	}
 
-	.compact .pular-btn {
-		display: none;
+	.compact .slider-row {
+		padding: 0 2px;
 	}
 
-	/* Mobile adjustments */
+	/* Mobile: slightly larger touch targets */
 	@media (max-width: 480px) {
-		.dot {
-			width: 32px;
-			height: 32px;
+		.pos-btn {
+			width: 44px;
 		}
 
-		.lbl {
-			font-size: 0.6rem;
+		.dot {
+			width: 30px;
+			height: 30px;
+		}
+
+		.track-bg {
+			top: 13px;
 		}
 	}
 </style>
