@@ -136,7 +136,6 @@
 			r.proposicao_id === proposicaoId ? resposta : r
 		);
 		if (get(authUser)) salvarResposta(resposta);
-		expandedVotoId = null;
 		loadMatching();
 	}
 

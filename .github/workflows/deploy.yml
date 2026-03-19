@@ -45,6 +45,17 @@ jobs:
             chmod 600 "\$ENV_FILE"
           ENVEOF
 
+      - name: Ensure env_file in production compose
+        run: |
+          ssh -i ~/.ssh/deploy_key ec2-user@${{ secrets.SERVER_IP }} << 'EOF'
+            cd /opt/votovc
+            # Add env_file to backend service if not already present
+            if ! grep -q 'env_file' docker-compose.yml; then
+              sed -i '/image: votovc-backend:latest/a\    env_file:\n      - .env' docker-compose.yml
+              echo "Added env_file to docker-compose.yml"
+            fi
+          EOF
+
       - name: Build and deploy
         run: |
           ssh -i ~/.ssh/deploy_key ec2-user@${{ secrets.SERVER_IP }} << 'EOF'

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { authUser } from '$lib/stores/auth';
+	import { marked } from 'marked';
 
 	interface Props {
 		proposicaoId: number;
@@ -174,6 +175,21 @@
 		}
 	}
 
+	// Configure marked for chat: no paragraph wrapping for single lines, links open in new tab
+	marked.use({
+		renderer: {
+			link({ href, text }) {
+				return `<a href="${href}" target="_blank" rel="noopener">${text}</a>`;
+			}
+		},
+		breaks: true,
+		gfm: true,
+	});
+
+	function renderMarkdown(text: string): string {
+		return marked.parse(text, { async: false }) as string;
+	}
+
 	function handleKeydown(e: KeyboardEvent) {
 		if (e.key === 'Enter' && !e.shiftKey) {
 			e.preventDefault();
@@ -231,8 +247,10 @@
 							<span class="typing-indicator">
 								<span></span><span></span><span></span>
 							</span>
-						{:else}
+						{:else if msg.role === 'user'}
 							<div class="msg-content">{msg.content}</div>
+						{:else}
+							<div class="msg-content markdown">{@html renderMarkdown(msg.content)}</div>
 						{/if}
 					</div>
 				{/each}
@@ -444,11 +462,11 @@
 		border-radius: 12px;
 		font-size: 0.85rem;
 		line-height: 1.5;
-		white-space: pre-wrap;
 		word-break: break-word;
 	}
 
 	.user .msg-content {
+		white-space: pre-wrap;
 		background: #2563eb;
 		color: white;
 		border-bottom-right-radius: 4px;
@@ -459,6 +477,60 @@
 		color: var(--text-primary);
 		border: 1px solid var(--border);
 		border-bottom-left-radius: 4px;
+	}
+
+	/* Markdown inside assistant messages */
+	.msg-content.markdown :global(p) {
+		margin: 0 0 0.5em;
+	}
+
+	.msg-content.markdown :global(p:last-child) {
+		margin-bottom: 0;
+	}
+
+	.msg-content.markdown :global(ul),
+	.msg-content.markdown :global(ol) {
+		margin: 0.3em 0;
+		padding-left: 1.4em;
+	}
+
+	.msg-content.markdown :global(li) {
+		margin: 0.15em 0;
+	}
+
+	.msg-content.markdown :global(strong) {
+		font-weight: 700;
+	}
+
+	.msg-content.markdown :global(em) {
+		font-style: italic;
+	}
+
+	.msg-content.markdown :global(code) {
+		background: rgba(0, 0, 0, 0.08);
+		padding: 0.1em 0.3em;
+		border-radius: 3px;
+		font-size: 0.8em;
+	}
+
+	.msg-content.markdown :global(a) {
+		color: var(--link);
+		text-decoration: underline;
+	}
+
+	.msg-content.markdown :global(h1),
+	.msg-content.markdown :global(h2),
+	.msg-content.markdown :global(h3) {
+		font-size: 0.9rem;
+		font-weight: 700;
+		margin: 0.5em 0 0.25em;
+	}
+
+	.msg-content.markdown :global(blockquote) {
+		border-left: 3px solid var(--border);
+		margin: 0.3em 0;
+		padding-left: 0.6em;
+		color: var(--text-secondary);
 	}
 
 	.chat-error {
