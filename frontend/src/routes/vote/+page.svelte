@@ -10,6 +10,9 @@
 		carregarRespostas
 	} from '$lib/stores/questionario';
 	import { authUser, authLoading } from '$lib/stores/auth';
+	import VoteSlider from '$lib/components/VoteSlider.svelte';
+	import ChatWidget from '$lib/components/ChatWidget.svelte';
+	import { voteToPosition } from '$lib/utils/vote';
 	import type { QuestionarioItem, RespostaItem } from '$lib/types';
 	import { goto } from '$app/navigation';
 	import { get } from 'svelte/store';
@@ -116,6 +119,12 @@
 		return get(respostas).find((r) => r.proposicao_id === pid);
 	});
 
+	let sliderValue = $derived(
+		respostaAtual && respostaAtual.voto !== 'pular'
+			? voteToPosition(respostaAtual.voto, respostaAtual.peso)
+			: null
+	);
+
 	function voltar() {
 		if (idx > 0) {
 			currentIndex.set(idx - 1);
@@ -135,14 +144,14 @@
 		return get(respostas).some((r) => r.proposicao_id === pid);
 	});
 
-	function votar(voto: 'sim' | 'nao' | 'pular') {
+	function votar(voto: 'sim' | 'nao' | 'pular', peso: number = 1.0) {
 		if (!currentItems[idx]) return;
 
 		const pid = currentItems[idx].proposicao_id;
 		const resposta: RespostaItem = {
 			proposicao_id: pid,
 			voto,
-			peso: 1.0
+			peso
 		};
 
 		respostas.update((r) => {
@@ -262,11 +271,19 @@
 
 		<div class="actions">
 			<button class="btn-nav" onclick={voltar} disabled={idx === 0} aria-label="Voltar">&#8592;</button>
-			<button class="btn nao" class:selected={respostaAtual?.voto === 'nao'} onclick={() => votar('nao')}>Contra</button>
-			<button class="btn pular" class:selected={respostaAtual?.voto === 'pular'} onclick={() => votar('pular')}>Pular</button>
-			<button class="btn sim" class:selected={respostaAtual?.voto === 'sim'} onclick={() => votar('sim')}>A favor</button>
+			<div class="slider-area">
+				<VoteSlider
+					value={sliderValue}
+					onvote={(voto, peso) => votar(voto, peso)}
+					onpular={() => votar('pular', 1.0)}
+				/>
+			</div>
 			<button class="btn-nav" onclick={avancar} disabled={!canAdvance} aria-label="Avançar">&#8594;</button>
 		</div>
+		<ChatWidget
+			proposicaoId={currentItems[idx].proposicao_id}
+			proposicaoTitulo="{currentItems[idx].tipo} {currentItems[idx].numero}/{currentItems[idx].ano}"
+		/>
 	</div>
 {/if}
 
@@ -477,11 +494,17 @@
 		gap: 0.5rem;
 		margin-top: 1.5rem;
 		justify-content: center;
-		align-items: stretch;
+		align-items: center;
+	}
+
+	.slider-area {
+		flex: 1;
+		min-width: 0;
 	}
 
 	.btn-nav {
 		width: 44px;
+		height: 44px;
 		flex-shrink: 0;
 		border: 1px solid var(--border);
 		border-radius: 12px;
@@ -503,58 +526,6 @@
 	.btn-nav:disabled {
 		opacity: 0.3;
 		cursor: default;
-	}
-
-	.btn {
-		padding: 0.875rem 0.5rem;
-		border: 2px solid transparent;
-		border-radius: 12px;
-		font-size: 1rem;
-		font-weight: 600;
-		cursor: pointer;
-		transition: transform 0.1s, opacity 0.2s, box-shadow 0.2s;
-		white-space: nowrap;
-		flex: 1;
-		min-width: 0;
-	}
-
-	.btn:hover {
-		transform: scale(1.05);
-	}
-
-	.btn:active {
-		transform: scale(0.95);
-	}
-
-	.sim {
-		background: #16a34a;
-		color: white;
-	}
-
-	.nao {
-		background: #dc2626;
-		color: white;
-	}
-
-	.pular {
-		background: var(--border);
-		color: var(--text-secondary);
-	}
-
-	.btn.selected {
-		box-shadow: 0 0 0 3px var(--bg-page), 0 0 0 5px currentColor;
-	}
-
-	.sim.selected {
-		box-shadow: 0 0 0 3px var(--bg-page), 0 0 0 5px #16a34a;
-	}
-
-	.nao.selected {
-		box-shadow: 0 0 0 3px var(--bg-page), 0 0 0 5px #dc2626;
-	}
-
-	.pular.selected {
-		box-shadow: 0 0 0 3px var(--bg-page), 0 0 0 5px #888;
 	}
 
 	.loading,

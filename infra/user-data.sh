@@ -55,9 +55,10 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    env_file:
+      - .env
     environment:
       DATABASE_URL: postgresql+asyncpg://votovc:${db_password}@db:5432/votovc
-      LOG_LEVEL: INFO
     ports:
       - "8000:8000"
 
@@ -129,6 +130,11 @@ http {
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
+
+            # SSE support for chat streaming
+            proxy_buffering off;
+            proxy_cache off;
+            proxy_read_timeout 120s;
         }
 
         # Frontend

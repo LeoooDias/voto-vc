@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     google_redirect_uri: str = "http://localhost:8000/api/auth/google/callback"
     frontend_url: str = "http://localhost:5173"
 
+    anthropic_api_key: str = ""
+    chat_rate_limit: str = "30/hour"
+
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
 

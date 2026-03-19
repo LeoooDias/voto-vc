@@ -31,6 +31,20 @@ jobs:
             -e "ssh -i ~/.ssh/deploy_key" \
             . ec2-user@${{ secrets.SERVER_IP }}:/opt/votovc/app/
 
+      - name: Inject secrets into server .env
+        run: |
+          ssh -i ~/.ssh/deploy_key ec2-user@${{ secrets.SERVER_IP }} << ENVEOF
+            ENV_FILE="/opt/votovc/.env"
+            touch "\$ENV_FILE"
+            # Update or add ANTHROPIC_API_KEY
+            if grep -q '^ANTHROPIC_API_KEY=' "\$ENV_FILE"; then
+              sed -i 's|^ANTHROPIC_API_KEY=.*|ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}|' "\$ENV_FILE"
+            else
+              echo 'ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}' >> "\$ENV_FILE"
+            fi
+            chmod 600 "\$ENV_FILE"
+          ENVEOF
+
       - name: Build and deploy
         run: |
           ssh -i ~/.ssh/deploy_key ec2-user@${{ secrets.SERVER_IP }} << 'EOF'

@@ -36,6 +36,7 @@ pnpm check        # svelte-check
 - **Infra**: AWS us-east-1, Terraform, EC2 t4g.small (ARM64), CloudFront, Route 53
 - **CI/CD**: GitHub Actions on push to main → rsync → docker build → compose up
 - **Auth**: JWT (python-jose) + bcrypt (passlib) + Google OAuth 2.0
+- **Chat**: Anthropic Claude Haiku 4.5 (proposição Q&A with tool use)
 
 ## Key conventions
 
@@ -69,8 +70,13 @@ pnpm check        # svelte-check
 - `backend/app/routers/partidos.py` — partido detail + aggregated voting + disciplina
 - `backend/app/routers/auth.py` — Google OAuth + JWT auth + user profile
 - `backend/app/routers/questionario.py` — vote endpoints (items, responder, respostas)
+- `backend/app/services/chat.py` — proposição chatbot (Claude Haiku 4.5 with tool use)
+- `backend/app/routers/chat.py` — SSE streaming chat endpoint
 - `backend/app/utils.py` — URL generation (`url_proposicao`, `urls_por_casa`)
-- `frontend/src/routes/vote/+page.svelte` — UF selector + question cards
+- `frontend/src/lib/components/VoteSlider.svelte` — 5-position vote intensity slider
+- `frontend/src/lib/components/ChatWidget.svelte` — floating chat widget for proposição Q&A
+- `frontend/src/lib/utils/vote.ts` — vote position ↔ voto/peso mapping utilities
+- `frontend/src/routes/vote/+page.svelte` — UF selector + question cards + slider + chat
 - `frontend/src/routes/perfil/+page.svelte` — ranked results (parlamentares, partidos, votos tabs)
 - `frontend/src/routes/parlamentar/[id]/+page.svelte` — parlamentar profile with expandable votes
 - `frontend/src/routes/partido/[id]/+page.svelte` — partido profile with aggregated votes + disciplina
@@ -95,6 +101,9 @@ pnpm check        # svelte-check
 - Questionnaire: backend accepts `exclude` param with already-answered IDs to always serve fresh questions
 - Casa pills: proposições link to both Câmara and Senado pages via `urls_por_casa()` (direct URL or search fallback)
 - Vote endpoints mounted at `/api/vote/` (router in `questionario.py`)
+- Chat endpoint at `/api/chat/proposicao/{id}` — SSE streaming, auth required, rate limited (30/hour)
+- Vote slider: 5 positions map to voto (sim/nao) + peso (0.0–1.0); Neutro = sim with peso=0
+- Chat requires `ANTHROPIC_API_KEY` env var; without it, endpoint returns 503
 
 ## Don't
 

@@ -4,6 +4,8 @@
 	import { respostas, selectedUf, carregarRespostas, salvarResposta } from '$lib/stores/questionario';
 	import { authUser, authLoading } from '$lib/stores/auth';
 	import { resultados, resultadosPartidos, loading } from '$lib/stores/resultado';
+	import VoteSlider from '$lib/components/VoteSlider.svelte';
+	import { voteToPosition, voteLabel } from '$lib/utils/vote';
 	import type { MatchResult, PartidoMatchResult, MatchResponse, RespostaItem } from '$lib/types';
 	import { goto } from '$app/navigation';
 	import { get } from 'svelte/store';
@@ -119,8 +121,8 @@
 		expandedVotoId = expandedVotoId === propId ? null : propId;
 	}
 
-	function reVotar(proposicaoId: number, voto: 'sim' | 'nao') {
-		const resposta: RespostaItem = { proposicao_id: proposicaoId, voto, peso: 1.0 };
+	function reVotar(proposicaoId: number, voto: 'sim' | 'nao', peso: number = 1.0) {
+		const resposta: RespostaItem = { proposicao_id: proposicaoId, voto, peso };
 		respostas.update((r) => {
 			const idx = r.findIndex((x) => x.proposicao_id === proposicaoId);
 			if (idx >= 0) {
@@ -297,8 +299,8 @@
 							tabindex="0"
 						>
 							<div class="voto-main">
-								<span class="voto-badge" class:voto-sim={item.voto === 'sim'} class:voto-nao={item.voto === 'nao'}>
-									{item.voto === 'sim' ? 'A favor' : 'Contra'}
+								<span class="voto-badge" class:voto-sim={item.voto === 'sim' && item.peso > 0} class:voto-nao={item.voto === 'nao'} class:voto-neutro={item.peso === 0}>
+									{voteLabel(item.voto, item.peso)}
 								</span>
 								<div class="voto-info">
 									<div class="voto-top">
@@ -322,19 +324,16 @@
 											{/each}
 										</div>
 									{/if}
-									<div class="revote-actions">
-										<span class="revote-label">Mudar voto:</span>
-										<button
-											class="revote-btn sim"
-											class:active={item.voto === 'sim'}
-											onclick={(e) => { e.stopPropagation(); reVotar(item.proposicao_id, 'sim'); }}
-										>A favor</button>
-										<button
-											class="revote-btn nao"
-											class:active={item.voto === 'nao'}
-											onclick={(e) => { e.stopPropagation(); reVotar(item.proposicao_id, 'nao'); }}
-										>Contra</button>
-									</div>
+									<!-- svelte-ignore a11y_no_static_element_interactions -->
+								<div class="revote-actions" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()}>
+									<span class="revote-label">Mudar voto:</span>
+									<VoteSlider
+										compact
+										value={voteToPosition(item.voto, item.peso)}
+										onvote={(voto, peso) => reVotar(item.proposicao_id, voto, peso)}
+										onpular={() => {}}
+									/>
+								</div>
 								</div>
 							{/if}
 						</div>
@@ -557,6 +556,7 @@
 
 	.voto-badge.voto-sim { background: #16a34a1a; color: #16a34a; }
 	.voto-badge.voto-nao { background: #dc26261a; color: #dc2626; }
+	.voto-badge.voto-neutro { background: #a3a3a31a; color: #737373; }
 
 	.voto-info { flex: 1; }
 
@@ -662,7 +662,7 @@
 
 	.revote-actions {
 		display: flex;
-		align-items: center;
+		flex-direction: column;
 		gap: 0.5rem;
 	}
 
@@ -670,23 +670,6 @@
 		font-size: 0.8rem;
 		color: var(--text-secondary);
 	}
-
-	.revote-btn {
-		padding: 0.4rem 1rem;
-		border: 2px solid transparent;
-		border-radius: 8px;
-		font-weight: 600;
-		font-size: 0.8rem;
-		cursor: pointer;
-		transition: transform 0.1s, box-shadow 0.2s;
-	}
-
-	.revote-btn:hover { transform: scale(1.05); }
-	.revote-btn:active { transform: scale(0.95); }
-
-	.revote-btn.sim { background: #16a34a; color: white; }
-	.revote-btn.nao { background: #dc2626; color: white; }
-	.revote-btn.active { box-shadow: 0 0 0 3px var(--bg-page), 0 0 0 5px currentColor; }
 
 	/* CTA */
 	.cta-section {
