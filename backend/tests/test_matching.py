@@ -1,6 +1,6 @@
 """Tests for the matching service — alignment scoring engine."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from unittest.mock import MagicMock
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -253,7 +253,7 @@ class TestCalcularMatching:
                 id_externo=f"camara_vot_{3000 + i}",
                 proposicao_id=prop.id,
                 casa=Casa.CAMARA,
-                data=datetime(2025, 6, 15 + i, 14, 0),
+                data=datetime(2025, 1, 1, 14, 0) + timedelta(days=i),
                 descricao=f"Votacao {i}",
                 total_sim=300,
                 total_nao=150,
@@ -407,6 +407,35 @@ class TestCalcularMatching:
         # Filtering by RJ should return results
         result = await calcular_matching(db, respostas=respostas, uf="RJ")
         assert len(result["parlamentares"]) > 0
+
+    async def test_pular_does_not_inflate_min_compared(self, db: AsyncSession):
+        """PULAR votes should not increase the min_compared threshold.
+
+        With 4 sim votes + 16 pular votes, min_compared should be max(3, 4//4)=3
+        not max(3, 20//4)=5. A parlamentar with 3 overlapping votes should appear.
+        """
+        n_total = 20
+        props, parl1, parl2, _, _ = await self._create_test_data(
+            db,
+            n_props=n_total,
+            parl1_votes=[TipoVoto.SIM] * n_total,
+            parl2_votes=[TipoVoto.NAO] * n_total,
+        )
+
+        # 4 sim + 16 pular
+        respostas = []
+        for i, p in enumerate(props):
+            voto = VotoUsuario.SIM if i < 4 else VotoUsuario.PULAR
+            respostas.append(MagicMock(proposicao_id=p.id, voto=voto, peso=1.0))
+
+        result = await calcular_matching(db, respostas=respostas)
+        parlamentares = result["parlamentares"]
+
+        # min_compared = max(3, 4//4) = 3, parl1 has 4 SIM overlaps => should appear
+        parl1_result = next((p for p in parlamentares if p["parlamentar_id"] == parl1.id), None)
+        assert parl1_result is not None
+        assert parl1_result["score"] == 100.0
+        assert parl1_result["votos_comparados"] == 4
 
     async def test_results_sorted_by_score_desc(self, db: AsyncSession):
         """Results should be sorted by score in descending order."""

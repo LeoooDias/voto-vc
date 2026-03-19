@@ -135,6 +135,7 @@
 		);
 		if (get(authUser)) salvarResposta(resposta);
 		expandedVotoId = null;
+		loadMatching();
 	}
 
 	onMount(() => {

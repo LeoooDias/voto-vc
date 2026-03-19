@@ -1,0 +1,1615 @@
+ ▐▛███▜▌   Claude Code v2.1.77
+▝▜█████▛▘  Sonnet 4.6 · API Usage Billing
+  ▘▘ ▝▝    ~/source/voto-vc/backend
+
+  ↑ Opus now defaults to 1M context · 5x more room, same pricing
+
+❯ /login                                                                        
+  ⎿  Login interrupted
+
+❯ /login                                                                        
+  ⎿  Login successful
+
+❯ Usuários anonimos que respondem um monte de perguntas têm uma experiência     
+  horrível: parecem perder todos seus votos (ou pelo menos são perguntados      
+  novamente pelo seu UF) quando eventualmente fazem login. Podemos trazer os    
+  dados da sessão anonima para o perfil do usuário autenticado para evitar      
+  essa experiência?                                                             
+
+⏺ Vou investigar como a sessão anônima e o login funcionam atualmente.
+
+⏺ Explore(Explore auth and session handling)
+  ⎿  Done (29 tool uses · 93.6k tokens · 1m 9s)
+  (ctrl+o to expand)
+
+⏺ Entendi o problema. As respostas anônimas ficam apenas em memória (Svelte
+  stores) e se perdem quando o usuário faz login via OAuth (que causa navegação
+  completa). Preciso:
+
+  1. Persistir respostas no localStorage durante a sessão anônima
+  2. Após login, migrar os dados do localStorage para o backend
+
+  Vou ler os arquivos-chave para implementar.
+
+⏺ Read 3 files (ctrl+o to expand)
+
+⏺ Agora vou ler o endpoint de respostas no backend e a página de vote.
+
+⏺ Read 2 files (ctrl+o to expand)
+
+⏺ Agora tenho o plano completo. Vou implementar:
+
+  1. Persistir respostas e selectedUf no localStorage no store
+  2. Endpoint batch no backend para salvar múltiplas respostas de uma vez
+  3. No callback de auth, migrar dados do localStorage para o backend
+
+  Vou ler rapidamente o backend main.py para confirmar como os routers são
+  registrados.
+
+⏺ Searched for 1 pattern (ctrl+o to expand)
+
+⏺ Perfeito. Agora vou implementar tudo.
+
+⏺ Update(~/source/voto-vc/frontend/src/lib/stores/questionario.ts)
+  ⎿  Added 18 lines, removed 2 lines
+       1  import { writable } from 'svelte/store';
+       2  import type { QuestionarioItem, RespostaItem } from '$lib/types
+          ';
+       3 +import { browser } from '$app/environment';                    
+       4  
+       5 +function loadFromStorage<T>(key: string, fallback: T): T {     
+       6 +  if (!browser) return fallback;                               
+       7 +  try {                                                        
+       8 +    const raw = localStorage.getItem(key);                     
+       9 +    if (raw) return JSON.parse(raw);                           
+      10 +  } catch { /* ignore */ }                                     
+      11 +  return fallback;                                             
+      12 +}                                                              
+      13 +                                                               
+      14  export const items = writable<QuestionarioItem[]>([]);
+       5 -export const respostas = writable<RespostaItem[]>([]);         
+      15 +export const respostas = writable<RespostaItem[]>(loadFromStora
+         +ge('voto_respostas', []));                                     
+      16  export const currentIndex = writable(0);
+       7 -export const selectedUf = writable<string>('');                
+      17 +export const selectedUf = writable<string>(loadFromStorage('vot
+         +o_uf', ''));                                                   
+      18  
+      19 +// Persist to localStorage on changes                          
+      20 +if (browser) {                                                 
+      21 +  respostas.subscribe((v) => localStorage.setItem('voto_respost
+         +as', JSON.stringify(v)));                                      
+      22 +  selectedUf.subscribe((v) => localStorage.setItem('voto_uf', v
+         +));                                                            
+      23 +}                                                              
+      24 +                                                               
+      25  export async function salvarResposta(resposta: RespostaItem): P
+          romise<void> {
+      26    try {
+      27      await fetch('/api/vote/responder', {
+
+⏺ Agora vou adicionar uma função para migrar dados anônimos e o endpoint batch
+  no backend.
+
+⏺ Update(~/source/voto-vc/frontend/src/lib/stores/questionario.ts)
+  ⎿  Added 37 lines
+      35    }
+      36  }
+      37  
+      38 +export async function migrarRespostasAnonimas(): Promise<void> 
+         +{                                                              
+      39 +  if (!browser) return;                                        
+      40 +  const raw = localStorage.getItem('voto_respostas');          
+      41 +  const uf = localStorage.getItem('voto_uf');                  
+      42 +  if (!raw) return;                                            
+      43 +                                                               
+      44 +  try {                                                        
+      45 +    const saved: RespostaItem[] = JSON.parse(raw);             
+      46 +    if (saved.length === 0) return;                            
+      47 +                                                               
+      48 +    // Batch save to backend                                   
+      49 +    const res = await fetch('/api/vote/responder/batch', {     
+      50 +      method: 'POST',                                          
+      51 +      credentials: 'include',                                  
+      52 +      headers: { 'Content-Type': 'application/json' },         
+      53 +      body: JSON.stringify({ respostas: saved })               
+      54 +    });                                                        
+      55 +    if (!res.ok) return;                                       
+      56 +                                                               
+      57 +    // Save UF if present                                      
+      58 +    if (uf) {                                                  
+      59 +      await fetch('/api/auth/me', {                            
+      60 +        method: 'PATCH',                                       
+      61 +        credentials: 'include',                                
+      62 +        headers: { 'Content-Type': 'application/json' },       
+      63 +        body: JSON.stringify({ uf })                           
+      64 +      });                                                      
+      65 +    }                                                          
+      66 +                                                               
+      67 +    // Clear localStorage after successful migration           
+      68 +    localStorage.removeItem('voto_respostas');                 
+      69 +    localStorage.removeItem('voto_uf');                        
+      70 +  } catch {                                                    
+      71 +    // Migration failed — data stays in localStorage for next a
+         +ttempt                                                         
+      72 +  }                                                            
+      73 +}                                                              
+      74 +                                                               
+      75  export async function carregarRespostas(): Promise<RespostaItem
+          []> {
+      76    try {
+      77      const res = await fetch('/api/vote/respostas', {
+
+⏺ Agora o endpoint batch no backend:
+
+⏺ Update(app/routers/questionario.py)
+  ⎿  Added 29 lines
+      28      peso: float = 1.0
+      29  
+      30  
+      31 +class ResponderBatchRequest(BaseModel):                        
+      32 +    respostas: list[ResponderRequest]                          
+      33 +                                                               
+      34 +                                                               
+      35  @router.post("/responder")
+      36  async def responder(
+      37      request: ResponderRequest,
+     ...
+      56      return {"ok": True}
+      57  
+      58  
+      59 +@router.post("/responder/batch")                               
+      60 +async def responder_batch(                                     
+      61 +    request: ResponderBatchRequest,                            
+      62 +    usuario: Usuario = Depends(get_current_user),              
+      63 +    db: AsyncSession = Depends(get_db),                        
+      64 +):                                                             
+      65 +    for r in request.respostas:                                
+      66 +        stmt = (                                               
+      67 +            insert(RespostaUsuario)                            
+      68 +            .values(                                           
+      69 +                usuario_id=usuario.id,                         
+      70 +                proposicao_id=r.proposicao_id,                 
+      71 +                voto=r.voto,                                   
+      72 +                peso=r.peso,                                   
+      73 +            )                                                  
+      74 +            .on_conflict_do_update(                            
+      75 +                constraint="uq_resposta_usuario",              
+      76 +                set_={"voto": r.voto, "peso": r.peso},         
+      77 +            )                                                  
+      78 +        )                                                      
+      79 +        await db.execute(stmt)                                 
+      80 +    await db.commit()                                          
+      81 +    return {"ok": True, "count": len(request.respostas)}       
+      82 +                                                               
+      83 +                                                               
+      84  @router.get("/respostas")
+      85  async def obter_respostas(
+      86      usuario: Usuario = Depends(get_current_user),
+
+⏺ Agora atualizar o callback de auth para migrar os dados:
+
+⏺ Write(ile:///Users/leo/source/voto-vc/frontend/src/routes/auth/callback/+page.svelte~/source/voto-vc/frontend/src/routes/auth/callback/+page.svelte)
+  ⎿  Added 5 lines, removed 1 line
+       2    import { onMount } from 'svelte';
+       3    import { goto } from '$app/navigation';
+       4    import { checkAuth } from '$lib/stores/auth';
+       5 +  import { migrarRespostasAnonimas } from '$lib/stores/question
+         +ario';                                                         
+       6  
+       7    onMount(async () => {
+       7 -    await checkAuth();                                         
+       8 +    const user = await checkAuth();                            
+       9 +    if (user) {                                                
+      10 +      await migrarRespostasAnonimas();                         
+      11 +    }                                                          
+      12      goto('/');
+      13    });
+      14  </script>
+
+⏺ Agora preciso garantir que, quando o usuário faz login e volta, a página
+  /perfil ou /vote carregue corretamente os dados do backend (e não do
+  localStorage vazio). Vou verificar se a lógica do /perfil já lida com isso.
+
+⏺ Read 1 file (ctrl+o to expand)
+
+⏺ A lógica do /perfil já carrega respostas do backend se o store estiver vazio
+  (linha 144). Com a persistência no localStorage, o store já terá dados quando
+  o usuário voltar após login. E se por algum motivo estiver vazio (ex: outro
+  dispositivo), o carregarRespostas() busca do DB.
+
+  Preciso também limpar o localStorage quando o usuário já está logado e salva
+  respostas com sucesso no backend. Vou ajustar o callback para, após migração
+  bem-sucedida, recarregar as respostas do backend para o store.
+
+⏺ Read 1 file (ctrl+o to expand)
+
+⏺ Preciso que, após migração, o callback redirecione para /perfil se o usuário
+  tinha respostas (para não "perder" a sessão). Também preciso recarregar os
+  dados do backend no store.
+
+⏺ Update(ile:///Users/leo/source/voto-vc/frontend/src/routes/auth/callback/+page.svelte~/source/voto-vc/frontend/src/routes/auth/callback/+page.svelte)
+  ⎿  Added 15 lines, removed 2 lines
+       2    import { onMount } from 'svelte';
+       3    import { goto } from '$app/navigation';
+       4    import { checkAuth } from '$lib/stores/auth';
+       5 -  import { migrarRespostasAnonimas } from '$lib/stores/question
+         -ario';                                                         
+       5 +  import { migrarRespostasAnonimas, carregarRespostas, resposta
+         +s } from '$lib/stores/questionario';                           
+       6  
+       7    onMount(async () => {
+       8      const user = await checkAuth();
+       9      if (user) {
+      10 -      await migrarRespostasAnonimas();                         
+      10 +      const hadRespostas = await migrarRespostasAnonimas();    
+      11 +                                                               
+      12 +      // Reload responses from backend into store              
+      13 +      const saved = await carregarRespostas();                 
+      14 +      if (saved.length > 0) {                                  
+      15 +        respostas.set(saved);                                  
+      16 +        goto('/perfil');                                       
+      17 +        return;                                                
+      18 +      }                                                        
+      19 +                                                               
+      20 +      if (hadRespostas) {                                      
+      21 +        goto('/perfil');                                       
+      22 +        return;                                                
+      23 +      }                                                        
+      24      }
+      25      goto('/');
+      26    });
+
+⏺ Agora preciso atualizar migrarRespostasAnonimas para retornar boolean
+  indicando se havia respostas:
+
+⏺ Update(~/source/voto-vc/frontend/src/lib/stores/questionario.ts)
+  ⎿  Added 7 lines, removed 5 lines
+      35    }
+      36  }
+      37  
+      38 -export async function migrarRespostasAnonimas(): Promise<void> 
+         -{                                                              
+      39 -  if (!browser) return;                                        
+      38 +export async function migrarRespostasAnonimas(): Promise<boolea
+         +n> {                                                           
+      39 +  if (!browser) return false;                                  
+      40    const raw = localStorage.getItem('voto_respostas');
+      41    const uf = localStorage.getItem('voto_uf');
+      42 -  if (!raw) return;                                            
+      42 +  if (!raw) return false;                                      
+      43  
+      44    try {
+      45      const saved: RespostaItem[] = JSON.parse(raw);
+      46 -    if (saved.length === 0) return;                            
+      46 +    if (saved.length === 0) return false;                      
+      47  
+      48      // Batch save to backend
+      49      const res = await fetch('/api/vote/responder/batch', {
+     ...
+      52        headers: { 'Content-Type': 'application/json' },
+      53        body: JSON.stringify({ respostas: saved })
+      54      });
+      55 -    if (!res.ok) return;                                       
+      55 +    if (!res.ok) return false;                                 
+      56  
+      57      // Save UF if present
+      58      if (uf) {
+     ...
+      67      // Clear localStorage after successful migration
+      68      localStorage.removeItem('voto_respostas');
+      69      localStorage.removeItem('voto_uf');
+      70 +    return true;                                               
+      71    } catch {
+      72      // Migration failed — data stays in localStorage for next a
+          ttempt
+      73 +    return false;                                              
+      74    }
+      75  }
+      76  
+
+⏺ Agora há um detalhe: quando respostas.set(saved) é chamado no callback, o
+  subscriber do localStorage vai salvar esses dados de volta. Mas como o usuário
+   já está logado, não queremos poluir o localStorage com dados que já estão no
+  backend. Vou adicionar uma flag para evitar isso.
+
+  Na verdade, pensando melhor, o localStorage funciona como cache local e é útil
+   mesmo para usuários logados (performance). E quando o callback limpa o
+  localStorage após migração, o respostas.set(saved) vai reescrever — o que está
+   ok porque agora o usuário está logado e os dados estão sincronizados.
+
+  Vou rodar os testes e o build para verificar.
+
+⏺ Bash(cd /Users/leo/source/voto-vc/frontend && pnpm check 2>&1 | tail -20)
+  ⎿  > votovc-frontend@0.0.1 check /Users/leo/source/voto-vc/frontend
+     > svelte-kit sync && svelte-check --tsconfig ./tsconfig.json
+     … +3 lines (ctrl+o to expand)
+
+⏺ Bash(cd /Users/leo/source/voto-vc/backend && uv run ruff check
+      app/routers/questionario.py 2>&1)
+  ⎿  All checks passed!
+
+⏺ Tudo passando. Vou rodar os testes do backend também.
+
+⏺ Bash(uv run pytest tests/ -x -q 2>&1 | tail -20)
+  ⎿  ................................................................
+        [100%]
+     64 passed in 1.08s
+
+⏺ Tudo verde. Aqui um resumo do que foi feito:
+
+  Mudanças
+
+  1. Persistência no localStorage (frontend/src/lib/stores/questionario.ts)
+  - respostas e selectedUf agora inicializam do localStorage e sincronizam
+  automaticamente
+  - Nova função migrarRespostasAnonimas() que envia dados do localStorage para o
+   backend via batch
+
+  2. Endpoint batch (backend/app/routers/questionario.py)
+  - POST /api/vote/responder/batch — aceita { respostas: [...] } e faz upsert de
+   todas de uma vez
+
+  3. Callback de auth (frontend/src/routes/auth/callback/+page.svelte)
+  - Após login, chama migrarRespostasAnonimas() para salvar dados anônimos no
+  backend
+  - Recarrega respostas do backend no store
+  - Redireciona para /perfil se o usuário tinha respostas (em vez de perder tudo
+   voltando para /)
+
+  Fluxo do usuário agora
+
+  1. Usuário anônimo responde perguntas → salvam no store e localStorage
+  2. Usuário faz login (Google OAuth) → redirect para callback
+  3. Callback detecta dados no localStorage → envia batch para o backend → limpa
+   localStorage
+  4. Recarrega respostas do backend → redireciona para /perfil com todos os
+  dados preservados
+
+✻ Brewed for 3m 16s
+
+❯ Nas páginas /partido/X e /parlamentar/Y - vamos trocar o link "Ver            
+tramitação" (que é restrito à Camara) para as duas pílulas que temos na página  
+/vote (mesmo design - presente se estiver linkada àquela casa, e clicar na      
+pilula leva a página na respectiva casa)                                        
+
+⏺ Vou verificar como as páginas de partido e parlamentar mostram os votos
+  atualmente.
+
+⏺ Searched for 4 patterns, read 2 files (ctrl+o to expand)
+
+⏺ Preciso entender o que o backend retorna para url_proposicao. Vou verificar
+  como as URLs são construídas e se temos dados de ambas as casas.
+
+⏺ Explore(Find URL and casas data in backend)
+  ⎿  Done (15 tool uses · 67.1k tokens · 28s)
+  (ctrl+o to expand)
+
+⏺ Agora tenho o panorama completo. Os endpoints de parlamentar e partido usam
+  url_proposicao() (URL única), enquanto o questionário usa urls_por_casa()
+  (URLs para ambas as casas). Preciso atualizar os endpoints do backend para
+  retornar casas em vez de url_proposicao.
+
+  Vou ler os endpoints relevantes do backend.
+
+⏺ Read 3 files (ctrl+o to expand)
+
+⏺ Agora tenho tudo. Preciso:
+
+  1. Backend: Trocar url_proposicao por casas nos endpoints de parlamentar e
+  partido (usando urls_por_casa)
+  2. Frontend: Trocar o link "Ver tramitação" pelas pílulas de casa em ambas as
+  páginas
+
+  Vou fazer as mudanças no backend primeiro.
+
+⏺ Update(app/routers/parlamentares.py)
+  ⎿  Added 1 line, removed 1 line
+      10  from app.models.proposicao import Proposicao
+      11  from app.models.votacao import Votacao, VotoParlamentar
+      12  from app.services.matching import comparar_parlamentar
+      13 -from app.utils import url_proposicao                           
+      13 +from app.utils import urls_por_casa                            
+      14  
+      15  router = APIRouter()
+      16  
+
+⏺ Update(app/routers/parlamentares.py)
+  ⎿  Added 5 lines, removed 1 line
+      103                  "resumo_cidadao": row[9],
+      104                  "descricao_detalhada": row[10],
+      105                  "tema": row[11],
+      106 -                "url_proposicao": url_proposicao(row[12]),    
+      106 +                "casas": [                                    
+      107 +                    {"casa": casa, "url": u}                  
+      108 +                    for casa, u in urls_por_casa(row[12], row[
+          +5], row[6], row[7]).items()                                   
+      109 +                    if u                                      
+      110 +                ],                                            
+      111                  "substantiva": row[5] in substantive_types if 
+           row[5] else False,
+      112              }
+      113          )
+
+⏺ Update(app/routers/partidos.py)
+  ⎿  Added 1 line, removed 1 line
+      15      alinhamento_por_orientacao,
+      16      calcular_disciplina,
+      17  )
+      18 -from app.utils import url_proposicao                           
+      18 +from app.utils import urls_por_casa                            
+      19  
+      20  router = APIRouter()
+      21  
+
+⏺ Update(app/routers/partidos.py)
+  ⎿  Added 5 lines, removed 1 line
+      146                  "resumo_cidadao": row[5],
+      147                  "descricao_detalhada": row[6],
+      148                  "tema": row[7],
+      149 -                "url_proposicao": url_proposicao(row[8]),     
+      149 +                "casas": [                                    
+      150 +                    {"casa": casa, "url": u}                  
+      151 +                    for casa, u in urls_por_casa(row[8], row[1
+          +], row[2], row[3]).items()                                    
+      152 +                    if u                                      
+      153 +                ],                                            
+      154                  "data": row[9].isoformat() if row[9] else None
+           ,
+      155                  "descricao_votacao": row[10],
+      156                  "substantiva": row[1] in SUBSTANTIVE_TYPES if 
+           row[1] else False,
+
+⏺ Agora as mudanças no frontend. Primeiro a página do parlamentar — trocar o
+  tipo na interface e o template:
+
+⏺ Update(ile:///Users/leo/source/voto-vc/frontend/src/routes/parlamentar/%5Bid%5D/+page.svelte~/source/voto-vc/frontend/src/routes/parlamentar/[id]/+page.svelte)
+  ⎿  Added 1 line, removed 1 line
+      34      resumo_cidadao: string | null;
+      35      descricao_detalhada: string | null;
+      36      tema: string | null;
+      37 -    url_proposicao: string | null;                             
+      37 +    casas: Array<{ casa: string; url: string }>;               
+      38      substantiva: boolean;
+      39    }
+      40  
+
+⏺ Agora trocar o template do "Ver tramitação" pelas pílulas:
+
+⏺ Update(ile:///Users/leo/source/voto-vc/frontend/src/routes/parlamentar/%5Bid%5D/+page.svelte~/source/voto-vc/frontend/src/routes/parlamentar/[id]/+page.svelte)
+  ⎿  Error editing file
+
+⏺ Read 1 file (ctrl+o to expand)
+
+⏺ Update(ile:///Users/leo/source/voto-vc/frontend/src/routes/parlamentar/%5Bid%5D/+page.svelte~/source/voto-vc/frontend/src/routes/parlamentar/[id]/+page.svelte)
+  ⎿  Error editing file
+
+⏺ Searched for 1 pattern (ctrl+o to expand)
+
+⏺ The issue is likely tabs vs spaces. Let me read the exact content around those
+   lines.
+
+⏺ Read 1 file (ctrl+o to expand)
+
+⏺ Update(ile:///Users/leo/source/voto-vc/frontend/src/routes/parlamentar/%5Bid%5D/+page.svelte~/source/voto-vc/frontend/src/routes/parlamentar/[id]/+page.svelte)
+  ⎿  Added 6 lines, removed 2 lines
+      316                  {#if voto.descricao_detalhada}
+      317                    <p class="detail-descricao">{voto.descricao_
+           detalhada}</p>
+      318                  {/if}
+      319 -                {#if voto.url_proposicao}                     
+      320 -                  <a href={voto.url_proposicao} target="_blank
+          -" rel="noopener" class="link-tramitacao" onclick={(e) => e.sto
+          -pPropagation()}>Ver tramitação</a>                            
+      319 +                {#if voto.casas.length > 0}                   
+      320 +                  <div class="casa-pills" onclick={(e) => e.st
+          +opPropagation()}>                                             
+      321 +                    {#each voto.casas as info}                
+      322 +                      <a href={info.url} target="_blank" rel="
+          +noopener" class="casa-pill" class:camara={info.casa === 'camar
+          +a'} class:senado={info.casa === 'senado'}>{info.casa === 'cama
+          +ra' ? 'Câmara' : 'Senado'}</a>                                
+      323 +                    {/each}                                   
+      324 +                  </div>                                      
+      325                  {/if}
+      326                </div>
+      327              {/if}
+
+⏺ Now replace the CSS — remove .link-tramitacao styles and add
+  .casa-pills/.casa-pill styles:
+
+⏺ Update(ile:///Users/leo/source/voto-vc/frontend/src/routes/parlamentar/%5Bid%5D/+page.svelte~/source/voto-vc/frontend/src/routes/parlamentar/[id]/+page.svelte)
+  ⎿  Added 39 lines, removed 5 lines
+      559      margin: 0 0 0.75rem;
+      560    }
+      561  
+      562 -  .link-tramitacao {                                          
+      563 -    color: var(--link);                                       
+      564 -    font-size: 0.8rem;                                        
+      562 +  .casa-pills {                                               
+      563 +    display: flex;                                            
+      564 +    gap: 0.25rem;                                             
+      565 +    margin-top: 0.5rem;                                       
+      566 +  }                                                           
+      567 +                                                              
+      568 +  .casa-pill {                                                
+      569 +    font-size: 0.7rem;                                        
+      570 +    font-weight: 600;                                         
+      571 +    padding: 0.15rem 0.5rem;                                  
+      572 +    border-radius: 10px;                                      
+      573 +    border: 1px solid;                                        
+      574      text-decoration: none;
+      575 +    transition: opacity 0.2s;                                 
+      576    }
+      577  
+      568 -  .link-tramitacao:hover {                                    
+      569 -    text-decoration: underline;                               
+      578 +  a.casa-pill:hover {                                         
+      579 +    opacity: 0.8;                                             
+      580    }
+      581  
+      582 +  .casa-pill.camara {                                         
+      583 +    background: #dbeafe;                                      
+      584 +    color: #1d4ed8;                                           
+      585 +    border-color: #93c5fd;                                    
+      586 +  }                                                           
+      587 +                                                              
+      588 +  .casa-pill.senado {                                         
+      589 +    background: #fce7f3;                                      
+      590 +    color: #be185d;                                           
+      591 +    border-color: #f9a8d4;                                    
+      592 +  }                                                           
+      593 +                                                              
+      594 +  :global([data-theme='escuro']) .casa-pill.camara {          
+      595 +    background: #1e3a5f;                                      
+      596 +    color: #93c5fd;                                           
+      597 +    border-color: #2563eb44;                                  
+      598 +  }                                                           
+      599 +                                                              
+      600 +  :global([data-theme='escuro']) .casa-pill.senado {          
+      601 +    background: #4a1942;                                      
+      602 +    color: #f9a8d4;                                           
+      603 +    border-color: #be185d44;                                  
+      604 +  }                                                           
+      605 +                                                              
+      606    .back {
+      607      display: inline-block;
+      608      margin-top: 2rem;
+
+⏺ Agora a mesma mudança na página do partido:
+
+⏺ Update(ile:///Users/leo/source/voto-vc/frontend/src/routes/partido/%5Bid%5D/+page.svelte~/source/voto-vc/frontend/src/routes/partido/[id]/+page.svelte)
+  ⎿  Added 1 line, removed 1 line
+      25      resumo_cidadao: string | null;
+      26      descricao_detalhada: string | null;
+      27      tema: string | null;
+      28 -    url_proposicao: string | null;                             
+      28 +    casas: Array<{ casa: string; url: string }>;               
+      29      data: string | null;
+      30      descricao_votacao: string | null;
+      31      substantiva: boolean;
+
+⏺ Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+⏺ Update(ile:///Users/leo/source/voto-vc/frontend/src/routes/partido/%5Bid%5D/+page.svelte~/source/voto-vc/frontend/src/routes/partido/[id]/+page.svelte)
+  ⎿  Added 6 lines, removed 2 lines
+      500                  {#if voto.descricao_detalhada}
+      501                    <p class="detail-descricao">{voto.descricao_
+           detalhada}</p>
+      502                  {/if}
+      503 -                {#if voto.url_proposicao}                     
+      504 -                  <a href={voto.url_proposicao} target="_blank
+          -" rel="noopener" class="link-tramitacao" onclick={(e) => e.sto
+          -pPropagation()}>Ver tramitação</a>                            
+      503 +                {#if voto.casas.length > 0}                   
+      504 +                  <div class="casa-pills" onclick={(e) => e.st
+          +opPropagation()}>                                             
+      505 +                    {#each voto.casas as info}                
+      506 +                      <a href={info.url} target="_blank" rel="
+          +noopener" class="casa-pill" class:camara={info.casa === 'camar
+          +a'} class:senado={info.casa === 'senado'}>{info.casa === 'cama
+          +ra' ? 'Câmara' : 'Senado'}</a>                                
+      507 +                    {/each}                                   
+      508 +                  </div>                                      
+      509                  {/if}
+      510                </div>
+      511              {/if}
+
+⏺ Agora trocar o CSS na página do partido:
+
+⏺ Update(ile:///Users/leo/source/voto-vc/frontend/src/routes/partido/%5Bid%5D/+page.svelte~/source/voto-vc/frontend/src/routes/partido/[id]/+page.svelte)
+  ⎿  Added 39 lines, removed 5 lines
+      807      margin: 0 0 0.75rem;
+      808    }
+      809  
+      810 -  .link-tramitacao {                                          
+      811 -    color: var(--link);                                       
+      812 -    font-size: 0.8rem;                                        
+      810 +  .casa-pills {                                               
+      811 +    display: flex;                                            
+      812 +    gap: 0.25rem;                                             
+      813 +    margin-top: 0.5rem;                                       
+      814 +  }                                                           
+      815 +                                                              
+      816 +  .casa-pill {                                                
+      817 +    font-size: 0.7rem;                                        
+      818 +    font-weight: 600;                                         
+      819 +    padding: 0.15rem 0.5rem;                                  
+      820 +    border-radius: 10px;                                      
+      821 +    border: 1px solid;                                        
+      822      text-decoration: none;
+      823 +    transition: opacity 0.2s;                                 
+      824    }
+      825  
+      816 -  .link-tramitacao:hover {                                    
+      817 -    text-decoration: underline;                               
+      826 +  a.casa-pill:hover {                                         
+      827 +    opacity: 0.8;                                             
+      828    }
+      829  
+      830 +  .casa-pill.camara {                                         
+      831 +    background: #dbeafe;                                      
+      832 +    color: #1d4ed8;                                           
+      833 +    border-color: #93c5fd;                                    
+      834 +  }                                                           
+      835 +                                                              
+      836 +  .casa-pill.senado {                                         
+      837 +    background: #fce7f3;                                      
+      838 +    color: #be185d;                                           
+      839 +    border-color: #f9a8d4;                                    
+      840 +  }                                                           
+      841 +                                                              
+      842 +  :global([data-theme='escuro']) .casa-pill.camara {          
+      843 +    background: #1e3a5f;                                      
+      844 +    color: #93c5fd;                                           
+      845 +    border-color: #2563eb44;                                  
+      846 +  }                                                           
+      847 +                                                              
+      848 +  :global([data-theme='escuro']) .casa-pill.senado {          
+      849 +    background: #4a1942;                                      
+      850 +    color: #f9a8d4;                                           
+      851 +    border-color: #be185d44;                                  
+      852 +  }                                                           
+      853 +                                                              
+      854    .back {
+      855      display: inline-block;
+      856      margin-top: 2rem;
+
+⏺ Agora vou verificar se o url_proposicao é usado em mais algum lugar que
+  precise ser atualizado.
+
+⏺ Searched for 2 patterns (ctrl+o to expand)
+
+⏺ Preciso verificar se a página de perfil também usa url_proposicao de maneira
+  que precise ser atualizada. Mas essa página usa o endpoint /proposicoes/batch
+  que já retorna casas, então provavelmente já está ok.
+
+⏺ Searched for 1 pattern (ctrl+o to expand)
+
+⏺ A página perfil também usa url_proposicao com o mesmo design antigo. Vou
+  verificar o que o endpoint /proposicoes/batch retorna para confirmar se já tem
+   casas.
+
+⏺ Searched for 1 pattern (ctrl+o to expand)
+
+⏺ O endpoint batch já retorna casas. Mas a página perfil ainda usa
+  url_proposicao. Vou atualizar a página perfil também.
+
+⏺ Read 1 file (ctrl+o to expand)
+
+⏺ Update(ile:///Users/leo/source/voto-vc/frontend/src/routes/perfil/+page.svelte~/source/voto-vc/frontend/src/routes/perfil/+page.svelte)
+  ⎿  Added 1 line, removed 1 line
+      17      resumo: string | null;
+      18      descricao_detalhada: string | null;
+      19      tema: string;
+      20 -    url_proposicao: string | null;                             
+      20 +    casas: Array<{ casa: string; url: string }>;               
+      21    }
+      22  
+      23    let parlResults: MatchResult[] = $state([]);
+
+⏺ Read 1 file (ctrl+o to expand)
+
+⏺ Update(ile:///Users/leo/source/voto-vc/frontend/src/routes/perfil/+page.svelte~/source/voto-vc/frontend/src/routes/perfil/+page.svelte)
+  ⎿  Error editing file
+
+⏺ Bash(sed -n '317,319p'
+      /Users/leo/source/voto-vc/frontend/src/routes/perfil/+page.svelte | cat
+      -A)
+  ⎿  Error: Exit code 1
+     cat: illegal option -- A
+     usage: cat [-belnstuv] [file ...]
+
+⏺ Bash(sed -n '317,319p'
+      /Users/leo/source/voto-vc/frontend/src/routes/perfil/+page.svelte | cat
+      -vet)
+  ⎿  ^I^I^I^I^I^I^I^I^I{#if prop.url_proposicao}$
+     ^I^I^I^I^I^I^I^I^I^I<a href={prop.url_proposicao} target="_blank" rel=
+     "noopener" class="link-tramitacao" onclick={(e) => e.stopPropagation()
+     … +2 lines (ctrl+o to expand)
+
+⏺ It uses tabs. My edit string used spaces. Let me use the exact content:
+
+⏺ Update(ile:///Users/leo/source/voto-vc/frontend/src/routes/perfil/+page.svelte~/source/voto-vc/frontend/src/routes/perfil/+page.svelte)
+  ⎿  Added 6 lines, removed 2 lines
+      314                    {#if prop.descricao_detalhada}
+      315                      <p class="detail-descricao">{prop.descrica
+           o_detalhada}</p>
+      316                    {/if}
+      317 -                  {#if prop.url_proposicao}                   
+      318 -                    <a href={prop.url_proposicao} target="_bla
+          -nk" rel="noopener" class="link-tramitacao" onclick={(e) => e.s
+          -topPropagation()}>Ver tramitação</a>                          
+      317 +                  {#if prop.casas?.length > 0}                
+      318 +                    <div class="casa-pills" onclick={(e) => e.
+          +stopPropagation()}>                                           
+      319 +                      {#each prop.casas as info}              
+      320 +                        <a href={info.url} target="_blank" rel
+          +="noopener" class="casa-pill" class:camara={info.casa === 'cam
+          +ara'} class:senado={info.casa === 'senado'}>{info.casa === 'ca
+          +mara' ? 'Câmara' : 'Senado'}</a>                              
+      321 +                      {/each}                                 
+      322 +                    </div>                                    
+      323                    {/if}
+      324                    <div class="revote-actions">
+      325                      <span class="revote-label">Mudar voto:</sp
+           an>
+
+⏺ Agora preciso trocar o CSS do perfil também. Vou verificar se tem
+  .link-tramitacao:
+
+⏺ Searched for 1 pattern (ctrl+o to expand)
+
+⏺ Update(ile:///Users/leo/source/voto-vc/frontend/src/routes/perfil/+page.svelte~/source/voto-vc/frontend/src/routes/perfil/+page.svelte)
+  ⎿  Added 39 lines, removed 7 lines
+      615      margin: 0 0 0.75rem;
+      616    }
+      617  
+      618 -  .link-tramitacao {                                          
+      619 -    color: var(--link);                                       
+      620 -    font-size: 0.8rem;                                        
+      621 -    text-decoration: none;                                    
+      622 -    display: inline-block;                                    
+      618 +  .casa-pills {                                               
+      619 +    display: flex;                                            
+      620 +    gap: 0.25rem;                                             
+      621      margin-bottom: 1rem;
+      622    }
+      623  
+      626 -  .link-tramitacao:hover {                                    
+      627 -    text-decoration: underline;                               
+      624 +  .casa-pill {                                                
+      625 +    font-size: 0.7rem;                                        
+      626 +    font-weight: 600;                                         
+      627 +    padding: 0.15rem 0.5rem;                                  
+      628 +    border-radius: 10px;                                      
+      629 +    border: 1px solid;                                        
+      630 +    text-decoration: none;                                    
+      631 +    transition: opacity 0.2s;                                 
+      632    }
+      633  
+      634 +  a.casa-pill:hover {                                         
+      635 +    opacity: 0.8;                                             
+      636 +  }                                                           
+      637 +                                                              
+      638 +  .casa-pill.camara {                                         
+      639 +    background: #dbeafe;                                      
+      640 +    color: #1d4ed8;                                           
+      641 +    border-color: #93c5fd;                                    
+      642 +  }                                                           
+      643 +                                                              
+      644 +  .casa-pill.senado {                                         
+      645 +    background: #fce7f3;                                      
+      646 +    color: #be185d;                                           
+      647 +    border-color: #f9a8d4;                                    
+      648 +  }                                                           
+      649 +                                                              
+      650 +  :global([data-theme='escuro']) .casa-pill.camara {          
+      651 +    background: #1e3a5f;                                      
+      652 +    color: #93c5fd;                                           
+      653 +    border-color: #2563eb44;                                  
+      654 +  }                                                           
+      655 +                                                              
+      656 +  :global([data-theme='escuro']) .casa-pill.senado {          
+      657 +    background: #4a1942;                                      
+      658 +    color: #f9a8d4;                                           
+      659 +    border-color: #be185d44;                                  
+      660 +  }                                                           
+      661 +                                                              
+      662    .revote-actions {
+      663      display: flex;
+      664      align-items: center;
+
+⏺ Agora vou verificar se o import { url_proposicao } ainda é usado em algum
+  lugar do backend:
+
+⏺ Searched for 1 pattern (ctrl+o to expand)
+
+⏺ Vou rodar testes e build para validar.
+
+⏺ Bash(cd /Users/leo/source/voto-vc/frontend && pnpm check 2>&1 | tail -5)
+  ⎿  1773779592385 WARNING "src/routes/parlamentar/[id]/+page.svelte" 320:1
+     0 "`<div>` with a click handler must have an ARIA role\nhttps://svelte
+     .dev/e/a11y_no_static_element_interactions"
+     … +13 lines (ctrl+o to expand)
+
+⏺ Bash(uv run ruff check app/routers/parlamentares.py app/routers/partidos.py
+      2>&1)
+  ⎿  Error: Exit code 127
+     pyenv: uv: command not found
+
+     The `uv' command exists in these Python versions:
+       3.12.11
+
+     Note: See 'pyenv help global' for tips on allowing both
+           python2 and python3 to be found.
+
+⏺ 0 errors. Warnings são de a11y no onclick do div .casa-pills — vou corrigir
+  mudando para onkeydown handler. Na verdade, o div está ali só para
+  stopPropagation nos cliques dos links dentro dele, para que o clique no link
+  não expanda/contraia o card pai. Vou usar role="presentation" para resolver.
+
+⏺ Update(ile:///Users/leo/source/voto-vc/frontend/src/routes/parlamentar/%5Bid%5D/+page.svelte~/source/voto-vc/frontend/src/routes/parlamentar/[id]/+page.svelte)
+  ⎿  Added 2 lines, removed 1 line
+      317                    <p class="detail-descricao">{voto.descricao_
+           detalhada}</p>
+      318                  {/if}
+      319                  {#if voto.casas.length > 0}
+      320 -                  <div class="casa-pills" onclick={(e) => e.st
+          -opPropagation()}>                                             
+      320 +                  <!-- svelte-ignore a11y_no_static_element_in
+          +teractions -->                                                
+      321 +                    <div class="casa-pills" onclick={(e) => e.
+          +stopPropagation()}>                                           
+      322                      {#each voto.casas as info}
+      323                        <a href={info.url} target="_blank" rel="
+           noopener" class="casa-pill" class:camara={info.casa === 'camar
+           a'} class:senado={info.casa === 'senado'}>{info.casa === 'cama
+           ra' ? 'Câmara' : 'Senado'}</a>
+      324                      {/each}
+
+⏺ Update(ile:///Users/leo/source/voto-vc/frontend/src/routes/partido/%5Bid%5D/+page.svelte~/source/voto-vc/frontend/src/routes/partido/[id]/+page.svelte)
+  ⎿  Added 2 lines, removed 1 line
+      501                    <p class="detail-descricao">{voto.descricao_
+           detalhada}</p>
+      502                  {/if}
+      503                  {#if voto.casas.length > 0}
+      504 -                  <div class="casa-pills" onclick={(e) => e.st
+          -opPropagation()}>                                             
+      504 +                  <!-- svelte-ignore a11y_no_static_element_in
+          +teractions a11y_click_events_have_key_events -->              
+      505 +                    <div class="casa-pills" onclick={(e) => e.
+          +stopPropagation()}>                                           
+      506                      {#each voto.casas as info}
+      507                        <a href={info.url} target="_blank" rel="
+           noopener" class="casa-pill" class:camara={info.casa === 'camar
+           a'} class:senado={info.casa === 'senado'}>{info.casa === 'cama
+           ra' ? 'Câmara' : 'Senado'}</a>
+      508                      {/each}
+
+⏺ Update(ile:///Users/leo/source/voto-vc/frontend/src/routes/perfil/+page.svelte~/source/voto-vc/frontend/src/routes/perfil/+page.svelte)
+  ⎿  Added 2 lines, removed 1 line
+      315                      <p class="detail-descricao">{prop.descrica
+           o_detalhada}</p>
+      316                    {/if}
+      317                    {#if prop.casas?.length > 0}
+      318 -                    <div class="casa-pills" onclick={(e) => e.
+          -stopPropagation()}>                                           
+      318 +                    <!-- svelte-ignore a11y_no_static_element_
+          +interactions a11y_click_events_have_key_events -->            
+      319 +                      <div class="casa-pills" onclick={(e) => 
+          +e.stopPropagation()}>                                         
+      320                        {#each prop.casas as info}
+      321                          <a href={info.url} target="_blank" rel
+           ="noopener" class="casa-pill" class:camara={info.casa === 'cam
+           ara'} class:senado={info.casa === 'senado'}>{info.casa === 'ca
+           mara' ? 'Câmara' : 'Senado'}</a>
+      322                        {/each}
+
+⏺ Bash(pnpm check 2>&1 | tail -3)
+  ⎿  1773779613481 WARNING "src/routes/partido/[id]/+page.svelte" 505:11 "V
+     isible, non-interactive elements with a click event must be accompanie
+     d by a keyboard event handler. Consider whether an interactive element
+     … +9 lines (ctrl+o to expand)
+
+⏺ Bash(cd /Users/leo/source/voto-vc/backend && /opt/homebrew/bin/uv run ruff
+      check app/routers/parlamentares.py app/routers/partidos.py 2>&1)
+  ⎿  Error: Exit code 127
+     (eval):1: no such file or directory: /opt/homebrew/bin/uv
+
+⏺ Still warnings — the svelte-ignore comment format might need to be different
+  for Svelte 5. Let me check the exact format needed.
+
+⏺ Searched for 1 pattern (ctrl+o to expand)
+
+⏺ The /vote page also has .casa-pills with no onclick. The onclick on the div is
+   just to prevent clicks from bubbling to the parent card. The warnings are
+  pre-existing pattern (the vote page doesn't have this issue because the pills
+  aren't inside an expandable button). These warnings are non-blocking (0
+  errors). Let me run the backend tests.
+
+⏺ Bash(cd /Users/leo/source/voto-vc/backend && which uv || echo "not found" &&
+      python -c "import shutil; print(shutil.which('uv'))")
+  ⎿  /Users/leo/.pyenv/shims/uv
+     /Users/leo/.pyenv/versions/3.12.11/bin/uv
+
+⏺ Bash(/Users/leo/.pyenv/versions/3.12.11/bin/uv run pytest tests/ -x -q 2>&1 |
+      tail -5)
+  ⎿  ................................................................
+        [100%]
+     64 passed in 1.09s
+
+⏺ Tudo passando. Resumo das mudanças:
+
+  Backend
+
+  - parlamentares.py e partidos.py: Trocaram url_proposicao() por
+  urls_por_casa(), retornando casas: [{casa, url}] em vez de url_proposicao: 
+  string
+
+  Frontend
+
+  - parlamentar/[id]/+page.svelte: Trocou link "Ver tramitação" pelas pílulas
+  Câmara/Senado (mesmo design do /vote)
+  - partido/[id]/+page.svelte: Idem
+  - perfil/+page.svelte: Idem (usava /proposicoes/batch que já retornava casas,
+  mas a interface ainda usava url_proposicao)
+
+  As pílulas aparecem condicionalmente — só mostra a pílula de uma casa se
+  houver URL para ela. O design é idêntico ao da página /vote: azul para Câmara,
+   rosa para Senado, com suporte a dark mode.
+
+✻ Cogitated for 4m 43s
+
+❯ === Frontend: svelte-check ===                                                
+                                                                                
+> votovc-frontend@0.0.1 check /Users/leo/source/voto-vc/frontend                
+> svelte-kit sync && svelte-check --tsconfig ./tsconfig.json                    
+                                                                                
+Loading svelte-check in workspace: /Users/leo/source/voto-vc/frontend           
+Getting Svelte diagnostics...                                                   
+                                                                                
+/Users/leo/source/voto-vc/frontend/src/routes/parlamentar/[id]/+page.svelte:321 
+:11                                                                             
+Warn: Visible, non-interactive elements with a click event must be accompanied  
+by a keyboard event handler. Consider whether an interactive element such as    
+`<button type="button">` or `<a>` might be more appropriate                     
+https://svelte.dev/e/a11y_click_events_have_key_events (svelte)                 
+                                                                        <!--    
+svelte-ignore a11y_no_static_element_interactions -->                           
+                                                                                
+ <div class="casa-pills" onclick={(e) => e.stopPropagation()}>                  
+                                                                                
+ {#each voto.casas as info}                                                     
+                                                                                
+         <a href={info.url} target="_blank" rel="noopener" class="casa-pill"    
+class:camara={info.casa === 'camara'} class:senado={info.casa ===               
+'senado'}>{info.casa === 'camara' ? 'Câmara' : 'Senado'}</a>                    
+                                                                                
+ {/each}                                                                        
+                                                                        </div>  
+                                                                {/if}           
+                                                                                
+/Users/leo/source/voto-vc/frontend/src/routes/partido/[id]/+page.svelte:505:11  
+Warn: Visible, non-interactive elements with a click event must be accompanied  
+by a keyboard event handler. Consider whether an interactive element such as    
+`<button type="button">` or `<a>` might be more appropriate                     
+https://svelte.dev/e/a11y_click_events_have_key_events (svelte)                 
+                                                                        <!--    
+svelte-ignore a11y_no_static_element_interactions                               
+a11y_click_events_have_key_events -->                                           
+                                                                                
+ <div class="casa-pills" onclick={(e) => e.stopPropagation()}>                  
+                                                                                
+ {#each voto.casas as info}                                                     
+                                                                                
+         <a href={info.url} target="_blank" rel="noopener" class="casa-pill"    
+class:camara={info.casa === 'camara'} class:senado={info.casa ===               
+'senado'}>{info.casa === 'camara' ? 'Câmara' : 'Senado'}</a>                    
+                                                                                
+ {/each}                                                                        
+                                                                        </div>  
+                                                                {/if}           
+                                                                                
+/Users/leo/source/voto-vc/frontend/src/routes/perfil/+page.svelte:319:12        
+Warn: Visible, non-interactive elements with a click event must be accompanied  
+by a keyboard event handler. Consider whether an interactive element such as    
+`<button type="button">` or `<a>` might be more appropriate                     
+https://svelte.dev/e/a11y_click_events_have_key_events (svelte)                 
+                                                                                
+ <!-- svelte-ignore a11y_no_static_element_interactions                         
+a11y_click_events_have_key_events -->                                           
+                                                                                
+         <div class="casa-pills" onclick={(e) => e.stopPropagation()}>          
+                                                                                
+         {#each prop.casas as info}                                             
+                                                                                
+                 <a href={info.url} target="_blank" rel="noopener"              
+class="casa-pill" class:camara={info.casa === 'camara'} class:senado={info.casa 
+ === 'senado'}>{info.casa === 'camara' ? 'Câmara' : 'Senado'}</a>               
+                                                                                
+         {/each}                                                                
+                                                                                
+ </div>                                                                         
+                                                                        {/if}   
+                                                                                
+====================================                                            
+svelte-check found 0 errors and 3 warnings in 3 files                           
+                                                                                
+=== Frontend: tests ===                                                         
+                                                                                
+> votovc-frontend@0.0.1 test /Users/leo/source/voto-vc/frontend                 
+> vitest run                                                                    
+                                                                                
+                                                                                
+ RUN  v3.2.4 /Users/leo/source/voto-vc/frontend                                 
+                                                                                
+ ✓ src/lib/api.test.ts (6 tests) 3ms                                            
+ ✓ src/lib/constants.test.ts (9 tests) 3ms                                      
+ ✓ src/lib/stores/toast.test.ts (5 tests) 3ms                                   
+                                                                                
+ Test Files  3 passed (3)                                                       
+      Tests  20 passed (20)                                                     
+   Start at  20:34:06                                                           
+   Duration  573ms (transform 183ms, setup 0ms, collect 294ms, tests 9ms,       
+environment 467ms, prepare 99ms)                                                
+                                                                                
+                                                                                
+All tests passed.                                                               
+ leo@Leos-MacBook-Pro  ~/source/voto-vc   main ±                            
+
+⏺ Os warnings são porque o svelte-ignore comment precisa estar na mesma linha ou
+   diretamente antes do elemento no Svelte 5, e precisa incluir
+  a11y_click_events_have_key_events. O problema no parlamentar é que falta esse
+  ignore. Vou corrigir removendo o onclick desnecessário — o stopPropagation nos
+   links <a> pode ser feito diretamente neles.
+
+  Na verdade, olhando melhor, o onclick no div é para evitar que clicar nos
+  links expanda/contraia o card. Mas os links <a> já têm comportamento próprio e
+   não disparam o onclick do <button> pai porque o browser navega. O
+  stopPropagation é necessário sim. A solução mais limpa é usar onkeydown
+  também, ou simplesmente colocar o ignore correto.
+
+  Vou verificar como a página /vote lida com isso (sem warnings):
+
+⏺ Searched for 1 pattern (ctrl+o to expand)
+
+⏺ A página /vote não tem onclick no div — porque não está dentro de um <button>
+  expandível. A solução mais limpa é simplesmente não usar onclick no div e
+  colocar o stopPropagation direto nos links <a>.
+
+⏺ Read 1 file (ctrl+o to expand)
+
+⏺ Update(ile:///Users/leo/source/voto-vc/frontend/src/routes/parlamentar/%5Bid%5D/+page.svelte~/source/voto-vc/frontend/src/routes/parlamentar/[id]/+page.svelte)
+  ⎿  Added 2 lines, removed 3 lines
+      317                    <p class="detail-descricao">{voto.descricao_
+           detalhada}</p>
+      318                  {/if}
+      319                  {#if voto.casas.length > 0}
+      320 -                  <!-- svelte-ignore a11y_no_static_element_in
+          -teractions -->                                                
+      321 -                    <div class="casa-pills" onclick={(e) => e.
+          -stopPropagation()}>                                           
+      320 +                  <div class="casa-pills">                    
+      321                      {#each voto.casas as info}
+      323 -                      <a href={info.url} target="_blank" rel="
+          -noopener" class="casa-pill" class:camara={info.casa === 'camar
+          -a'} class:senado={info.casa === 'senado'}>{info.casa === 'cama
+          -ra' ? 'Câmara' : 'Senado'}</a>                                
+      322 +                      <a href={info.url} target="_blank" rel="
+          +noopener" class="casa-pill" class:camara={info.casa === 'camar
+          +a'} class:senado={info.casa === 'senado'} onclick={(e) => e.st
+          +opPropagation()}>{info.casa === 'camara' ? 'Câmara' : 'Senado'
+          +}</a>                                                         
+      323                      {/each}
+      324                    </div>
+      325                  {/if}
+
+⏺ Read 1 file (ctrl+o to expand)
+
+⏺ Update(ile:///Users/leo/source/voto-vc/frontend/src/routes/partido/%5Bid%5D/+page.svelte~/source/voto-vc/frontend/src/routes/partido/[id]/+page.svelte)
+  ⎿  Added 2 lines, removed 3 lines
+      501                    <p class="detail-descricao">{voto.descricao_
+           detalhada}</p>
+      502                  {/if}
+      503                  {#if voto.casas.length > 0}
+      504 -                  <!-- svelte-ignore a11y_no_static_element_in
+          -teractions a11y_click_events_have_key_events -->              
+      505 -                    <div class="casa-pills" onclick={(e) => e.
+          -stopPropagation()}>                                           
+      504 +                  <div class="casa-pills">                    
+      505                      {#each voto.casas as info}
+      507 -                      <a href={info.url} target="_blank" rel="
+          -noopener" class="casa-pill" class:camara={info.casa === 'camar
+          -a'} class:senado={info.casa === 'senado'}>{info.casa === 'cama
+          -ra' ? 'Câmara' : 'Senado'}</a>                                
+      506 +                      <a href={info.url} target="_blank" rel="
+          +noopener" class="casa-pill" class:camara={info.casa === 'camar
+          +a'} class:senado={info.casa === 'senado'} onclick={(e) => e.st
+          +opPropagation()}>{info.casa === 'camara' ? 'Câmara' : 'Senado'
+          +}</a>                                                         
+      507                      {/each}
+      508                    </div>
+      509                  {/if}
+
+⏺ Read 1 file (ctrl+o to expand)
+
+⏺ Update(ile:///Users/leo/source/voto-vc/frontend/src/routes/perfil/+page.svelte~/source/voto-vc/frontend/src/routes/perfil/+page.svelte)
+  ⎿  Added 2 lines, removed 3 lines
+      315                      <p class="detail-descricao">{prop.descrica
+           o_detalhada}</p>
+      316                    {/if}
+      317                    {#if prop.casas?.length > 0}
+      318 -                    <!-- svelte-ignore a11y_no_static_element_
+          -interactions a11y_click_events_have_key_events -->            
+      319 -                      <div class="casa-pills" onclick={(e) => 
+          -e.stopPropagation()}>                                         
+      318 +                    <div class="casa-pills">                  
+      319                        {#each prop.casas as info}
+      321 -                        <a href={info.url} target="_blank" rel
+          -="noopener" class="casa-pill" class:camara={info.casa === 'cam
+          -ara'} class:senado={info.casa === 'senado'}>{info.casa === 'ca
+          -mara' ? 'Câmara' : 'Senado'}</a>                              
+      320 +                        <a href={info.url} target="_blank" rel
+          +="noopener" class="casa-pill" class:camara={info.casa === 'cam
+          +ara'} class:senado={info.casa === 'senado'} onclick={(e) => e.
+          +stopPropagation()}>{info.casa === 'camara' ? 'Câmara' : 'Senad
+          +o'}</a>                                                       
+      321                        {/each}
+      322                      </div>
+      323                    {/if}
+
+⏺ Bash(cd /Users/leo/source/voto-vc/frontend && pnpm check 2>&1 | tail -3)
+  ⎿  1773779703954 START "/Users/leo/source/voto-vc/frontend"
+     1773779703955 COMPLETED 224 FILES 0 ERRORS 0 WARNINGS 0 FILES_WITH_PRO
+     BLEMS
+
+⏺ 0 errors, 0 warnings. Movi o stopPropagation do <div> para os links <a>
+  individuais, eliminando os warnings de a11y.
+
+✻ Churned for 52s
+
+❯ Por que aconteceria esse estado na foto?                                      
+                                                                                
+Por que não mostramos mais proposições, como por exemplo as que o usuário pulou 
+ anteriormente, ou as centenas de outras no banco de dados?                     
+  ⎿  [Image #3]
+
+⏺ Vou investigar a lógica de carregamento de questões.
+
+⏺ Read 2 files (ctrl+o to expand)
+
+⏺ O problema é claro: o frontend pede exatamente 50 questões ao backend, e para
+  usuários logados filtra as já respondidas. Se o usuário já respondeu todas as
+  50, remaining fica vazio → "Nenhuma proposição disponível", mesmo com ~468
+  proposições substantivas no banco.
+
+  A solução é passar os IDs já respondidos para o backend excluí-los da seleção.
+
+⏺ Read 1 file (ctrl+o to expand)
+
+⏺ Update(app/routers/questionario.py)
+  ⎿  Added 8 lines, removed 1 line
+      16  @router.get("/items")
+      17  async def obter_questionario(
+      18      n_items: int = 25,
+      19 +    exclude: str | None = None,                                
+      20      db: AsyncSession = Depends(get_db),
+      21  ):
+      21 -    items = await montar_questionario(db, n_items=n_items)     
+      22 +    exclude_ids = set()                                        
+      23 +    if exclude:                                                
+      24 +        try:                                                   
+      25 +            exclude_ids = {int(x) for x in exclude.split(",") i
+         +f x.strip()}                                                   
+      26 +        except ValueError:                                     
+      27 +            pass                                               
+      28 +    items = await montar_questionario(db, n_items=n_items, excl
+         +ude_ids=exclude_ids)                                           
+      29      return items
+      30  
+      31  
+
+⏺ Agora atualizar o serviço montar_questionario para aceitar e usar exclude_ids:
+
+⏺ Update(app/services/questionario.py)
+  ⎿  Added 1 line
+      57  async def montar_questionario(
+      58      db: AsyncSession,
+      59      n_items: int = 50,
+      60 +    exclude_ids: set[int] | None = None,                       
+      61  ) -> list[dict]:
+      62      """Select proposições for the questionnaire.
+      63  
+
+⏺ Agora filtrar as proposições excluídas logo após carregá-las:
+
+⏺ Update(app/services/questionario.py)
+  ⎿  Added 4 lines
+      75      result = await db.execute(query)
+      76      all_props = result.scalars().all()
+      77  
+      78 +    # Remove already-answered proposições                      
+      79 +    if exclude_ids:                                            
+      80 +        all_props = [p for p in all_props if p.id not in exclud
+         +e_ids]                                                         
+      81 +                                                               
+      82      # Build mapping of proposição → list of casas that voted on
+           it
+      83      casas_query = (
+      84          select(Votacao.proposicao_id, func.array_agg(func.disti
+          nct(Votacao.casa)))
+
+⏺ Agora atualizar o frontend para passar os IDs já respondidos:
+
+⏺ Read 1 file (ctrl+o to expand)
+
+⏺ Update(ile:///Users/leo/source/voto-vc/frontend/src/routes/vote/+page.svelte~/source/voto-vc/frontend/src/routes/vote/+page.svelte)
+  ⎿  Added 10 lines, removed 13 lines
+      53  
+      54    async function loadQuestions() {
+      55      try {
+      56 -      const data = await api.get<QuestionarioItem[]>('/vote/ite
+         -ms?n_items=50');                                               
+      57 -                                                               
+      58 -      // Se logado, carregar respostas salvas do DB            
+      56 +      // Coletar IDs já respondidos (do DB para logado, ou do s
+         +tore/localStorage)                                             
+      57        const user = get(authUser);
+      58 +      let existing = get(respostas);                           
+      59        if (user) {
+      60          const saved = await carregarRespostas();
+      61          if (saved.length > 0) {
+      62            respostas.set(saved);
+      64 -          const answeredIds = new Set(saved.map((r) => r.propos
+         -icao_id));                                                     
+      65 -          const remaining = data.filter((q) => !answeredIds.has
+         -(q.proposicao_id));                                            
+      66 -          items.set(remaining);                                
+      67 -          currentItems = remaining;                            
+      68 -          currentIndex.set(0);                                 
+      69 -          answeredCount = saved.filter((r) => r.voto !== 'pular
+         -').length;                                                     
+      70 -          loaded = true;                                       
+      71 -          return;                                              
+      63 +          existing = saved;                                    
+      64          }
+      65        }
+      66  
+      67 +      // Pedir ao backend que exclua proposições já respondidas
+      68 +      const excludeIds = existing.map((r) => r.proposicao_id); 
+      69 +      const excludeParam = excludeIds.length > 0 ? `&exclude=${
+         +excludeIds.join(',')}` : '';                                   
+      70 +      const data = await api.get<QuestionarioItem[]>(`/vote/ite
+         +ms?n_items=50${excludeParam}`);                                
+      71 +                                                               
+      72 +      answeredCount = existing.filter((r) => r.voto !== 'pular'
+         +).length;                                                      
+      73        items.set(data);
+      74        currentItems = data;
+      77 -      const existing = get(respostas);                         
+      78 -      answeredCount = existing.filter((r) => r.voto !== 'pular'
+         -).length;                                                      
+      75 +      currentIndex.set(0);                                     
+      76        loaded = true;
+      77      } catch (e) {
+      78        console.error('Failed to load questionnaire:', e);
+
+⏺ Vou rodar os testes.
+
+⏺ Bash(pnpm check 2>&1 | tail -3)
+  ⎿  1773786179399 START "/Users/leo/source/voto-vc/frontend"
+     1773786179400 COMPLETED 224 FILES 0 ERRORS 0 WARNINGS 0 FILES_WITH_PRO
+     BLEMS
+
+⏺ Bash(cd /Users/leo/source/voto-vc/backend &&
+      /Users/leo/.pyenv/versions/3.12.11/bin/uv run pytest tests/ -x -q 2>&1 |
+      tail -10)
+  ⎿  ................................................................
+        [100%]
+     64 passed in 1.08s
+
+⏺ Tudo verde. Agora o fluxo funciona assim:
+
+  1. Primeira visita: backend retorna 50 questões (25 âncoras + round-robin por
+  tema)
+  2. Volta ao /vote depois de ter respondido: frontend envia exclude=1,2,3,...
+  com os IDs já respondidos → backend exclui essas proposições e retorna 50
+  novas do pool de ~468
+  3. Funciona tanto para anônimos (IDs vêm do localStorage/store) quanto para 
+  logados (IDs vêm do DB)
+
+  O usuário nunca mais verá "Nenhuma proposição disponível" enquanto houver
+  proposições no banco que ainda não respondeu.
+
+✻ Worked for 1m 20s
+
+❯ Vamos atualizar CLAUDE.md                                                     
+
+⏺ Read 1 file (ctrl+o to expand)
+
+⏺ Update(~/source/voto-vc/CLAUDE.md)
+  ⎿  Added 1 line, removed 1 line
+      35  - **Frontend**: SvelteKit 5, TypeScript, adapter-node, Svelte 5
+           runes (`$state`, `$derived`)
+      36  - **Infra**: AWS us-east-1, Terraform, EC2 t4g.small (ARM64), C
+          loudFront, Route 53
+      37  - **CI/CD**: GitHub Actions on push to main → rsync → docker bu
+          ild → compose up
+      38 -- **Auth**: JWT (python-jose) + bcrypt (passlib) — not yet acti
+         -ve in MVP                                                      
+      38 +- **Auth**: JWT (python-jose) + bcrypt (passlib) + Google OAuth
+         + 2.0                                                           
+      39  
+      40  ## Key conventions
+      41  
+
+⏺ Update(~/source/voto-vc/CLAUDE.md)
+  ⎿  Added 1 line, removed 1 line
+      45  - Python 3.12+, type hints throughout
+      46  - SQLAlchemy models use `Mapped[]` annotations
+      47  - Frontend uses Svelte 5 runes syntax (`$state`, `$derived`, `$
+          effect`), NOT legacy `$:` reactive declarations
+      48 -- API routes prefixed with `/api/` (e.g., `/api/questionario/it
+         -ems`, `/api/matching/calcular`)                                
+      48 +- API routes prefixed with `/api/` (e.g., `/api/vote/items`, `/
+         +api/matching/calcular`)                                        
+      49  - Enum values in DB are UPPERCASE (e.g., `TipoVoto.SIM`, `Casa.
+          CAMARA`)
+      50  - `id_externo` format: `camara_{id}` or `senado_{id}`
+      51  - Name normalization: title case with lowercase prepositions (d
+          e, da, do, dos, das)
+
+⏺ Update(~/source/voto-vc/CLAUDE.md)
+  ⎿  Added 2 lines
+      57  - `votacoes` — roll call votes linked to proposições
+      58  - `votos_parlamentares` — individual votes (enum: SIM, NAO, ABS
+          TENCAO, AUSENTE, OBSTRUCAO, PRESENTE_SEM_VOTO)
+      59  - `partidos` — parties with `sigla`
+      60 +- `usuarios` — user accounts (Google OAuth or email/password), 
+         +`uf`, `provedor_auth`                                          
+      61 +- `respostas_usuarios` — user answers to proposições (`usuario_
+         +id`, `proposicao_id`, `voto`, `peso`)                          
+      62  
+      63  ## Important files
+      64  
+
+⏺ Update(~/source/voto-vc/CLAUDE.md)
+  ⎿  Added 11 lines, removed 3 lines
+      63  ## Important files
+      64  
+      65  - `backend/app/services/matching.py` — alignment scoring engine
+      66 -- `backend/app/services/questionario.py` — topic-diverse questi
+         -on selection                                                   
+      66 +- `backend/app/services/questionario.py` — topic-diverse questi
+         +on selection (anchors + round-robin by tema)                   
+      67  - `backend/app/ingestion/normalize.py` — API data normalization
+      68  - `backend/app/routers/parlamentares.py` — parlamentar detail +
+           voting history
+      69 -- `frontend/src/routes/questionario/+page.svelte` — UF selector
+         - + question cards                                              
+      70 -- `frontend/src/routes/resultado/+page.svelte` — ranked results
+      69 +- `backend/app/routers/partidos.py` — partido detail + aggregat
+         +ed voting + disciplina                                         
+      70 +- `backend/app/routers/auth.py` — Google OAuth + JWT auth + use
+         +r profile                                                      
+      71 +- `backend/app/routers/questionario.py` — vote endpoints (items
+         +, responder, respostas)                                        
+      72 +- `backend/app/utils.py` — URL generation (`url_proposicao`, `u
+         +rls_por_casa`)                                                 
+      73 +- `frontend/src/routes/vote/+page.svelte` — UF selector + quest
+         +ion cards                                                      
+      74 +- `frontend/src/routes/perfil/+page.svelte` — ranked results (p
+         +arlamentares, partidos, votos tabs)                            
+      75  - `frontend/src/routes/parlamentar/[id]/+page.svelte` — parlame
+          ntar profile with expandable votes
+      76 +- `frontend/src/routes/partido/[id]/+page.svelte` — partido pro
+         +file with aggregated votes + disciplina                        
+      77 +- `frontend/src/lib/stores/questionario.ts` — respostas/UF stor
+         +es with localStorage persistence                               
+      78 +- `frontend/src/lib/stores/auth.ts` — auth state (authUser, che
+         +ckAuth, logout)                                                
+      79 +- `frontend/src/routes/auth/callback/+page.svelte` — OAuth call
+         +back + anonymous data migration                                
+      80  - `infra/cloudfront.tf` — CDN + SSL config
+      81  - `.github/workflows/deploy.yml` — CI/CD pipeline
+      82  
+
+⏺ Update(~/source/voto-vc/CLAUDE.md)
+  ⎿  Added 7 lines
+       89  - DB access: `docker exec votovc-db-1 psql -U votovc -d votovc
+           `
+       90  - Terraform state in `infra/terraform.tfstate` (local, gitigno
+           red)
+       91  
+       92 +## Key patterns                                               
+       93 +                                                              
+       94 +- Anonymous users: respostas + UF persisted in localStorage, m
+          +igrated to DB on login                                        
+       95 +- Questionnaire: backend accepts `exclude` param with already-
+          +answered IDs to always serve fresh questions                  
+       96 +- Casa pills: proposições link to both Câmara and Senado pages
+          + via `urls_por_casa()` (direct URL or search fallback)        
+       97 +- Vote endpoints mounted at `/api/vote/` (router in `questiona
+          +rio.py`)                                                      
+       98 +                                                              
+       99  ## Don't
+      100  
+      101  - Don't use `pip install` — use `uv` for backend deps
+
+⏺ Atualizado. Principais mudanças no CLAUDE.md:
+
+  - Auth: atualizado de "not yet active" para refletir Google OAuth ativo
+  - API routes: corrigido exemplo de /api/questionario/ para /api/vote/
+  - Data model: adicionados usuarios e respostas_usuarios
+  - Important files: expandido com routers de auth/partidos, stores, callback,
+  utils
+  - Key patterns: nova seção documentando localStorage persistence, exclude
+  param no questionário, casa pills, e montagem dos endpoints de vote
+
+✻ Churned for 43s
+
+❯ Vamos mudar a cor da caixa onde está escrito Perfil expert! 50 respostas.     
+Altíssima precisão.                                                             
+Quando atingir o nível expert, mostre-a em cor azul ao invés de verde           
+  ⎿  [Image #5]
+
+⏺ O banner expert usa a classe .meta-banner.success (mesma do avançado). Vou
+  adicionar uma classe separada para expert com cor azul.
+
+⏺ Read 1 file (ctrl+o to expand)
+
+⏺ Update(ile:///Users/leo/source/voto-vc/frontend/src/routes/vote/+page.svelte~/source/voto-vc/frontend/src/routes/vote/+page.svelte)
+  ⎿  Added 1 line, removed 1 line
+      218      </div>
+      219  
+      220      {#if reachedTier3}
+      221 -      <div class="meta-banner success">                       
+      221 +      <div class="meta-banner expert">                        
+      222          Perfil expert! {answeredCount} respostas. Altíssima pr
+           ecisão.
+      223          <button class="btn-resultado" onclick={verResultado}>V
+           er meu perfil</button>
+      224        </div>
+
+⏺ Agora adicionar o CSS da classe .expert:
+
+⏺ Read 1 file (ctrl+o to expand)
+
+⏺ Update(ile:///Users/leo/source/voto-vc/frontend/src/routes/vote/+page.svelte~/source/voto-vc/frontend/src/routes/vote/+page.svelte)
+  ⎿  Added 6 lines
+      353      border: 1px solid #16a34a33;
+      354    }
+      355  
+      356 +  .meta-banner.expert {                                       
+      357 +    background: #2563eb1a;                                    
+      358 +    color: #2563eb;                                           
+      359 +    border: 1px solid #2563eb33;                              
+      360 +  }                                                           
+      361 +                                                              
+      362    .btn-resultado {
+      363      background: #2563eb;
+      364      color: white;
+
+⏺ Pronto. O banner expert agora aparece em azul, consistente com a cor do
+  terceiro segmento da barra de progresso.
+
+❯ Vamos atualizar AGENTS.md                                                     
+
+⏺ Searched for 1 pattern (ctrl+o to expand)
+
+⏺ Não existe um AGENTS.md no projeto. Você gostaria de criar um? Se sim, qual o
+  objetivo — documentar os agentes/bots usados no projeto, ou algo diferente?
+
+❯ Existe um em ~/AGENTS.md - é uma versão genérica do CLAUDE.md                 
+
+⏺ Searched for 1 pattern, read 2 files (ctrl+o to expand)
+
+⏺ É uma cópia desatualizada do CLAUDE.md. Vou sincronizá-lo com a versão atual.
+
+⏺ Read 1 file (ctrl+o to expand)
+
+⏺ Write(~/source/voto-vc/AGENTS.md)
+  ⎿  Added 22 lines, removed 6 lines
+      35  - **Frontend**: SvelteKit 5, TypeScript, adapter-node, Svelte 5
+           runes (`$state`, `$derived`)
+      36  - **Infra**: AWS us-east-1, Terraform, EC2 t4g.small (ARM64), C
+          loudFront, Route 53
+      37  - **CI/CD**: GitHub Actions on push to main → rsync → docker bu
+          ild → compose up
+      38 -- **Auth**: JWT (python-jose) + bcrypt (passlib) — not yet acti
+         -ve in MVP                                                      
+      38 +- **Auth**: JWT (python-jose) + bcrypt (passlib) + Google OAuth
+         + 2.0                                                           
+      39  
+      40  ## Key conventions
+      41  
+      42 -- User prefers Portuguese for communication                    
+      42  - Backend uses `uv` (not pip) for package management
+      43  - Frontend uses `pnpm` (not npm/yarn)
+      44  - Python 3.12+, type hints throughout
+      45  - SQLAlchemy models use `Mapped[]` annotations
+      46  - Frontend uses Svelte 5 runes syntax (`$state`, `$derived`, `$
+          effect`), NOT legacy `$:` reactive declarations
+      48 -- API routes prefixed with `/api/` (e.g., `/api/questionario/it
+         -ems`, `/api/matching/calcular`)                                
+      47 +- API routes prefixed with `/api/` (e.g., `/api/vote/items`, `/
+         +api/matching/calcular`)                                        
+      48  - Enum values in DB are UPPERCASE (e.g., `TipoVoto.SIM`, `Casa.
+          CAMARA`)
+      49  - `id_externo` format: `camara_{id}` or `senado_{id}`
+      50  - Name normalization: title case with lowercase prepositions (d
+          e, da, do, dos, das)
+     ...
+      56  - `votacoes` — roll call votes linked to proposições
+      57  - `votos_parlamentares` — individual votes (enum: SIM, NAO, ABS
+          TENCAO, AUSENTE, OBSTRUCAO, PRESENTE_SEM_VOTO)
+      58  - `partidos` — parties with `sigla`
+      59 +- `usuarios` — user accounts (Google OAuth or email/password), 
+         +`uf`, `provedor_auth`                                          
+      60 +- `respostas_usuarios` — user answers to proposições (`usuario_
+         +id`, `proposicao_id`, `voto`, `peso`)                          
+      61  
+      62  ## Important files
+      63  
+      64  - `backend/app/services/matching.py` — alignment scoring engine
+      64 -- `backend/app/services/questionario.py` — topic-diverse questi
+         -on selection                                                   
+      65 +- `backend/app/services/questionario.py` — topic-diverse questi
+         +on selection (anchors + round-robin by tema)                   
+      66  - `backend/app/ingestion/normalize.py` — API data normalization
+      67  - `backend/app/routers/parlamentares.py` — parlamentar detail +
+           voting history
+      67 -- `frontend/src/routes/questionario/+page.svelte` — UF selector
+         - + question cards                                              
+      68 -- `frontend/src/routes/resultado/+page.svelte` — ranked results
+      68 +- `backend/app/routers/partidos.py` — partido detail + aggregat
+         +ed voting + disciplina                                         
+      69 +- `backend/app/routers/auth.py` — Google OAuth + JWT auth + use
+         +r profile                                                      
+      70 +- `backend/app/routers/questionario.py` — vote endpoints (items
+         +, responder, respostas)                                        
+      71 +- `backend/app/utils.py` — URL generation (`url_proposicao`, `u
+         +rls_por_casa`)                                                 
+      72 +- `frontend/src/routes/vote/+page.svelte` — UF selector + quest
+         +ion cards                                                      
+      73 +- `frontend/src/routes/perfil/+page.svelte` — ranked results (p
+         +arlamentares, partidos, votos tabs)                            
+      74  - `frontend/src/routes/parlamentar/[id]/+page.svelte` — parlame
+          ntar profile with expandable votes
+      75 +- `frontend/src/routes/partido/[id]/+page.svelte` — partido pro
+         +file with aggregated votes + disciplina                        
+      76 +- `frontend/src/lib/stores/questionario.ts` — respostas/UF stor
+         +es with localStorage persistence                               
+      77 +- `frontend/src/lib/stores/auth.ts` — auth state (authUser, che
+         +ckAuth, logout)                                                
+      78 +- `frontend/src/routes/auth/callback/+page.svelte` — OAuth call
+         +back + anonymous data migration                                
+      79  - `infra/cloudfront.tf` — CDN + SSL config
+      80  - `.github/workflows/deploy.yml` — CI/CD pipeline
+      81  
+     ...
+       88  - DB access: `docker exec votovc-db-1 psql -U votovc -d votovc
+           `
+       89  - Terraform state in `infra/terraform.tfstate` (local, gitigno
+           red)
+       90  
+       91 +## Key patterns                                               
+       92 +                                                              
+       93 +- Anonymous users: respostas + UF persisted in localStorage, m
+          +igrated to DB on login                                        
+       94 +- Questionnaire: backend accepts `exclude` param with already-
+          +answered IDs to always serve fresh questions                  
+       95 +- Casa pills: proposições link to both Câmara and Senado pages
+          + via `urls_por_casa()` (direct URL or search fallback)        
+       96 +- Vote endpoints mounted at `/api/vote/` (router in `questiona
+          +rio.py`)                                                      
+       97 +                                                              
+       98  ## Don't
+       99  
+      100  - Don't use `pip install` — use `uv` for backend deps
+
+⏺ Pronto. AGENTS.md sincronizado com CLAUDE.md (mesma estrutura, sem a linha
+  "User prefers Portuguese" que é específica do Claude).
+
+✻ Crunched for 56s

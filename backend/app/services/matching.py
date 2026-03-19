@@ -424,7 +424,8 @@ async def calcular_matching(
     if not parlamentar_votos:
         return {"parlamentares": [], "partidos": []}
 
-    min_compared = max(3, len(user_votes) // 4)
+    n_opinionated = sum(1 for v, _ in user_votes.values() if v.value in ("sim", "nao"))
+    min_compared = max(3, n_opinionated // 4)
 
     # Score all parlamentares
     parl_scores: list[tuple[int, float, int]] = []

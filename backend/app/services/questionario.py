@@ -65,11 +65,18 @@ async def montar_questionario(
     Phase 2: round-robin by tema, ordered by relevancia_score DESC.
     """
     substantive_types = ["PL", "PEC", "MPV", "PLP", "PDL", "MIP"]
+
+    # Only select proposições that have at least one votação (so they can participate in matching)
+    props_with_votacao = (
+        select(Votacao.proposicao_id).where(Votacao.proposicao_id.is_not(None)).distinct()
+    )
+
     query = (
         select(Proposicao)
         .where(Proposicao.resumo_cidadao.is_not(None))
         .where(Proposicao.relevancia_score.is_not(None))
         .where(Proposicao.tipo.in_(substantive_types))
+        .where(Proposicao.id.in_(props_with_votacao))
         .order_by(Proposicao.relevancia_score.desc())
     )
     result = await db.execute(query)

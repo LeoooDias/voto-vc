@@ -34,7 +34,7 @@ def normalize_deputado(raw: dict) -> dict:
     return {
         "id_externo": f"camara_{raw['id']}",
         "casa": "camara",
-        "nome_civil": normalize_nome(raw.get("nome", raw.get("nomeCivil", ""))),
+        "nome_civil": normalize_nome(raw.get("nomeCivil", raw.get("nome", ""))),
         "nome_parlamentar": normalize_nome(raw.get("nome", "")),
         "cpf": raw.get("cpf"),
         "sexo": _normalize_sexo(raw.get("sexo")),

@@ -66,6 +66,13 @@ async def sync_parlamentares(db: AsyncSession, parlamentares_data: list[dict]):
             parlamentar.partido_id = partido_id
             parlamentar.foto_url = data.get("foto_url")
             parlamentar.dados_brutos = data.get("dados_brutos")
+            parlamentar.legislatura_atual = data.get("legislatura_atual", False)
+            if data.get("nome_civil"):
+                parlamentar.nome_civil = data["nome_civil"]
+            if data.get("sexo"):
+                parlamentar.sexo = data["sexo"]
+            if data.get("email"):
+                parlamentar.email = data["email"]
         else:
             parlamentar = Parlamentar(
                 id_externo=data["id_externo"],

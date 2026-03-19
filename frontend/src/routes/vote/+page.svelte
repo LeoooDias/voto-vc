@@ -64,8 +64,8 @@
 				}
 			}
 
-			// Pedir ao backend que exclua proposições já respondidas
-			const excludeIds = existing.map((r) => r.proposicao_id);
+			// Pedir ao backend que exclua apenas proposições efetivamente votadas (sim/nao), não pular
+			const excludeIds = existing.filter((r) => r.voto !== 'pular').map((r) => r.proposicao_id);
 			const excludeParam = excludeIds.length > 0 ? `&exclude=${excludeIds.join(',')}` : '';
 			const data = await api.get<QuestionarioItem[]>(`/vote/items?n_items=50${excludeParam}`);
 

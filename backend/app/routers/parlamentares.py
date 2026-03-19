@@ -7,6 +7,7 @@ from sqlalchemy.orm import joinedload
 from app.database import get_db
 from app.models.base import VotoUsuario
 from app.models.parlamentar import Parlamentar
+from app.models.partido import Partido
 from app.models.proposicao import Proposicao
 from app.models.votacao import Votacao, VotoParlamentar
 from app.services.matching import comparar_parlamentar
@@ -40,6 +41,8 @@ async def listar_parlamentares(
         query = query.where(Parlamentar.casa == casa)
     if uf:
         query = query.where(Parlamentar.uf == uf.upper())
+    if partido:
+        query = query.where(Parlamentar.partido.has(Partido.sigla == partido))
     if legislatura_atual:
         query = query.where(Parlamentar.legislatura_atual.is_(True))
     query = query.offset((pagina - 1) * itens).limit(itens)

@@ -88,6 +88,23 @@ class TestParlamentaresEndpoints:
         assert voto["voto"] == "sim"
         assert "proposicao_id" in voto
 
+    async def test_listar_parlamentares_filter_partido(
+        self,
+        client: AsyncClient,
+        test_parlamentar,
+        test_parlamentar2,
+    ):
+        """Filtering by partido sigla should return only matching parlamentares."""
+        response = await client.get("/api/parlamentares/?partido=PT")
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data) == 1
+        assert data[0]["nome_parlamentar"] == "Maria Silva"
+
+        response = await client.get("/api/parlamentares/?partido=INEXISTENTE")
+        assert response.status_code == 200
+        assert response.json() == []
+
     async def test_obter_parlamentar_not_found(self, client: AsyncClient):
         """Should return 404 for non-existent parlamentar."""
         response = await client.get("/api/parlamentares/99999")
