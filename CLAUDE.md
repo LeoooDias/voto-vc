@@ -73,7 +73,7 @@ pnpm check        # svelte-check
 - `backend/app/services/chat.py` — proposição chatbot (Claude Haiku 4.5 with tool use)
 - `backend/app/routers/chat.py` — SSE streaming chat endpoint
 - `backend/app/utils.py` — URL generation (`url_proposicao`, `urls_por_casa`)
-- `frontend/src/lib/components/VoteSlider.svelte` — 5-position vote intensity slider
+- `frontend/src/lib/components/VoteSlider.svelte` — 9-position vote intensity slider
 - `frontend/src/lib/components/ChatWidget.svelte` — floating chat widget for proposição Q&A
 - `frontend/src/lib/utils/vote.ts` — vote position ↔ voto/peso mapping utilities
 - `frontend/src/routes/vote/+page.svelte` — UF selector + question cards + slider + chat
@@ -102,7 +102,7 @@ pnpm check        # svelte-check
 - Casa pills: proposições link to both Câmara and Senado pages via `urls_por_casa()` (direct URL or search fallback)
 - Vote endpoints mounted at `/api/vote/` (router in `questionario.py`)
 - Chat endpoint at `/api/chat/proposicao/{id}` — SSE streaming, auth required, rate limited (30/hour)
-- Vote slider: 5 positions map to voto (sim/nao) + peso (0.0–1.0); Neutro = sim with peso=0
+- Vote slider: 9 positions map to voto (sim/nao) + peso (0.0–1.0 in 0.25 steps); Neutro = sim with peso=0
 - Chat requires `ANTHROPIC_API_KEY` env var; without it, endpoint returns 503
 
 ## Don't

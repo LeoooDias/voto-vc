@@ -1,13 +1,17 @@
 <script lang="ts">
 	/**
-	 * 5-position vote intensity slider.
+	 * 9-position vote intensity slider.
 	 *
 	 * Positions map to:
-	 *   1 = Fortemente Contra  (nao, peso 1.0)
-	 *   2 = Contra             (nao, peso 0.5)
-	 *   3 = Neutro             (sim, peso 0.0)
-	 *   4 = A favor            (sim, peso 0.5)
-	 *   5 = Fortemente A favor (sim, peso 1.0)
+	 *   1 = Contra       (nao, peso 1.00)
+	 *   2 =              (nao, peso 0.75)
+	 *   3 =              (nao, peso 0.50)
+	 *   4 =              (nao, peso 0.25)
+	 *   5 = Neutro       (sim, peso 0.00)
+	 *   6 =              (sim, peso 0.25)
+	 *   7 =              (sim, peso 0.50)
+	 *   8 =              (sim, peso 0.75)
+	 *   9 = A favor      (sim, peso 1.00)
 	 */
 
 	interface Props {
@@ -17,43 +21,79 @@
 		compact?: boolean;
 	}
 
-	const POSITIONS = [
-		{ pos: 1, label: 'Forte', voto: 'nao' as const, peso: 1.0, cls: 'p1' },
-		{ pos: 2, label: 'Contra', voto: 'nao' as const, peso: 0.5, cls: 'p2' },
-		{ pos: 3, label: 'Neutro', voto: 'sim' as const, peso: 0.0, cls: 'p3' },
-		{ pos: 4, label: 'A favor', voto: 'sim' as const, peso: 0.5, cls: 'p4' },
-		{ pos: 5, label: 'Forte', voto: 'sim' as const, peso: 1.0, cls: 'p5' },
+	interface Position {
+		pos: number;
+		voto: 'sim' | 'nao';
+		peso: number;
+		label?: string;
+	}
+
+	const POSITIONS: Position[] = [
+		{ pos: 1, voto: 'nao', peso: 1.0, label: 'Contra' },
+		{ pos: 2, voto: 'nao', peso: 0.75 },
+		{ pos: 3, voto: 'nao', peso: 0.5 },
+		{ pos: 4, voto: 'nao', peso: 0.25 },
+		{ pos: 5, voto: 'sim', peso: 0.0, label: 'Neutro' },
+		{ pos: 6, voto: 'sim', peso: 0.25 },
+		{ pos: 7, voto: 'sim', peso: 0.5 },
+		{ pos: 8, voto: 'sim', peso: 0.75 },
+		{ pos: 9, voto: 'sim', peso: 1.0, label: 'A favor' },
 	];
 
-	const FULL_LABELS: Record<number, string> = {
-		1: 'Fortemente Contra',
-		2: 'Contra',
-		3: 'Neutro',
-		4: 'A favor',
-		5: 'Fortemente A favor',
+	const TOOLTIP: Record<number, string> = {
+		1: 'Contra (máximo)',
+		2: 'Contra (forte)',
+		3: 'Contra (moderado)',
+		4: 'Contra (leve)',
+		5: 'Neutro',
+		6: 'A favor (leve)',
+		7: 'A favor (moderado)',
+		8: 'A favor (forte)',
+		9: 'A favor (máximo)',
 	};
 
 	let { value = null, onvote, onpular, compact = false }: Props = $props();
 
-	function select(p: (typeof POSITIONS)[number]) {
+	function select(p: Position) {
 		onvote(p.voto, p.peso);
+	}
+
+	function colorForPos(pos: number): string {
+		const colors: Record<number, string> = {
+			1: '#dc2626',
+			2: '#ef4444',
+			3: '#f87171',
+			4: '#fca5a5',
+			5: '#a3a3a3',
+			6: '#86efac',
+			7: '#4ade80',
+			8: '#22c55e',
+			9: '#16a34a',
+		};
+		return colors[pos] ?? '#a3a3a3';
 	}
 </script>
 
 <div class="vote-slider" class:compact>
+	<div class="labels-row">
+		<span class="end-label left">Contra</span>
+		<span class="end-label center">Neutro</span>
+		<span class="end-label right">A favor</span>
+	</div>
 	<div class="slider-row">
 		<div class="track-bg">
 			<div class="track-fill"></div>
 		</div>
 		{#each POSITIONS as p}
 			<button
-				class="pos-btn {p.cls}"
+				class="pos-btn"
 				class:active={value === p.pos}
+				class:endpoint={p.pos === 1 || p.pos === 5 || p.pos === 9}
 				onclick={() => select(p)}
-				title={FULL_LABELS[p.pos]}
+				title={TOOLTIP[p.pos]}
+				style:--dot-color={colorForPos(p.pos)}
 			>
 				<span class="dot"></span>
-				<span class="lbl">{p.label}</span>
 			</button>
 		{/each}
 	</div>
@@ -67,9 +107,27 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 0.75rem;
+		gap: 0.4rem;
 		width: 100%;
 	}
+
+	.labels-row {
+		display: flex;
+		width: 100%;
+		justify-content: space-between;
+		align-items: center;
+		padding: 0 2px;
+	}
+
+	.end-label {
+		font-size: 0.7rem;
+		font-weight: 600;
+		color: var(--text-secondary);
+	}
+
+	.end-label.left { color: #dc2626; }
+	.end-label.center { color: #737373; }
+	.end-label.right { color: #16a34a; }
 
 	.slider-row {
 		display: flex;
@@ -79,13 +137,13 @@
 		padding: 0 4px;
 	}
 
-	/* Track behind dots — absolutely positioned */
 	.track-bg {
 		position: absolute;
-		top: 12px;
-		left: 24px;
-		right: 24px;
+		top: 50%;
+		left: 16px;
+		right: 16px;
 		height: 4px;
+		margin-top: -2px;
 		border-radius: 2px;
 		overflow: hidden;
 		background: var(--border);
@@ -94,76 +152,62 @@
 	.track-fill {
 		position: absolute;
 		inset: 0;
-		background: linear-gradient(to right, #dc2626, #f87171, #d4d4d4, #4ade80, #16a34a);
+		background: linear-gradient(
+			to right,
+			#dc2626, #ef4444, #f87171, #fca5a5,
+			#d4d4d4,
+			#86efac, #4ade80, #22c55e, #16a34a
+		);
 		opacity: 0.4;
 	}
 
 	.pos-btn {
 		display: flex;
-		flex-direction: column;
 		align-items: center;
-		gap: 0.3rem;
+		justify-content: center;
 		background: none;
 		border: none;
 		cursor: pointer;
-		padding: 0;
+		padding: 4px 0;
 		position: relative;
 		z-index: 1;
-		width: 48px;
+		width: 28px;
 	}
 
 	.dot {
-		width: 28px;
-		height: 28px;
+		width: 18px;
+		height: 18px;
 		border-radius: 50%;
-		border: 3px solid var(--border);
+		border: 2.5px solid var(--dot-color, var(--border));
 		background: var(--bg-card);
 		transition: all 0.15s ease;
 		flex-shrink: 0;
 	}
 
-	.pos-btn:hover .dot {
-		transform: scale(1.1);
+	/* Endpoint dots (Contra, Neutro, A favor) are bigger */
+	.pos-btn.endpoint .dot {
+		width: 24px;
+		height: 24px;
+		border-width: 3px;
 	}
 
-	/* Colors per position */
-	.p1 .dot { border-color: #dc2626; }
-	.p2 .dot { border-color: #f87171; }
-	.p3 .dot { border-color: #a3a3a3; }
-	.p4 .dot { border-color: #4ade80; }
-	.p5 .dot { border-color: #16a34a; }
-
-	.pos-btn.active .dot {
+	.pos-btn:hover .dot {
 		transform: scale(1.15);
 	}
 
-	.p1.active .dot { background: #dc2626; border-color: #dc2626; box-shadow: 0 0 0 3px #dc262633; }
-	.p2.active .dot { background: #f87171; border-color: #f87171; box-shadow: 0 0 0 3px #f8717133; }
-	.p3.active .dot { background: #a3a3a3; border-color: #a3a3a3; box-shadow: 0 0 0 3px #a3a3a333; }
-	.p4.active .dot { background: #4ade80; border-color: #4ade80; box-shadow: 0 0 0 3px #4ade8033; }
-	.p5.active .dot { background: #16a34a; border-color: #16a34a; box-shadow: 0 0 0 3px #16a34a33; }
-
-	.lbl {
-		font-size: 0.65rem;
-		font-weight: 600;
-		color: var(--text-secondary);
-		text-align: center;
-		line-height: 1.15;
-		white-space: nowrap;
-		transition: color 0.15s;
+	.pos-btn.active .dot {
+		background: var(--dot-color);
+		border-color: var(--dot-color);
+		box-shadow: 0 0 0 3px color-mix(in srgb, var(--dot-color) 20%, transparent);
+		transform: scale(1.2);
 	}
 
-	.pos-btn.active .lbl {
-		color: var(--text-primary);
+	.pos-btn.active.endpoint .dot {
+		transform: scale(1.25);
 	}
-
-	.p1.active .lbl { color: #dc2626; }
-	.p2.active .lbl { color: #f87171; }
-	.p3.active .lbl { color: #737373; }
-	.p4.active .lbl { color: #22c55e; }
-	.p5.active .lbl { color: #16a34a; }
 
 	.pular-btn {
+		margin-top: 0.35rem;
 		padding: 0.35rem 1.25rem;
 		background: var(--bg-card);
 		border: 1px solid var(--border);
@@ -182,43 +226,54 @@
 
 	/* Compact mode (for perfil re-vote) */
 	.compact .dot {
-		width: 20px;
-		height: 20px;
+		width: 14px;
+		height: 14px;
 		border-width: 2px;
 	}
 
-	.compact .pos-btn {
-		width: 40px;
+	.compact .pos-btn.endpoint .dot {
+		width: 18px;
+		height: 18px;
+		border-width: 2.5px;
 	}
 
-	.compact .lbl {
-		font-size: 0.55rem;
+	.compact .pos-btn {
+		width: 20px;
+	}
+
+	.compact .end-label {
+		font-size: 0.6rem;
 	}
 
 	.compact .track-bg {
-		top: 9px;
-		left: 20px;
-		right: 20px;
+		left: 10px;
+		right: 10px;
 		height: 3px;
+		margin-top: -1.5px;
 	}
 
 	.compact .slider-row {
 		padding: 0 2px;
 	}
 
-	/* Mobile: slightly larger touch targets */
+	.compact .labels-row {
+		padding: 0 0;
+	}
+
+	/* Mobile */
 	@media (max-width: 480px) {
 		.pos-btn {
-			width: 44px;
+			width: 24px;
 		}
 
 		.dot {
-			width: 30px;
-			height: 30px;
+			width: 20px;
+			height: 20px;
 		}
 
-		.track-bg {
-			top: 13px;
+		.pos-btn.endpoint .dot {
+			width: 26px;
+			height: 26px;
 		}
 	}
 </style>
