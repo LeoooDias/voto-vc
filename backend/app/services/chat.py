@@ -28,7 +28,7 @@ def _get_client() -> anthropic.AsyncAnthropic:
     return _client
 
 
-MODEL = "claude-sonnet-4-5-20250514"
+MODEL = "claude-sonnet-4-6"
 MAX_HISTORY = 20
 MAX_TOOL_ROUNDS = 3
 
