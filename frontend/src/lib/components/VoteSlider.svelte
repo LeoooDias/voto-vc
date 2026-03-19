@@ -12,12 +12,16 @@
 	 *   7 =              (sim, peso 0.50)
 	 *   8 =              (sim, peso 0.75)
 	 *   9 = A favor      (sim, peso 1.00)
+	 *
+	 * In normal mode, clicking a dot only selects it visually (onselect).
+	 * The parent is responsible for confirming the vote.
+	 * In compact mode (perfil re-vote), clicking a dot fires onvote directly.
 	 */
 
 	interface Props {
 		value?: number | null;
-		onvote: (voto: 'sim' | 'nao', peso: number) => void;
-		onpular: () => void;
+		onselect?: (pos: number) => void;
+		onvote?: (voto: 'sim' | 'nao', peso: number) => void;
 		compact?: boolean;
 	}
 
@@ -52,10 +56,16 @@
 		9: 'A favor (máximo)',
 	};
 
-	let { value = null, onvote, onpular, compact = false }: Props = $props();
+	let { value = null, onselect, onvote, compact = false }: Props = $props();
 
-	function select(p: Position) {
-		onvote(p.voto, p.peso);
+	function handleClick(p: Position) {
+		if (compact && onvote) {
+			// Compact mode: fire vote directly
+			onvote(p.voto, p.peso);
+		} else if (onselect) {
+			// Normal mode: just select visually
+			onselect(p.pos);
+		}
 	}
 
 	function colorForPos(pos: number): string {
@@ -89,7 +99,7 @@
 				class="pos-btn"
 				class:active={value === p.pos}
 				class:endpoint={p.pos === 1 || p.pos === 5 || p.pos === 9}
-				onclick={() => select(p)}
+				onclick={() => handleClick(p)}
 				title={TOOLTIP[p.pos]}
 				style:--dot-color={colorForPos(p.pos)}
 			>
@@ -97,9 +107,6 @@
 			</button>
 		{/each}
 	</div>
-	{#if !compact}
-		<button class="pular-btn" onclick={onpular}>Pular</button>
-	{/if}
 </div>
 
 <style>
@@ -184,7 +191,6 @@
 		flex-shrink: 0;
 	}
 
-	/* Endpoint dots (Contra, Neutro, A favor) are bigger */
 	.pos-btn.endpoint .dot {
 		width: 24px;
 		height: 24px;
@@ -204,24 +210,6 @@
 
 	.pos-btn.active.endpoint .dot {
 		transform: scale(1.25);
-	}
-
-	.pular-btn {
-		margin-top: 0.35rem;
-		padding: 0.35rem 1.25rem;
-		background: var(--bg-card);
-		border: 1px solid var(--border);
-		border-radius: 8px;
-		font-size: 0.8rem;
-		font-weight: 600;
-		color: var(--text-secondary);
-		cursor: pointer;
-		transition: border-color 0.2s, color 0.2s;
-	}
-
-	.pular-btn:hover {
-		border-color: var(--text-secondary);
-		color: var(--text-primary);
 	}
 
 	/* Compact mode (for perfil re-vote) */

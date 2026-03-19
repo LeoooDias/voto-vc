@@ -330,7 +330,6 @@
 										compact
 										value={voteToPosition(item.voto, item.peso)}
 										onvote={(voto, peso) => reVotar(item.proposicao_id, voto, peso)}
-										onpular={() => {}}
 									/>
 								</div>
 								</div>

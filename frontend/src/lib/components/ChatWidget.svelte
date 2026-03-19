@@ -204,11 +204,12 @@
 
 {#if $authUser}
 	<!-- Floating button -->
-	<button class="chat-fab" class:open={isOpen} onclick={toggle} title="Tirar dúvida sobre esta proposição">
+	<button class="chat-fab" class:open={isOpen} onclick={toggle}>
 		{#if isOpen}
-			<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+			<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 		{:else}
-			<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+			<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+			<span class="fab-label">Pergunte sobre esta proposição</span>
 		{/if}
 	</button>
 
@@ -288,9 +289,9 @@
 		position: fixed;
 		bottom: 1.5rem;
 		right: 1.5rem;
-		width: 52px;
-		height: 52px;
-		border-radius: 50%;
+		height: 44px;
+		padding: 0 1rem;
+		border-radius: 22px;
 		background: #2563eb;
 		color: white;
 		border: none;
@@ -298,17 +299,27 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		gap: 0.5rem;
 		box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
 		transition: transform 0.2s, background 0.2s;
 		z-index: 1000;
 	}
 
+	.fab-label {
+		font-size: 0.8rem;
+		font-weight: 600;
+		white-space: nowrap;
+	}
+
 	.chat-fab:hover {
-		transform: scale(1.08);
+		transform: scale(1.03);
 		background: #1d4ed8;
 	}
 
 	.chat-fab.open {
+		padding: 0;
+		width: 44px;
+		border-radius: 50%;
 		background: #64748b;
 		box-shadow: 0 4px 12px rgba(100, 116, 139, 0.4);
 	}

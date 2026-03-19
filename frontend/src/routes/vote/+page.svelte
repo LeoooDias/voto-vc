@@ -12,7 +12,7 @@
 	import { authUser, authLoading } from '$lib/stores/auth';
 	import VoteSlider from '$lib/components/VoteSlider.svelte';
 	import ChatWidget from '$lib/components/ChatWidget.svelte';
-	import { voteToPosition } from '$lib/utils/vote';
+	import { voteToPosition, positionToVote } from '$lib/utils/vote';
 	import type { QuestionarioItem, RespostaItem } from '$lib/types';
 	import { goto } from '$app/navigation';
 	import { get } from 'svelte/store';
@@ -119,11 +119,24 @@
 		return get(respostas).find((r) => r.proposicao_id === pid);
 	});
 
-	let sliderValue = $derived(
-		respostaAtual && respostaAtual.voto !== 'pular'
-			? voteToPosition(respostaAtual.voto, respostaAtual.peso)
-			: null
-	);
+	// Selected position on slider (not yet confirmed)
+	let selectedPos: number | null = $state(null);
+
+	// When navigating to a new question, reset selection to existing answer (if any)
+	let lastIdx: number | null = $state(null);
+	$effect(() => {
+		const curIdx = idx;
+		if (curIdx !== lastIdx) {
+			lastIdx = curIdx;
+			if (respostaAtual && respostaAtual.voto !== 'pular') {
+				selectedPos = voteToPosition(respostaAtual.voto, respostaAtual.peso);
+			} else {
+				selectedPos = null;
+			}
+		}
+	});
+
+	let sliderValue = $derived(selectedPos);
 
 	function voltar() {
 		if (idx > 0) {
@@ -179,6 +192,12 @@
 		} else {
 			currentIndex.set(idx + 1);
 		}
+	}
+
+	function confirmarVoto() {
+		if (selectedPos == null) return;
+		const { voto, peso } = positionToVote(selectedPos);
+		votar(voto, peso);
 	}
 
 	function verResultado() {
@@ -269,15 +288,17 @@
 			{/if}
 		</div>
 
+		<div class="slider-area">
+			<VoteSlider
+				value={sliderValue}
+				onselect={(pos) => { selectedPos = pos; }}
+			/>
+		</div>
+
 		<div class="actions">
 			<button class="btn-nav" onclick={voltar} disabled={idx === 0} aria-label="Voltar">&#8592;</button>
-			<div class="slider-area">
-				<VoteSlider
-					value={sliderValue}
-					onvote={(voto, peso) => votar(voto, peso)}
-					onpular={() => votar('pular', 1.0)}
-				/>
-			</div>
+			<button class="btn-pular" onclick={() => votar('pular', 1.0)}>Pular</button>
+			<button class="btn-votar" class:active={selectedPos != null} onclick={confirmarVoto} disabled={selectedPos == null}>Votar</button>
 			<button class="btn-nav" onclick={avancar} disabled={!canAdvance} aria-label="Avançar">&#8594;</button>
 		</div>
 		<ChatWidget
@@ -489,17 +510,56 @@
 		border-color: #be185d44;
 	}
 
+	.slider-area {
+		margin-top: 1.5rem;
+	}
+
 	.actions {
 		display: flex;
-		gap: 0.5rem;
-		margin-top: 1.5rem;
+		gap: 0.75rem;
+		margin-top: 1rem;
 		justify-content: center;
 		align-items: center;
 	}
 
-	.slider-area {
-		flex: 1;
-		min-width: 0;
+	.btn-pular {
+		padding: 0.6rem 1.5rem;
+		background: var(--bg-card);
+		border: 1px solid var(--border);
+		border-radius: 12px;
+		font-size: 0.9rem;
+		font-weight: 600;
+		color: var(--text-secondary);
+		cursor: pointer;
+		transition: border-color 0.2s, color 0.2s;
+	}
+
+	.btn-pular:hover {
+		border-color: var(--text-secondary);
+		color: var(--text-primary);
+	}
+
+	.btn-votar {
+		padding: 0.6rem 2rem;
+		background: var(--border);
+		border: none;
+		border-radius: 12px;
+		font-size: 0.9rem;
+		font-weight: 700;
+		color: var(--text-secondary);
+		cursor: default;
+		transition: background 0.2s, color 0.2s, transform 0.15s;
+	}
+
+	.btn-votar.active {
+		background: #2563eb;
+		color: white;
+		cursor: pointer;
+	}
+
+	.btn-votar.active:hover {
+		background: #1d4ed8;
+		transform: scale(1.03);
 	}
 
 	.btn-nav {
