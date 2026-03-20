@@ -234,17 +234,6 @@
 			</p>
 		</div>
 
-		{#if canFinish}
-			<div class="meta-banner ready">
-				{#if answeredCount >= 20}
-					Todas as posições respondidas!
-				{:else}
-					Seu perfil está pronto. Continue para aumentar a precisão.
-				{/if}
-				<button class="btn-resultado" onclick={verResultado}>Ver meu perfil</button>
-			</div>
-		{/if}
-
 		<div class="categories-grid">
 			{#each CATEGORIAS as cat}
 				{@const catItems = categorizedItems(cat)}
@@ -265,7 +254,7 @@
 								<span class="cat-count">{catAnswered}/{catItems.length}</span>
 							</div>
 						</div>
-						<span class="cat-chevron" class:open={isOpen}>&#9662;</span>
+						<svg class="cat-chevron" class:open={isOpen} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
 					</button>
 
 					{#if isOpen}
@@ -298,7 +287,7 @@
 									{#if pos.proposicoes.length > 0}
 										<button class="drill-toggle" onclick={() => toggleExpand(pos.id)}>
 											<span class="drill-label">{pos.proposicoes.length} {pos.proposicoes.length === 1 ? 'proposição' : 'proposições'}</span>
-											<span class="expand-icon" class:open={isExpanded}>&#9662;</span>
+											<svg class="expand-icon" class:open={isExpanded} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
 										</button>
 									{/if}
 
@@ -392,25 +381,6 @@
 		margin: 0;
 	}
 
-	.meta-banner {
-		border-radius: 12px;
-		padding: 1rem 1.25rem;
-		margin-bottom: 1rem;
-		font-size: 0.9rem;
-		line-height: 1.5;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.75rem;
-		text-align: center;
-	}
-
-	.meta-banner.ready {
-		background: #16a34a1a;
-		color: #16a34a;
-		border: 1px solid #16a34a33;
-	}
-
 	.btn-resultado {
 		background: #2563eb;
 		color: white;
@@ -481,7 +451,6 @@
 
 	.cat-chevron {
 		color: var(--text-secondary);
-		font-size: 1rem;
 		transition: transform 0.2s;
 		flex-shrink: 0;
 	}
@@ -596,7 +565,6 @@
 
 	.expand-icon {
 		color: var(--text-secondary);
-		font-size: 0.8rem;
 		transition: transform 0.2s;
 	}
 

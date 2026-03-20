@@ -186,10 +186,10 @@ POSICOES = [
     },
     {
         "slug": "protecao-trabalhadores-apps",
-        "titulo": "Proteção a trabalhadores de aplicativos",
+        "titulo": "Direitos dos trabalhadores vulneráveis",
         "descricao": (
-            "Direitos trabalhistas para entregadores, motoristas"
-            " e outros trabalhadores de plataformas digitais."
+            "Proteção trabalhista para categorias vulneráveis:"
+            " entregadores de apps, gestantes e trabalhadores informais."
         ),
         "tema": "trabalho",
         "ordem": 14,

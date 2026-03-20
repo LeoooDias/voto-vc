@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { api } from '$lib/api';
 	import { respostas, selectedUf, carregarRespostas } from '$lib/stores/questionario';
+	import { respostasPosicoes, carregarRespostasPosicoes } from '$lib/stores/posicoes';
 	import { authUser, authLoading } from '$lib/stores/auth';
 	import type { MatchResult, MatchResponse } from '$lib/types';
 	import { goto } from '$app/navigation';
@@ -72,17 +73,22 @@
 	}
 
 	let userRespostas: { proposicao_id: number; voto: string; peso: number }[] = [];
+	let userPosRespostas: { posicao_id: number; voto: string; peso: number }[] = [];
 
 	async function loadData() {
 		const isInitial = results.length === 0;
 		if (isInitial) isLoading = true;
 		scopeLoading = true;
 		try {
-			const data = await api.post<MatchResponse>('/matching/calcular', {
+			const body: Record<string, unknown> = {
 				respostas: userRespostas,
 				uf: escopo === 'estado' ? (ufSelecionada || undefined) : undefined,
 				limit: 1000
-			});
+			};
+			if (userPosRespostas.length > 0) {
+				body.posicao_respostas = userPosRespostas;
+			}
+			const data = await api.post<MatchResponse>('/matching/calcular', body);
 			results = data.parlamentares;
 		} catch (e) {
 			console.error('Failed to load:', e);
@@ -111,14 +117,24 @@
 
 	async function init() {
 		userRespostas = get(respostas) as typeof userRespostas;
-		if (userRespostas.length === 0 && get(authUser)) {
-			const saved = await carregarRespostas();
-			if (saved.length > 0) {
-				respostas.set(saved);
-				userRespostas = saved;
+		userPosRespostas = get(respostasPosicoes) as typeof userPosRespostas;
+		if (get(authUser)) {
+			if (userRespostas.length === 0) {
+				const saved = await carregarRespostas();
+				if (saved.length > 0) {
+					respostas.set(saved);
+					userRespostas = saved;
+				}
+			}
+			if (userPosRespostas.length === 0) {
+				const savedPos = await carregarRespostasPosicoes();
+				if (savedPos.length > 0) {
+					respostasPosicoes.set(savedPos);
+					userPosRespostas = savedPos;
+				}
 			}
 		}
-		if (userRespostas.length === 0) {
+		if (userRespostas.length === 0 && userPosRespostas.length === 0) {
 			goto('/vote');
 			return;
 		}
