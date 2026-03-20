@@ -1,49 +1,41 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { api } from '$lib/api';
-	import {
-		items,
-		respostas,
-		currentIndex,
-		selectedUf,
-		salvarResposta,
-		carregarRespostas
-	} from '$lib/stores/questionario';
+	import { selectedUf } from '$lib/stores/questionario';
 	import { authUser, authLoading } from '$lib/stores/auth';
-	import VoteSlider from '$lib/components/VoteSlider.svelte';
+	import {
+		posicaoItems,
+		respostasPosicoes,
+		overridesPosicoes,
+		salvarRespostaPosicao,
+		carregarRespostasPosicoes
+	} from '$lib/stores/posicoes';
+	import PositionSlider from '$lib/components/PositionSlider.svelte';
 	import ChatWidget from '$lib/components/ChatWidget.svelte';
-	import { voteToPosition, positionToVote } from '$lib/utils/vote';
-	import type { QuestionarioItem, RespostaItem } from '$lib/types';
+	import { positionToVote5, voteToPosition5 } from '$lib/utils/position';
+	import type { PosicaoItem, RespostaPosicaoItem } from '$lib/types/posicao';
+	import type { RespostaItem } from '$lib/types';
 	import { goto } from '$app/navigation';
 	import { get } from 'svelte/store';
-	import { UFS, TIER1, TIER2, TIER3, getTema } from '$lib/constants';
+	import { UFS, getTema } from '$lib/constants';
 
 	let uf = $state(get(selectedUf));
 	let loaded = $state(false);
-	let currentItems: QuestionarioItem[] = $state([]);
-	let idx = $state(0);
-	let answeredCount = $state(0);
-	let canFinish = $derived(answeredCount >= TIER1);
-	let reachedTier2 = $derived(answeredCount >= TIER2);
-	let reachedTier3 = $derived(answeredCount >= TIER3);
+	let items: PosicaoItem[] = $state([]);
+	let respostas: RespostaPosicaoItem[] = $state(get(respostasPosicoes));
+	let overrides: RespostaItem[] = $state(get(overridesPosicoes));
+	let expandedId: number | null = $state(null);
 
-	// Progress segments: each tier fills 1/3 of the bar
-	let seg1 = $derived(Math.min(answeredCount / TIER1, 1) * 33.33);
-	let seg2 = $derived(answeredCount > TIER1 ? Math.min((answeredCount - TIER1) / (TIER2 - TIER1), 1) * 33.33 : 0);
-	let seg3 = $derived(answeredCount > TIER2 ? Math.min((answeredCount - TIER2) / (TIER3 - TIER2), 1) * 33.34 : 0);
-
-	let tierLabel = $derived(
-		reachedTier3 ? 'Expert' :
-		reachedTier2 ? 'Avançado' :
-		canFinish ? 'Básico' : ''
-	);
+	let activePos = $derived(items.find((i) => i.id === expandedId));
+	let answeredCount = $derived(respostas.filter((r) => r.voto !== 'pular').length);
+	let canFinish = $derived(answeredCount >= 10);
+	let progressPct = $derived(Math.min((answeredCount / 20) * 100, 100));
 
 	function escolherUf(sigla: string) {
 		uf = sigla;
 		selectedUf.set(sigla);
-		loadQuestions();
+		loadPositions();
 
-		// Persistir UF no perfil se logado
 		if (get(authUser)) {
 			fetch('/api/auth/me', {
 				method: 'PATCH',
@@ -54,31 +46,23 @@
 		}
 	}
 
-	async function loadQuestions() {
+	async function loadPositions() {
 		try {
-			// Coletar IDs já respondidos (do DB para logado, ou do store/localStorage)
 			const user = get(authUser);
-			let existing = get(respostas);
 			if (user) {
-				const saved = await carregarRespostas();
+				const saved = await carregarRespostasPosicoes();
 				if (saved.length > 0) {
-					respostas.set(saved);
-					existing = saved;
+					respostas = saved;
+					respostasPosicoes.set(saved);
 				}
 			}
 
-			// Pedir ao backend que exclua apenas proposições efetivamente votadas (sim/nao), não pular
-			const excludeIds = existing.filter((r) => r.voto !== 'pular').map((r) => r.proposicao_id);
-			const excludeParam = excludeIds.length > 0 ? `&exclude=${excludeIds.join(',')}` : '';
-			const data = await api.get<QuestionarioItem[]>(`/vote/items?n_items=50${excludeParam}`);
-
-			answeredCount = existing.filter((r) => r.voto !== 'pular').length;
-			items.set(data);
-			currentItems = data;
-			currentIndex.set(0);
+			const data = await api.get<PosicaoItem[]>('/posicoes/items');
+			items = data;
+			posicaoItems.set(data);
 			loaded = true;
 		} catch (e) {
-			console.error('Failed to load questionnaire:', e);
+			console.error('Failed to load positions:', e);
 		}
 	}
 
@@ -91,17 +75,15 @@
 			}
 		}
 		if (uf) {
-			await loadQuestions();
+			await loadPositions();
 		}
 	}
 
 	onMount(() => {
-		// Se auth já resolveu, iniciar direto
 		if (!get(authLoading)) {
 			initPage();
 			return;
 		}
-		// Senão, esperar auth resolver
 		const unsub = authLoading.subscribe((loading) => {
 			if (!loading) {
 				unsub();
@@ -110,100 +92,59 @@
 		});
 	});
 
-	items.subscribe((v) => (currentItems = v));
-	currentIndex.subscribe((v) => (idx = v));
-
-	let respostaAtual = $derived.by(() => {
-		if (!currentItems[idx]) return undefined;
-		const pid = currentItems[idx].proposicao_id;
-		return get(respostas).find((r) => r.proposicao_id === pid);
-	});
-
-	// Selected position on slider (not yet confirmed)
-	let selectedPos: number | null = $state(null);
-
-	// When navigating to a new question, reset selection to existing answer (if any)
-	let lastIdx: number | null = $state(null);
-	$effect(() => {
-		const curIdx = idx;
-		if (curIdx !== lastIdx) {
-			lastIdx = curIdx;
-			if (respostaAtual && respostaAtual.voto !== 'pular') {
-				selectedPos = voteToPosition(respostaAtual.voto, respostaAtual.peso);
-			} else {
-				selectedPos = null;
-			}
-		}
-	});
-
-	let sliderValue = $derived(selectedPos);
-
-	function voltar() {
-		if (idx > 0) {
-			currentIndex.set(idx - 1);
-		}
+	function getRespostaPos(posicaoId: number): number | null {
+		const r = respostas.find((r) => r.posicao_id === posicaoId);
+		if (!r) return null;
+		return voteToPosition5(r.voto, r.peso);
 	}
 
-	function avancar() {
-		if (idx + 1 < currentItems.length) {
-			currentIndex.set(idx + 1);
-		}
-	}
-
-	let canAdvance = $derived.by(() => {
-		if (idx + 1 >= currentItems.length) return false;
-		const pid = currentItems[idx]?.proposicao_id;
-		if (!pid) return false;
-		return get(respostas).some((r) => r.proposicao_id === pid);
-	});
-
-	function votar(voto: 'sim' | 'nao' | 'pular', peso: number = 1.0) {
-		if (!currentItems[idx]) return;
-
-		const pid = currentItems[idx].proposicao_id;
-		const resposta: RespostaItem = {
-			proposicao_id: pid,
+	function votarPosicao(posicaoId: number, sliderPos: number) {
+		const { voto, peso } = positionToVote5(sliderPos);
+		const resposta: RespostaPosicaoItem = {
+			posicao_id: posicaoId,
 			voto,
 			peso
 		};
 
-		respostas.update((r) => {
-			const existing = r.findIndex((x) => x.proposicao_id === pid);
-			if (existing >= 0) {
-				const old = r[existing];
-				// Ajustar contagem
-				if (old.voto === 'pular' && voto !== 'pular') answeredCount++;
-				else if (old.voto !== 'pular' && voto === 'pular') answeredCount--;
-				const updated = [...r];
-				updated[existing] = resposta;
-				return updated;
-			}
-			if (voto !== 'pular') answeredCount++;
-			return [...r, resposta];
-		});
+		respostas = respostas.filter((r) => r.posicao_id !== posicaoId);
+		respostas = [...respostas, resposta];
+		respostasPosicoes.set(respostas);
 
-		// Salvar no backend se logado (fire-and-forget)
 		if (get(authUser)) {
-			salvarResposta(resposta);
-		}
-
-		if (idx + 1 >= currentItems.length) {
-			goto('/perfil');
-		} else {
-			currentIndex.set(idx + 1);
+			salvarRespostaPosicao(resposta);
 		}
 	}
 
-	function confirmarVoto() {
-		if (selectedPos == null) return;
-		const { voto, peso } = positionToVote(selectedPos);
-		votar(voto, peso);
+	function toggleExpand(posicaoId: number) {
+		expandedId = expandedId === posicaoId ? null : posicaoId;
+	}
+
+	function getOverride(proposicaoId: number): RespostaItem | undefined {
+		return overrides.find((o) => o.proposicao_id === proposicaoId);
+	}
+
+	function setOverride(proposicaoId: number, voto: 'sim' | 'nao') {
+		const existing = overrides.findIndex((o) => o.proposicao_id === proposicaoId);
+		const item: RespostaItem = { proposicao_id: proposicaoId, voto, peso: 1.0 };
+		if (existing >= 0) {
+			const updated = [...overrides];
+			// Toggle off if clicking same voto
+			if (overrides[existing].voto === voto) {
+				updated.splice(existing, 1);
+				overrides = updated;
+			} else {
+				updated[existing] = item;
+				overrides = updated;
+			}
+		} else {
+			overrides = [...overrides, item];
+		}
+		overridesPosicoes.set(overrides);
 	}
 
 	function verResultado() {
 		goto('/perfil');
 	}
-
 </script>
 
 <svelte:head>
@@ -224,93 +165,118 @@
 		</div>
 	</div>
 {:else if !loaded}
-	<div class="loading">Carregando proposições...</div>
-{:else if currentItems.length === 0}
-	<div class="empty">Nenhuma proposição disponível no momento.</div>
+	<div class="loading">Carregando posições...</div>
+{:else if items.length === 0}
+	<div class="empty">Nenhuma posição disponível no momento.</div>
 {:else}
-	<div class="questionario">
+	<div class="posicoes-page">
 		<div class="progress">
-			{#if seg1 > 0}<div class="progress-seg yellow" style="width: {seg1}%"></div>{/if}
-			{#if seg2 > 0}<div class="progress-seg green" style="width: {seg2}%"></div>{/if}
-			{#if seg3 > 0}<div class="progress-seg blue" style="width: {seg3}%"></div>{/if}
+			<div class="progress-fill" style="width: {progressPct}%"></div>
 		</div>
 		<div class="counter-row">
 			<p class="answered">
-				{answeredCount} voto{answeredCount !== 1 ? 's' : ''}
-				{#if tierLabel}
-					<span class="tier-badge">{tierLabel}</span>
-				{:else}
-					<span class="hint">· mínimo {TIER1}</span>
-				{/if}
+				{answeredCount}/20 posições respondidas
 			</p>
 		</div>
 
-		{#if reachedTier3}
-			<div class="meta-banner expert">
-				Perfil expert! {answeredCount} respostas. Altíssima precisão.
-				<button class="btn-resultado" onclick={verResultado}>Ver meu perfil</button>
-			</div>
-		{:else if reachedTier2}
-			<div class="meta-banner success">
-				Perfil avançado! Quanto mais você responder, mais preciso fica.
-				<button class="btn-resultado" onclick={verResultado}>Ver meu perfil</button>
-			</div>
-		{:else if canFinish}
+		{#if canFinish}
 			<div class="meta-banner ready">
-				Seu perfil Básico está pronto. Continue votando para aumentar a precisão.
-				<button class="btn-resultado" onclick={verResultado}>Ver perfil</button>
+				{#if answeredCount >= 20}
+					Todas as posições respondidas!
+				{:else}
+					Seu perfil está pronto. Continue para aumentar a precisão.
+				{/if}
+				<button class="btn-resultado" onclick={verResultado}>Ver meu perfil</button>
 			</div>
 		{/if}
 
-		<div class="card">
-			<div class="card-header">
-				<span class="tipo">{currentItems[idx].tipo} {currentItems[idx].numero}/{currentItems[idx].ano}</span>
-				{#if getTema(currentItems[idx].tema)}
-					<span class="tema-tag" style="background: {getTema(currentItems[idx].tema).cor}1a; color: {getTema(currentItems[idx].tema).cor}; border-color: {getTema(currentItems[idx].tema).cor}33">{getTema(currentItems[idx].tema).label}</span>
-				{:else}
-					<span class="tema-tag" style="background: {getTema('geral').cor}1a; color: {getTema('geral').cor}; border-color: {getTema('geral').cor}33">{getTema('geral').label}</span>
-				{/if}
-			</div>
-			<p class="resumo">{currentItems[idx].resumo}</p>
-			{#if currentItems[idx].descricao_detalhada}
-				<p class="descricao">{currentItems[idx].descricao_detalhada}</p>
-			{/if}
-			{#if currentItems[idx].casas.length > 0}
-				<div class="casa-pills">
-					{#each currentItems[idx].casas as info}
-						{#if info.url}
-							<a href={info.url} target="_blank" rel="noopener" class="casa-pill" class:camara={info.casa === 'camara'} class:senado={info.casa === 'senado'}>{info.casa === 'camara' ? 'Câmara' : 'Senado'}</a>
-						{:else}
-							<span class="casa-pill" class:camara={info.casa === 'camara'} class:senado={info.casa === 'senado'}>{info.casa === 'camara' ? 'Câmara' : 'Senado'}</span>
-						{/if}
-					{/each}
+		<div class="positions-list">
+			{#each items as pos}
+				{@const currentPos = getRespostaPos(pos.id)}
+				{@const isExpanded = expandedId === pos.id}
+				{@const temaInfo = getTema(pos.tema)}
+				<div class="pos-card" class:answered={currentPos != null}>
+					<div class="pos-header">
+						<div class="pos-title-row">
+							<span class="pos-ordem">{pos.ordem}</span>
+							<div class="pos-title-block">
+								<h3 class="pos-titulo">{pos.titulo}</h3>
+								<span class="tema-tag" style="background: {temaInfo.cor}1a; color: {temaInfo.cor}; border-color: {temaInfo.cor}33">{temaInfo.label}</span>
+							</div>
+						</div>
+						<p class="pos-descricao">{pos.descricao}</p>
+					</div>
+
+					<div class="slider-area">
+						<PositionSlider
+							value={currentPos}
+							onselect={(p) => votarPosicao(pos.id, p)}
+						/>
+					</div>
+
+					{#if pos.proposicoes.length > 0}
+						<button class="drill-toggle" onclick={() => toggleExpand(pos.id)}>
+							<span class="drill-label">{pos.proposicoes.length} proposições</span>
+							<span class="expand-icon" class:open={isExpanded}>&#9662;</span>
+						</button>
+					{/if}
+
+					{#if isExpanded}
+						<div class="drill-down">
+							{#each pos.proposicoes as prop}
+								{@const override = getOverride(prop.proposicao_id)}
+								<div class="drill-item">
+									<div class="drill-info">
+										<span class="drill-tipo">{prop.tipo} {prop.numero}/{prop.ano}</span>
+										<p class="drill-resumo">{prop.resumo ?? 'Sem descrição'}</p>
+										<span class="drill-direcao">
+											Direção na posição: {prop.direcao === 'sim' ? 'A favor' : 'Contra'}
+										</span>
+									</div>
+									<div class="drill-actions">
+										<button
+											class="drill-btn favor"
+											class:active={override?.voto === 'sim'}
+											onclick={() => setOverride(prop.proposicao_id, 'sim')}
+											title="A favor"
+										>&#10003;</button>
+										<button
+											class="drill-btn contra"
+											class:active={override?.voto === 'nao'}
+											onclick={() => setOverride(prop.proposicao_id, 'nao')}
+											title="Contra"
+										>&#10007;</button>
+									</div>
+								</div>
+							{/each}
+						</div>
+					{/if}
 				</div>
-			{/if}
+			{/each}
 		</div>
 
-		<div class="slider-area">
-			<VoteSlider
-				value={sliderValue}
-				onselect={(pos) => { selectedPos = pos; }}
-			/>
-		</div>
+		{#if canFinish}
+			<div class="bottom-cta">
+				<button class="btn-resultado" onclick={verResultado}>Ver meu perfil</button>
+			</div>
+		{/if}
 
-		<div class="actions">
-			<button class="btn-nav" onclick={voltar} disabled={idx === 0} aria-label="Voltar">&#8592;</button>
-			<button class="btn-pular" onclick={() => votar('pular', 1.0)}>Pular</button>
-			<button class="btn-votar" class:active={selectedPos != null} onclick={confirmarVoto} disabled={selectedPos == null}>Votar</button>
-			<button class="btn-nav" onclick={avancar} disabled={!canAdvance} aria-label="Avançar">&#8594;</button>
+		<div class="mode-link">
+			<a href="/vote/avancado">Modo avançado (proposições individuais)</a>
 		</div>
-		<ChatWidget
-			proposicaoId={currentItems[idx].proposicao_id}
-			proposicaoTitulo="{currentItems[idx].tipo} {currentItems[idx].numero}/{currentItems[idx].ano}"
-		/>
 	</div>
+
+	{#if activePos}
+		<ChatWidget
+			posicaoId={activePos.id}
+			proposicaoTitulo={activePos.titulo}
+		/>
+	{/if}
 {/if}
 
 <style>
-	.questionario {
-		max-width: 600px;
+	.posicoes-page {
+		max-width: 650px;
 		margin: 0 auto;
 	}
 
@@ -319,17 +285,13 @@
 		border-radius: 4px;
 		height: 8px;
 		overflow: hidden;
-		display: flex;
 	}
 
-	.progress-seg {
+	.progress-fill {
 		height: 100%;
+		background: #16a34a;
 		transition: width 0.3s ease;
 	}
-
-	.progress-seg.yellow { background: #eab308; }
-	.progress-seg.green { background: #16a34a; }
-	.progress-seg.blue { background: #2563eb; }
 
 	.counter-row {
 		display: flex;
@@ -343,21 +305,6 @@
 		font-size: 0.875rem;
 		font-weight: 600;
 		margin: 0;
-	}
-
-	.hint {
-		color: var(--text-secondary);
-		font-weight: 400;
-	}
-
-	.tier-badge {
-		font-size: 0.75rem;
-		font-weight: 600;
-		padding: 0.125rem 0.5rem;
-		border-radius: 10px;
-		background: var(--link);
-		color: white;
-		margin-left: 0.25rem;
 	}
 
 	.meta-banner {
@@ -374,27 +321,9 @@
 	}
 
 	.meta-banner.ready {
-		background: #fef3c7;
-		color: #92400e;
-		border: 1px solid #f59e0b66;
-	}
-
-	:global([data-theme='escuro']) .meta-banner.ready {
-		background: #eab3081a;
-		color: #fbbf24;
-		border: 1px solid #eab30833;
-	}
-
-	.meta-banner.success {
 		background: #16a34a1a;
 		color: #16a34a;
 		border: 1px solid #16a34a33;
-	}
-
-	.meta-banner.expert {
-		background: #2563eb1a;
-		color: #2563eb;
-		border: 1px solid #2563eb33;
 	}
 
 	.btn-resultado {
@@ -413,179 +342,223 @@
 		background: #1d4ed8;
 	}
 
-	.card {
+	.positions-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	.pos-card {
 		background: var(--bg-card);
 		border: 1px solid var(--border);
 		border-radius: 16px;
-		padding: 2rem;
-		min-height: 200px;
+		padding: 1.25rem;
+		transition: border-color 0.2s;
+	}
+
+	.pos-card.answered {
+		border-color: #16a34a44;
+	}
+
+	.pos-header {
+		margin-bottom: 0.75rem;
+	}
+
+	.pos-title-row {
 		display: flex;
-		flex-direction: column;
+		align-items: flex-start;
+		gap: 0.75rem;
+	}
+
+	.pos-ordem {
+		background: var(--border);
+		color: var(--text-secondary);
+		font-weight: 700;
+		font-size: 0.8rem;
+		width: 28px;
+		height: 28px;
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
 		justify-content: center;
+		flex-shrink: 0;
 	}
 
-	.card-header {
-		margin-bottom: 1rem;
+	.pos-card.answered .pos-ordem {
+		background: #16a34a;
+		color: white;
 	}
 
-	.card-header {
+	.pos-title-block {
 		display: flex;
 		align-items: center;
 		gap: 0.5rem;
 		flex-wrap: wrap;
 	}
 
-	.tipo {
-		background: #eff6ff;
-		color: #2563eb;
-		padding: 0.25rem 0.75rem;
-		border-radius: 20px;
-		font-size: 0.8rem;
-		font-weight: 600;
+	.pos-titulo {
+		margin: 0;
+		font-size: 1.05rem;
+		color: var(--text-primary);
 	}
 
 	.tema-tag {
-		padding: 0.2rem 0.6rem;
+		padding: 0.15rem 0.5rem;
 		border-radius: 20px;
-		font-size: 0.75rem;
-		font-weight: 600;
-		border: 1px solid;
-	}
-
-	.resumo {
-		font-size: 1.25rem;
-		line-height: 1.6;
-		color: var(--text-primary);
-		margin: 0;
-	}
-
-	.descricao {
-		color: var(--text-secondary);
-		font-size: 0.95rem;
-		margin-top: 1rem;
-		line-height: 1.6;
-	}
-
-	.casa-pills {
-		display: flex;
-		gap: 0.25rem;
-		margin-top: 0.75rem;
-	}
-
-	.casa-pill {
 		font-size: 0.7rem;
 		font-weight: 600;
-		padding: 0.15rem 0.5rem;
-		border-radius: 10px;
 		border: 1px solid;
-		text-decoration: none;
-		transition: opacity 0.2s;
 	}
 
-	a.casa-pill:hover {
-		opacity: 0.8;
-	}
-
-	.casa-pill.camara {
-		background: #dbeafe;
-		color: #1d4ed8;
-		border-color: #93c5fd;
-	}
-
-	.casa-pill.senado {
-		background: #fce7f3;
-		color: #be185d;
-		border-color: #f9a8d4;
-	}
-
-	:global([data-theme='escuro']) .casa-pill.camara {
-		background: #1e3a5f;
-		color: #93c5fd;
-		border-color: #2563eb44;
-	}
-
-	:global([data-theme='escuro']) .casa-pill.senado {
-		background: #4a1942;
-		color: #f9a8d4;
-		border-color: #be185d44;
+	.pos-descricao {
+		color: var(--text-secondary);
+		font-size: 0.875rem;
+		line-height: 1.5;
+		margin: 0.5rem 0 0;
+		padding-left: calc(28px + 0.75rem);
 	}
 
 	.slider-area {
+		padding: 0 0.5rem;
+	}
+
+	.drill-toggle {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		background: none;
+		border: none;
+		color: var(--link);
+		font-size: 0.8rem;
+		font-weight: 600;
+		cursor: pointer;
+		margin-top: 0.75rem;
+		padding: 0.25rem 0;
+	}
+
+	.drill-toggle:hover {
+		text-decoration: underline;
+	}
+
+	.drill-label {
+		color: var(--text-secondary);
+		font-weight: 500;
+	}
+
+	.expand-icon {
+		color: var(--text-secondary);
+		font-size: 0.8rem;
+		transition: transform 0.2s;
+	}
+
+	.expand-icon.open {
+		transform: rotate(180deg);
+	}
+
+	.drill-down {
+		margin-top: 0.75rem;
+		padding-top: 0.75rem;
+		border-top: 1px solid var(--border);
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.drill-item {
+		display: flex;
+		gap: 0.75rem;
+		align-items: flex-start;
+	}
+
+	.drill-info {
+		flex: 1;
+	}
+
+	.drill-tipo {
+		font-size: 0.75rem;
+		font-weight: 600;
+		color: var(--link);
+		background: #2563eb1a;
+		padding: 0.1rem 0.5rem;
+		border-radius: 4px;
+	}
+
+	.drill-resumo {
+		font-size: 0.85rem;
+		color: var(--text-primary);
+		margin: 0.3rem 0 0;
+		line-height: 1.4;
+	}
+
+	.drill-direcao {
+		font-size: 0.7rem;
+		color: var(--text-secondary);
+	}
+
+	.drill-actions {
+		display: flex;
+		gap: 0.25rem;
+		flex-shrink: 0;
+	}
+
+	.drill-btn {
+		width: 32px;
+		height: 32px;
+		border-radius: 8px;
+		border: 1px solid var(--border);
+		background: var(--bg-card);
+		font-size: 1rem;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: all 0.15s;
+	}
+
+	.drill-btn.favor {
+		color: #16a34a;
+	}
+
+	.drill-btn.contra {
+		color: #dc2626;
+	}
+
+	.drill-btn.favor.active {
+		background: #16a34a;
+		color: white;
+		border-color: #16a34a;
+	}
+
+	.drill-btn.contra.active {
+		background: #dc2626;
+		color: white;
+		border-color: #dc2626;
+	}
+
+	.drill-btn:hover:not(.active) {
+		border-color: var(--text-secondary);
+	}
+
+	.bottom-cta {
+		text-align: center;
 		margin-top: 1.5rem;
 	}
 
-	.actions {
-		display: flex;
-		gap: 0.75rem;
-		margin-top: 1rem;
-		justify-content: center;
-		align-items: center;
+	.mode-link {
+		text-align: center;
+		margin-top: 1.5rem;
+		padding-bottom: 2rem;
 	}
 
-	.btn-pular {
-		padding: 0.6rem 1.5rem;
-		background: var(--bg-card);
-		border: 1px solid var(--border);
-		border-radius: 12px;
-		font-size: 0.9rem;
-		font-weight: 600;
+	.mode-link a {
 		color: var(--text-secondary);
-		cursor: pointer;
-		transition: border-color 0.2s, color 0.2s;
+		text-decoration: none;
+		font-size: 0.85rem;
 	}
 
-	.btn-pular:hover {
-		border-color: var(--text-secondary);
-		color: var(--text-primary);
-	}
-
-	.btn-votar {
-		padding: 0.6rem 2rem;
-		background: var(--border);
-		border: none;
-		border-radius: 12px;
-		font-size: 0.9rem;
-		font-weight: 700;
-		color: var(--text-secondary);
-		cursor: default;
-		transition: background 0.2s, color 0.2s, transform 0.15s;
-	}
-
-	.btn-votar.active {
-		background: #2563eb;
-		color: white;
-		cursor: pointer;
-	}
-
-	.btn-votar.active:hover {
-		background: #1d4ed8;
-		transform: scale(1.03);
-	}
-
-	.btn-nav {
-		width: 44px;
-		height: 44px;
-		flex-shrink: 0;
-		border: 1px solid var(--border);
-		border-radius: 12px;
-		background: var(--bg-card);
-		color: var(--text-secondary);
-		font-size: 1.25rem;
-		cursor: pointer;
-		transition: border-color 0.2s, color 0.2s;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-
-	.btn-nav:hover:not(:disabled) {
-		border-color: var(--link);
-		color: var(--text-primary);
-	}
-
-	.btn-nav:disabled {
-		opacity: 0.3;
-		cursor: default;
+	.mode-link a:hover {
+		color: var(--link);
+		text-decoration: underline;
 	}
 
 	.loading,

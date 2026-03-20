@@ -13,9 +13,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import settings
 from app.core.deps import get_current_user
 from app.database import get_db
+from app.models.posicao import Posicao, PosicaoProposicao
 from app.models.proposicao import Proposicao
 from app.models.usuario import Usuario
-from app.services.chat import stream_chat
+from app.services.chat import stream_chat, stream_posicao_chat
 
 logger = logging.getLogger(__name__)
 
@@ -85,6 +86,71 @@ async def chat_proposicao(
         except Exception as e:
             logger.error(f"Chat error for proposicao {proposicao_id}: {e}")
             yield f"data: {json.dumps({'error': 'Erro ao gerar resposta. Tente novamente.'})}\n\n"
+
+    return StreamingResponse(
+        generate(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
+@router.post("/posicao/{posicao_id}")
+async def chat_posicao(
+    posicao_id: int,
+    body: ChatRequest,
+    request: Request,
+    usuario: Usuario = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    if not settings.anthropic_api_key:
+        raise HTTPException(status_code=503, detail="Chat não configurado.")
+
+    _check_rate_limit(usuario.id)
+
+    posicao = await db.get(Posicao, posicao_id)
+    if not posicao:
+        raise HTTPException(status_code=404, detail="Posição não encontrada.")
+
+    # Load proposições linked to this position
+    from sqlalchemy import select
+    from sqlalchemy.orm import selectinload
+
+    stmt = (
+        select(PosicaoProposicao)
+        .where(PosicaoProposicao.posicao_id == posicao_id)
+        .options(selectinload(PosicaoProposicao.proposicao))
+    )
+    result = await db.execute(stmt)
+    pos_props = result.scalars().all()
+
+    proposicoes = []
+    for pp in pos_props:
+        prop = pp.proposicao
+        if prop:
+            proposicoes.append(
+                {
+                    "tipo": prop.tipo,
+                    "numero": prop.numero,
+                    "ano": prop.ano,
+                    "ementa": prop.ementa,
+                    "resumo_cidadao": prop.resumo_cidadao,
+                    "direcao": pp.direcao.value,
+                }
+            )
+
+    history = [{"role": m.role, "content": m.content} for m in body.history]
+
+    async def generate():
+        try:
+            async for chunk in stream_posicao_chat(posicao, proposicoes, body.message, history):
+                yield f"data: {json.dumps({'text': chunk})}\n\n"
+            yield f"data: {json.dumps({'done': True})}\n\n"
+        except Exception as e:
+            logger.error(f"Chat error for posicao {posicao_id}: {e}")
+            yield (f"data: {json.dumps({'error': 'Erro ao gerar resposta. Tente novamente.'})}\n\n")
 
     return StreamingResponse(
         generate(),

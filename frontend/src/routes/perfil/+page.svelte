@@ -2,6 +2,10 @@
 	import { onMount } from 'svelte';
 	import { api } from '$lib/api';
 	import { respostas, selectedUf, carregarRespostas, salvarResposta } from '$lib/stores/questionario';
+	import { respostasPosicoes, overridesPosicoes, carregarRespostasPosicoes } from '$lib/stores/posicoes';
+	import { expandPositions } from '$lib/utils/position';
+	import { posicaoItems } from '$lib/stores/posicoes';
+	import type { RespostaPosicaoItem, PosicaoItem } from '$lib/types/posicao';
 	import { authUser, authLoading } from '$lib/stores/auth';
 	import { resultados, resultadosPartidos, loading } from '$lib/stores/resultado';
 	import VoteSlider from '$lib/components/VoteSlider.svelte';
@@ -43,6 +47,8 @@
 
 	// Votos tab
 	let userRespostas: RespostaItem[] = $state([]);
+	let userPosicaoRespostas: RespostaPosicaoItem[] = $state([]);
+	let cachedPosicaoItems: PosicaoItem[] = $state([]);
 	let proposicoes = $state<Map<number, ProposicaoInfo>>(new Map());
 	let votosLoaded = $state(false);
 	let expandedVotoId: number | null = $state(null);
@@ -66,10 +72,14 @@
 		if (isInitial) loading.set(true);
 		scopeLoading = true;
 		try {
-			const data = await api.post<MatchResponse>('/matching/calcular', {
+			const body: Record<string, unknown> = {
 				respostas: userRespostas,
 				uf: escopo === 'estado' && ufSelecionada ? ufSelecionada : undefined
-			});
+			};
+			if (userPosicaoRespostas.length > 0) {
+				body.posicao_respostas = userPosicaoRespostas;
+			}
+			const data = await api.post<MatchResponse>('/matching/calcular', body);
 			resultados.set(data.parlamentares);
 			resultadosPartidos.set(data.partidos);
 		} catch (e) {
@@ -142,6 +152,7 @@
 	onMount(() => {
 		async function init() {
 			userRespostas = get(respostas);
+			userPosicaoRespostas = get(respostasPosicoes);
 
 			if (userRespostas.length === 0 && get(authUser)) {
 				const saved = await carregarRespostas();
@@ -151,7 +162,16 @@
 				}
 			}
 
-			if (userRespostas.length === 0) {
+			// Load posicao respostas from DB if logged in
+			if (userPosicaoRespostas.length === 0 && get(authUser)) {
+				const savedPos = await carregarRespostasPosicoes();
+				if (savedPos.length > 0) {
+					respostasPosicoes.set(savedPos);
+					userPosicaoRespostas = savedPos;
+				}
+			}
+
+			if (userRespostas.length === 0 && userPosicaoRespostas.length === 0) {
 				goto('/vote');
 				return;
 			}

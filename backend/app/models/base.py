@@ -44,6 +44,11 @@ class Orientacao(enum.StrEnum):
     LIBERADO = "liberado"
 
 
+class DirecaoPosicao(enum.StrEnum):
+    SIM = "sim"
+    NAO = "nao"
+
+
 class ProvedorAuth(enum.StrEnum):
     EMAIL = "email"
     GOOGLE = "google"

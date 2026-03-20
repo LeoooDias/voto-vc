@@ -192,6 +192,75 @@ async def _web_search(query: str) -> str:
         )
 
 
+def build_posicao_system_prompt(
+    posicao: object,
+    proposicoes: list[dict],
+) -> str:
+    """Build system prompt for position-level chat."""
+    parts = [
+        "Você é um assistente especializado em legislação brasileira no site voto.vc.",
+        "Seu papel é ajudar cidadãos a entender posições temáticas e as proposições "
+        "legislativas relacionadas de forma clara e acessível.",
+        "",
+        "REGRAS:",
+        "- Responda com base nas informações fornecidas sobre a posição e suas proposições.",
+        "- Você tem conhecimento amplo sobre política e legislação brasileira — USE-O.",
+        "- Explique como cada proposição se relaciona com a posição temática.",
+        "- Seja neutro e imparcial — apresente múltiplos lados.",
+        "- Use markdown: **negrito**, listas, etc.",
+        "- Respostas concisas mas completas. Máximo ~300 palavras.",
+        "",
+        f"=== POSIÇÃO TEMÁTICA: {posicao.titulo} ===",
+        f"Descrição: {posicao.descricao}",
+        f"Tema: {posicao.tema}",
+        "",
+        "=== PROPOSIÇÕES RELACIONADAS ===",
+    ]
+    for p in proposicoes:
+        direcao_label = (
+            "votar SIM nesta proposição apoia esta posição"
+            if p["direcao"] == "sim"
+            else "votar NÃO nesta proposição apoia esta posição"
+        )
+        entry = f"- {p['tipo']} {p['numero']}/{p['ano']}: {p.get('ementa', '(sem ementa)')}"
+        entry += f"\n  Direção: {direcao_label}"
+        if p.get("resumo_cidadao"):
+            entry += f"\n  Resumo: {p['resumo_cidadao']}"
+        parts.append(entry)
+
+    return "\n".join(parts)
+
+
+POSICAO_TOOLS = [
+    {
+        "name": "web_search",
+        "description": (
+            "Busca informações na web. Use APENAS quando precisar de dados factuais "
+            "específicos não contidos nas proposições (ex: estatísticas, notícias recentes, "
+            "posições de entidades). NÃO use para perguntas que podem ser respondidas "
+            "com análise do conteúdo já fornecido."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "Termo de busca em português",
+                }
+            },
+            "required": ["query"],
+        },
+    },
+]
+
+
+async def _execute_posicao_tool(tool_name: str, tool_input: dict) -> str:
+    if tool_name == "web_search":
+        query = tool_input.get("query", "")
+        return await _web_search(query)
+    return "(Ferramenta desconhecida.)"
+
+
 async def _execute_tool(tool_name: str, tool_input: dict, prop: Proposicao) -> str:
     if tool_name == "buscar_inteiro_teor":
         if prop.url_inteiro_teor:
@@ -280,6 +349,93 @@ async def stream_chat(
             except json.JSONDecodeError:
                 tool_input = {}
             result_text = await _execute_tool(tool["name"], tool_input, prop)
+            tool_results.append(
+                {
+                    "type": "tool_result",
+                    "tool_use_id": tool["id"],
+                    "content": result_text,
+                }
+            )
+
+        messages.append({"role": "user", "content": tool_results})
+
+
+async def stream_posicao_chat(
+    posicao: object,
+    proposicoes: list[dict],
+    message: str,
+    history: list[dict],
+) -> AsyncGenerator[str, None]:
+    """Stream chat response for a thematic position.
+
+    Similar to stream_chat but uses position-specific system prompt and tools.
+    """
+    client = _get_client()
+    system = build_posicao_system_prompt(posicao, proposicoes)
+
+    messages: list[dict] = []
+    for h in history[-MAX_HISTORY:]:
+        if h.get("role") in ("user", "assistant"):
+            messages.append({"role": h["role"], "content": h["content"]})
+    messages.append({"role": "user", "content": message})
+
+    for _round in range(MAX_TOOL_ROUNDS + 1):
+        collected_text = ""
+        tool_uses: list[dict] = []
+
+        async with client.messages.stream(
+            model=MODEL,
+            max_tokens=2048,
+            system=system,
+            messages=messages,
+            tools=POSICAO_TOOLS,
+        ) as stream:
+            async for event in stream:
+                if event.type == "content_block_start":
+                    if event.content_block.type == "tool_use":
+                        tool_uses.append(
+                            {
+                                "id": event.content_block.id,
+                                "name": event.content_block.name,
+                                "input_json": "",
+                            }
+                        )
+                elif event.type == "content_block_delta":
+                    if event.delta.type == "text_delta":
+                        yield event.delta.text
+                        collected_text += event.delta.text
+                    elif event.delta.type == "input_json_delta":
+                        if tool_uses:
+                            tool_uses[-1]["input_json"] += event.delta.partial_json
+
+            response = await stream.get_final_message()
+
+        if response.stop_reason != "tool_use" or not tool_uses:
+            break
+
+        assistant_content = []
+        for block in response.content:
+            if block.type == "text":
+                assistant_content.append({"type": "text", "text": block.text})
+            elif block.type == "tool_use":
+                assistant_content.append(
+                    {
+                        "type": "tool_use",
+                        "id": block.id,
+                        "name": block.name,
+                        "input": block.input,
+                    }
+                )
+
+        messages.append({"role": "assistant", "content": assistant_content})
+
+        tool_results = []
+        for tool in tool_uses:
+            try:
+                tool_input = json.loads(tool["input_json"]) if tool["input_json"] else {}
+            except json.JSONDecodeError:
+                tool_input = {}
+            result_text = await _execute_posicao_tool(tool["name"], tool_input)
             tool_results.append(
                 {
                     "type": "tool_result",

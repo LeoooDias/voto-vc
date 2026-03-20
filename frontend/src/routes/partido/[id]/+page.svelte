@@ -6,6 +6,8 @@
 	import { selectedUf, respostas, carregarRespostas } from '$lib/stores/questionario';
 	import { get } from 'svelte/store';
 	import { UF_SIGLAS, getTema, fmtPct } from '$lib/constants';
+	import { stanceLabel, stanceColor } from '$lib/utils/position';
+	import type { PosicaoInferida } from '$lib/types/posicao';
 
 	interface VotoBreakdown {
 		sim?: number;
@@ -77,6 +79,7 @@
 	}
 
 	let disciplina = $state<DisciplinaResult | null>(null);
+	let posicoes = $state<PosicaoInferida[]>([]);
 
 	function buildUserVotoMap(lista: Array<{ proposicao_id: number; voto: string; peso: number }>) {
 		const map = new Map<number, 'sim' | 'nao'>();
@@ -109,13 +112,22 @@
 		}
 	}
 
+	async function loadPosicoes() {
+		try {
+			const ufParam = escopo === 'estado' && ufSelecionada ? `?uf=${ufSelecionada}` : '';
+			posicoes = await api.get<PosicaoInferida[]>(`/partidos/${page.params.id}/posicoes${ufParam}`);
+		} catch (e) {
+			console.error('Failed to load posições:', e);
+		}
+	}
+
 	async function loadPartido() {
 		try {
 			const ufParam = escopo === 'estado' && ufSelecionada ? `?uf=${ufSelecionada}` : '';
 			showLimit = 100;
 			scopeLoading = true;
 			partido = await api.get<PartidoDetail>(`/partidos/${page.params.id}${ufParam}`);
-			await Promise.all([loadComparacao(), loadDisciplina()]);
+			await Promise.all([loadComparacao(), loadDisciplina(), loadPosicoes()]);
 		} catch (e) {
 			console.error('Failed to load partido:', e);
 			error = true;
@@ -372,6 +384,27 @@
 							</span>
 						</div>
 					{/if}
+				</div>
+			</div>
+		{/if}
+
+		{#if posicoes.length > 0}
+			<div class="posicionamentos">
+				<h2>Posicionamentos</h2>
+				<div class="posicoes-grid">
+					{#each posicoes.filter(p => p.stance !== 'sem_dados') as pos}
+						<div class="posicao-card">
+							<div class="posicao-info">
+								<span class="posicao-titulo">{pos.titulo}</span>
+								<span class="posicao-stance" style="color: {stanceColor(pos.stance)}">{stanceLabel(pos.stance)}</span>
+							</div>
+							{#if pos.score_pct != null}
+								<div class="posicao-bar">
+									<div class="posicao-fill" style="width: {pos.score_pct}%; background: {stanceColor(pos.stance)}"></div>
+								</div>
+							{/if}
+						</div>
+					{/each}
 				</div>
 			</div>
 		{/if}
@@ -987,6 +1020,66 @@
 	.match-discordou {
 		background: #dc26261a;
 		color: #dc2626;
+	}
+
+	.posicionamentos {
+		margin-bottom: 2rem;
+	}
+
+	.posicionamentos h2 {
+		margin-bottom: 1rem;
+	}
+
+	.posicoes-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 0.5rem;
+	}
+
+	@media (max-width: 600px) {
+		.posicoes-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	.posicao-card {
+		background: var(--bg-card);
+		border: 1px solid var(--border);
+		border-radius: 10px;
+		padding: 0.75rem;
+	}
+
+	.posicao-info {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+		gap: 0.5rem;
+	}
+
+	.posicao-titulo {
+		font-size: 0.8rem;
+		font-weight: 600;
+		color: var(--text-primary);
+	}
+
+	.posicao-stance {
+		font-size: 0.7rem;
+		font-weight: 700;
+		white-space: nowrap;
+	}
+
+	.posicao-bar {
+		height: 4px;
+		border-radius: 2px;
+		background: var(--border);
+		margin-top: 0.4rem;
+		overflow: hidden;
+	}
+
+	.posicao-fill {
+		height: 100%;
+		border-radius: 2px;
+		transition: width 0.3s;
 	}
 
 	.loading, .empty {

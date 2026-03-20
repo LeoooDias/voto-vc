@@ -3,7 +3,8 @@
 	import { marked } from 'marked';
 
 	interface Props {
-		proposicaoId: number;
+		proposicaoId?: number;
+		posicaoId?: number;
 		proposicaoTitulo: string;
 	}
 
@@ -12,7 +13,12 @@
 		content: string;
 	}
 
-	let { proposicaoId, proposicaoTitulo }: Props = $props();
+	let { proposicaoId, posicaoId, proposicaoTitulo }: Props = $props();
+
+	const chatEndpoint = $derived(
+		posicaoId ? `/api/chat/posicao/${posicaoId}` : `/api/chat/proposicao/${proposicaoId}`
+	);
+	const entityId = $derived(posicaoId ?? proposicaoId ?? 0);
 
 	let isOpen = $state(false);
 	let messages: ChatMessage[] = $state([]);
@@ -21,18 +27,17 @@
 	let error = $state('');
 	let messagesEl: HTMLDivElement | undefined = $state();
 
-	// Reset chat when proposição changes
+	// Reset chat when entity changes
 	let lastSeenId: number | null = $state(null);
 	$effect(() => {
-		// Access proposicaoId reactively via props
-		const pid = proposicaoId;
-		if (lastSeenId !== null && pid !== lastSeenId) {
+		const eid = entityId;
+		if (lastSeenId !== null && eid !== lastSeenId) {
 			messages = [];
 			error = '';
 			inputText = '';
 			isStreaming = false;
 		}
-		lastSeenId = pid;
+		lastSeenId = eid;
 	});
 
 	function toggle() {
@@ -80,7 +85,7 @@
 		isStreaming = true;
 
 		try {
-			const res = await fetch(`/api/chat/proposicao/${proposicaoId}`, {
+			const res = await fetch(chatEndpoint, {
 				method: 'POST',
 				credentials: 'include',
 				headers: { 'Content-Type': 'application/json' },
@@ -209,7 +214,7 @@
 			<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 		{:else}
 			<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-			<span class="fab-label">Pergunte sobre esta proposição</span>
+			<span class="fab-label">{posicaoId ? 'Pergunte sobre esta posição' : 'Pergunte sobre esta proposição'}</span>
 		{/if}
 	</button>
 
@@ -233,11 +238,17 @@
 			<div class="chat-messages" bind:this={messagesEl}>
 				{#if messages.length === 0}
 					<div class="chat-empty">
-						<p>Pergunte qualquer coisa sobre esta proposição.</p>
+						<p>{posicaoId ? 'Pergunte qualquer coisa sobre esta posição temática.' : 'Pergunte qualquer coisa sobre esta proposição.'}</p>
 						<div class="suggestions">
-							<button class="suggestion" onclick={() => { inputText = 'Resuma os principais pontos desta proposição.'; sendMessage(); }}>Resumo dos pontos principais</button>
-							<button class="suggestion" onclick={() => { inputText = 'Quais os argumentos a favor e contra?'; sendMessage(); }}>Argumentos a favor e contra</button>
-							<button class="suggestion" onclick={() => { inputText = 'Como isso pode afetar meu dia a dia?'; sendMessage(); }}>Impacto no dia a dia</button>
+							{#if posicaoId}
+								<button class="suggestion" onclick={() => { inputText = 'Explique esta posição e as proposições relacionadas.'; sendMessage(); }}>Explicar posição e proposições</button>
+								<button class="suggestion" onclick={() => { inputText = 'Quais os argumentos a favor e contra esta posição?'; sendMessage(); }}>Argumentos a favor e contra</button>
+								<button class="suggestion" onclick={() => { inputText = 'Como essa questão afeta o dia a dia do cidadão?'; sendMessage(); }}>Impacto no dia a dia</button>
+							{:else}
+								<button class="suggestion" onclick={() => { inputText = 'Resuma os principais pontos desta proposição.'; sendMessage(); }}>Resumo dos pontos principais</button>
+								<button class="suggestion" onclick={() => { inputText = 'Quais os argumentos a favor e contra?'; sendMessage(); }}>Argumentos a favor e contra</button>
+								<button class="suggestion" onclick={() => { inputText = 'Como isso pode afetar meu dia a dia?'; sendMessage(); }}>Impacto no dia a dia</button>
+							{/if}
 						</div>
 					</div>
 				{/if}

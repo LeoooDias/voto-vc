@@ -4,6 +4,8 @@
 	import { get } from 'svelte/store';
 	import { api } from '$lib/api';
 	import { getTema, fmtPct } from '$lib/constants';
+	import { stanceLabel, stanceColor } from '$lib/utils/position';
+	import type { PosicaoInferida } from '$lib/types/posicao';
 	import { respostas, carregarRespostas } from '$lib/stores/questionario';
 	import { authUser, authLoading } from '$lib/stores/auth';
 
@@ -63,6 +65,7 @@
 	);
 
 	let comparacao = $state<{ concordou: number; discordou: number; total: number; score: number | null }>({ concordou: 0, discordou: 0, total: 0, score: null });
+	let posicoes = $state<PosicaoInferida[]>([]);
 
 	function buildUserVotoMap(lista: Array<{ proposicao_id: number; voto: string; peso: number }>) {
 		const map = new Map<number, 'sim' | 'nao'>();
@@ -115,12 +118,18 @@
 			loadComparacao(userRespostas);
 		}
 
-		// Load parlamentar
+		// Load parlamentar + posições
 		try {
 			parlamentar = await api.get<ParlamentarDetail>(`/parlamentares/${page.params.id}`);
 		} catch (e) {
 			console.error('Failed to load parlamentar:', e);
 			error = true;
+		}
+
+		try {
+			posicoes = await api.get<PosicaoInferida[]>(`/parlamentares/${page.params.id}/posicoes`);
+		} catch (e) {
+			console.error('Failed to load posições:', e);
 		}
 	});
 
@@ -231,6 +240,27 @@
 						<span class="comp-count">{comparacao.total}</span>
 						<span class="comp-label">Comparados</span>
 					</div>
+				</div>
+			</div>
+		{/if}
+
+		{#if posicoes.length > 0}
+			<div class="posicionamentos">
+				<h2>Posicionamentos</h2>
+				<div class="posicoes-grid">
+					{#each posicoes.filter(p => p.stance !== 'sem_dados') as pos}
+						<div class="posicao-card">
+							<div class="posicao-info">
+								<span class="posicao-titulo">{pos.titulo}</span>
+								<span class="posicao-stance" style="color: {stanceColor(pos.stance)}">{stanceLabel(pos.stance)}</span>
+							</div>
+							{#if pos.score_pct != null}
+								<div class="posicao-bar">
+									<div class="posicao-fill" style="width: {pos.score_pct}%; background: {stanceColor(pos.stance)}"></div>
+								</div>
+							{/if}
+						</div>
+					{/each}
 				</div>
 			</div>
 		{/if}
@@ -721,6 +751,66 @@
 	.match-naovotou {
 		background: #6b72801a;
 		color: var(--text-secondary);
+	}
+
+	.posicionamentos {
+		margin-bottom: 2rem;
+	}
+
+	.posicionamentos h2 {
+		margin-bottom: 1rem;
+	}
+
+	.posicoes-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 0.5rem;
+	}
+
+	@media (max-width: 600px) {
+		.posicoes-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	.posicao-card {
+		background: var(--bg-card);
+		border: 1px solid var(--border);
+		border-radius: 10px;
+		padding: 0.75rem;
+	}
+
+	.posicao-info {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+		gap: 0.5rem;
+	}
+
+	.posicao-titulo {
+		font-size: 0.8rem;
+		font-weight: 600;
+		color: var(--text-primary);
+	}
+
+	.posicao-stance {
+		font-size: 0.7rem;
+		font-weight: 700;
+		white-space: nowrap;
+	}
+
+	.posicao-bar {
+		height: 4px;
+		border-radius: 2px;
+		background: var(--border);
+		margin-top: 0.4rem;
+		overflow: hidden;
+	}
+
+	.posicao-fill {
+		height: 100%;
+		border-radius: 2px;
+		transition: width 0.3s;
 	}
 
 	.loading, .empty {

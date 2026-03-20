@@ -3,11 +3,13 @@
 	import { goto } from '$app/navigation';
 	import { checkAuth } from '$lib/stores/auth';
 	import { migrarRespostasAnonimas, carregarRespostas, respostas } from '$lib/stores/questionario';
+	import { migrarPosicaoRespostasAnonimas } from '$lib/stores/posicoes';
 
 	onMount(async () => {
 		const user = await checkAuth();
 		if (user) {
 			const hadRespostas = await migrarRespostasAnonimas();
+			await migrarPosicaoRespostasAnonimas();
 
 			// Reload responses from backend into store
 			const saved = await carregarRespostas();

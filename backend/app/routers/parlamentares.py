@@ -11,6 +11,7 @@ from app.models.partido import Partido
 from app.models.proposicao import Proposicao
 from app.models.votacao import Votacao, VotoParlamentar
 from app.services.matching import comparar_parlamentar
+from app.services.posicoes import inferir_posicoes_parlamentar
 from app.utils import urls_por_casa
 
 router = APIRouter()
@@ -141,6 +142,11 @@ async def obter_parlamentar(parlamentar_id: int, db: AsyncSession = Depends(get_
         "stats": stats,
         "votos": votos_history,
     }
+
+
+@router.get("/{parlamentar_id}/posicoes")
+async def posicoes_parlamentar(parlamentar_id: int, db: AsyncSession = Depends(get_db)):
+    return await inferir_posicoes_parlamentar(db, parlamentar_id)
 
 
 @router.post("/{parlamentar_id}/comparacao")

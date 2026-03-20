@@ -15,6 +15,7 @@ from app.services.orientacao import (
     alinhamento_por_orientacao,
     calcular_disciplina,
 )
+from app.services.posicoes import inferir_posicoes_partido
 from app.utils import urls_por_casa
 
 router = APIRouter()
@@ -190,6 +191,15 @@ async def obter_partido(
         "stats": stats,
         "votos": list(prop_map.values()),
     }
+
+
+@router.get("/{partido_id}/posicoes")
+async def posicoes_partido(
+    partido_id: int,
+    uf: str | None = None,
+    db: AsyncSession = Depends(get_db),
+):
+    return await inferir_posicoes_partido(db, partido_id, uf=uf)
 
 
 @router.post("/{partido_id}/comparacao")
