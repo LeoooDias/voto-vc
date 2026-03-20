@@ -3,6 +3,7 @@
 	import { authUser, authLoading, checkAuth, logout } from '$lib/stores/auth';
 	import { initTheme } from '$lib/stores/theme';
 	import { respostas, carregarRespostas } from '$lib/stores/questionario';
+	import { respostasPosicoes, carregarRespostasPosicoes } from '$lib/stores/posicoes';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
 	import Toast from '$lib/components/Toast.svelte';
 
@@ -10,8 +11,12 @@
 	let settingsOpen = $state(false);
 	let menuOpen = $state(false);
 	let respostasArr: { voto: string }[] = $state([]);
+	let posRespostasArr: { voto: string }[] = $state([]);
 	respostas.subscribe(r => respostasArr = r);
-	let perfilEnabled = $derived(respostasArr.filter(r => r.voto !== 'pular').length >= 10);
+	respostasPosicoes.subscribe(r => posRespostasArr = r);
+	let directVotes = $derived(respostasArr.filter(r => r.voto !== 'pular').length);
+	let posVotes = $derived(posRespostasArr.filter(r => r.voto !== 'pular').length);
+	let perfilEnabled = $derived(directVotes >= 10 || posVotes >= 10);
 
 	function closeMenu() {
 		menuOpen = false;
@@ -24,6 +29,10 @@
 			const saved = await carregarRespostas();
 			if (saved.length > 0) {
 				respostas.set(saved);
+			}
+			const savedPos = await carregarRespostasPosicoes();
+			if (savedPos.length > 0) {
+				respostasPosicoes.set(savedPos);
 			}
 		}
 	});

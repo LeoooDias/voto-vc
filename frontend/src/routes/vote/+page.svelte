@@ -19,17 +19,73 @@
 	import { get } from 'svelte/store';
 	import { UFS, getTema } from '$lib/constants';
 
+	interface Categoria {
+		id: string;
+		label: string;
+		cor: string;
+		corBg: string;
+		ordens: number[];
+	}
+
+	const CATEGORIAS: Categoria[] = [
+		{
+			id: 'economia',
+			label: 'Economia & Tributação',
+			cor: '#CA8A04',
+			corBg: '#CA8A041a',
+			ordens: [1, 2, 3, 4, 5]
+		},
+		{
+			id: 'seguranca',
+			label: 'Segurança & Direitos Humanos',
+			cor: '#2563EB',
+			corBg: '#2563EB1a',
+			ordens: [6, 7, 11, 12, 13]
+		},
+		{
+			id: 'social',
+			label: 'Educação, Saúde & Meio Ambiente',
+			cor: '#16A34A',
+			corBg: '#16A34A1a',
+			ordens: [9, 10, 17, 18, 19]
+		},
+		{
+			id: 'outros',
+			label: 'Outros temas',
+			cor: '#6B7280',
+			corBg: '#6B72801a',
+			ordens: [8, 14, 15, 16, 20]
+		}
+	];
+
 	let uf = $state(get(selectedUf));
 	let loaded = $state(false);
 	let items: PosicaoItem[] = $state([]);
 	let respostas: RespostaPosicaoItem[] = $state(get(respostasPosicoes));
 	let overrides: RespostaItem[] = $state(get(overridesPosicoes));
 	let expandedId: number | null = $state(null);
+	let openCategoryId: string | null = $state(null);
 
 	let activePos = $derived(items.find((i) => i.id === expandedId));
 	let answeredCount = $derived(respostas.filter((r) => r.voto !== 'pular').length);
 	let canFinish = $derived(answeredCount >= 10);
 	let progressPct = $derived(Math.min((answeredCount / 20) * 100, 100));
+
+	function categorizedItems(cat: Categoria): PosicaoItem[] {
+		return items.filter((i) => cat.ordens.includes(i.ordem));
+	}
+
+	function categoryAnswered(cat: Categoria): number {
+		const catItems = categorizedItems(cat);
+		return catItems.filter((i) =>
+			respostas.some((r) => r.posicao_id === i.id && r.voto !== 'pular')
+		).length;
+	}
+
+	function toggleCategory(catId: string) {
+		openCategoryId = openCategoryId === catId ? null : catId;
+		expandedId = null;
+	}
 
 	function escolherUf(sigla: string) {
 		uf = sigla;
@@ -128,7 +184,6 @@
 		const item: RespostaItem = { proposicao_id: proposicaoId, voto, peso: 1.0 };
 		if (existing >= 0) {
 			const updated = [...overrides];
-			// Toggle off if clicking same voto
 			if (overrides[existing].voto === voto) {
 				updated.splice(existing, 1);
 				overrides = updated;
@@ -174,7 +229,7 @@
 			<div class="progress-fill" style="width: {progressPct}%"></div>
 		</div>
 		<div class="counter-row">
-			<p class="answered">
+			<p class="answered-text">
 				{answeredCount}/20 posições respondidas
 			</p>
 		</div>
@@ -190,63 +245,93 @@
 			</div>
 		{/if}
 
-		<div class="positions-list">
-			{#each items as pos}
-				{@const currentPos = getRespostaPos(pos.id)}
-				{@const isExpanded = expandedId === pos.id}
-				{@const temaInfo = getTema(pos.tema)}
-				<div class="pos-card" class:answered={currentPos != null}>
-					<div class="pos-header">
-						<div class="pos-title-row">
-							<span class="pos-ordem">{pos.ordem}</span>
-							<div class="pos-title-block">
-								<h3 class="pos-titulo">{pos.titulo}</h3>
-								<span class="tema-tag" style="background: {temaInfo.cor}1a; color: {temaInfo.cor}; border-color: {temaInfo.cor}33">{temaInfo.label}</span>
+		<div class="categories-grid">
+			{#each CATEGORIAS as cat}
+				{@const catItems = categorizedItems(cat)}
+				{@const catAnswered = categoryAnswered(cat)}
+				{@const isOpen = openCategoryId === cat.id}
+				{@const isDone = catAnswered === catItems.length}
+				<div class="cat-section" class:open={isOpen}>
+					<button
+						class="cat-card"
+						class:done={isDone}
+						style="border-color: {isOpen ? cat.cor : ''}; background: {isOpen ? cat.corBg : ''}"
+						onclick={() => toggleCategory(cat.id)}
+					>
+						<div class="cat-left">
+							<span class="cat-dot" style="background: {cat.cor}"></span>
+							<div>
+								<span class="cat-label">{cat.label}</span>
+								<span class="cat-count">{catAnswered}/{catItems.length}</span>
 							</div>
 						</div>
-						<p class="pos-descricao">{pos.descricao}</p>
-					</div>
+						<span class="cat-chevron" class:open={isOpen}>&#9662;</span>
+					</button>
 
-					<div class="slider-area">
-						<PositionSlider
-							value={currentPos}
-							onselect={(p) => votarPosicao(pos.id, p)}
-						/>
-					</div>
-
-					{#if pos.proposicoes.length > 0}
-						<button class="drill-toggle" onclick={() => toggleExpand(pos.id)}>
-							<span class="drill-label">{pos.proposicoes.length} proposições</span>
-							<span class="expand-icon" class:open={isExpanded}>&#9662;</span>
-						</button>
-					{/if}
-
-					{#if isExpanded}
-						<div class="drill-down">
-							{#each pos.proposicoes as prop}
-								{@const override = getOverride(prop.proposicao_id)}
-								<div class="drill-item">
-									<div class="drill-info">
-										<span class="drill-tipo">{prop.tipo} {prop.numero}/{prop.ano}</span>
-										<p class="drill-resumo">{prop.resumo ?? 'Sem descrição'}</p>
-										<span class="drill-direcao">
-											Direção na posição: {prop.direcao === 'sim' ? 'A favor' : 'Contra'}
-										</span>
+					{#if isOpen}
+						<div class="cat-positions">
+							{#each catItems as pos}
+								{@const currentPos = getRespostaPos(pos.id)}
+								{@const isExpanded = expandedId === pos.id}
+								{@const temaInfo = getTema(pos.tema)}
+								<div class="pos-card" class:answered={currentPos != null}>
+									<div class="pos-header">
+										<div class="pos-title-row">
+											<span class="pos-check" class:done={currentPos != null} style="border-color: {cat.cor}; background: {currentPos != null ? cat.cor : ''}">
+												{#if currentPos != null}&#10003;{/if}
+											</span>
+											<div class="pos-title-block">
+												<h3 class="pos-titulo">{pos.titulo}</h3>
+												<span class="tema-tag" style="background: {temaInfo.cor}1a; color: {temaInfo.cor}; border-color: {temaInfo.cor}33">{temaInfo.label}</span>
+											</div>
+										</div>
+										<p class="pos-descricao">{pos.descricao}</p>
 									</div>
-									<div class="drill-actions">
-										<button
-											class="drill-btn favor"
-											class:active={override?.voto === 'sim'}
-											onclick={() => setOverride(prop.proposicao_id, 'sim')}
-											title="A favor"
-										>&#10003;</button>
-										<button
-											class="drill-btn contra"
-											class:active={override?.voto === 'nao'}
-											onclick={() => setOverride(prop.proposicao_id, 'nao')}
-											title="Contra"
-										>&#10007;</button>
+
+									<div class="slider-area">
+										<PositionSlider
+											value={currentPos}
+											onselect={(p) => votarPosicao(pos.id, p)}
+										/>
 									</div>
+
+									{#if pos.proposicoes.length > 0}
+										<button class="drill-toggle" onclick={() => toggleExpand(pos.id)}>
+											<span class="drill-label">{pos.proposicoes.length} {pos.proposicoes.length === 1 ? 'proposição' : 'proposições'}</span>
+											<span class="expand-icon" class:open={isExpanded}>&#9662;</span>
+										</button>
+									{/if}
+
+									{#if isExpanded}
+										<div class="drill-down">
+											{#each pos.proposicoes as prop}
+												{@const override = getOverride(prop.proposicao_id)}
+												<div class="drill-item">
+													<div class="drill-info">
+														<span class="drill-tipo">{prop.tipo} {prop.numero}/{prop.ano}</span>
+														<p class="drill-resumo">{prop.resumo ?? 'Sem descrição'}</p>
+														<span class="drill-direcao">
+															Direção na posição: {prop.direcao === 'sim' ? 'A favor' : 'Contra'}
+														</span>
+													</div>
+													<div class="drill-actions">
+														<button
+															class="drill-btn favor"
+															class:active={override?.voto === 'sim'}
+															onclick={() => setOverride(prop.proposicao_id, 'sim')}
+															title="A favor"
+														>&#10003;</button>
+														<button
+															class="drill-btn contra"
+															class:active={override?.voto === 'nao'}
+															onclick={() => setOverride(prop.proposicao_id, 'nao')}
+															title="Contra"
+														>&#10007;</button>
+													</div>
+												</div>
+											{/each}
+										</div>
+									{/if}
 								</div>
 							{/each}
 						</div>
@@ -300,7 +385,7 @@
 		margin: 0.5rem 0 1rem;
 	}
 
-	.answered {
+	.answered-text {
 		color: var(--text-secondary);
 		font-size: 0.875rem;
 		font-weight: 600;
@@ -342,12 +427,77 @@
 		background: #1d4ed8;
 	}
 
-	.positions-list {
+	/* Category cards grid */
+	.categories-grid {
 		display: flex;
 		flex-direction: column;
 		gap: 0.75rem;
 	}
 
+	.cat-card {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		width: 100%;
+		padding: 1rem 1.25rem;
+		background: var(--bg-card);
+		border: 2px solid var(--border);
+		border-radius: 14px;
+		cursor: pointer;
+		transition: border-color 0.2s, background 0.2s;
+		text-align: left;
+		font: inherit;
+	}
+
+	.cat-card:hover {
+		border-color: var(--text-secondary);
+	}
+
+	.cat-left {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+	}
+
+	.cat-dot {
+		width: 14px;
+		height: 14px;
+		border-radius: 50%;
+		flex-shrink: 0;
+	}
+
+	.cat-label {
+		font-weight: 700;
+		font-size: 1rem;
+		color: var(--text-primary);
+		display: block;
+	}
+
+	.cat-count {
+		font-size: 0.8rem;
+		color: var(--text-secondary);
+		font-weight: 500;
+	}
+
+	.cat-chevron {
+		color: var(--text-secondary);
+		font-size: 1rem;
+		transition: transform 0.2s;
+		flex-shrink: 0;
+	}
+
+	.cat-chevron.open {
+		transform: rotate(180deg);
+	}
+
+	.cat-positions {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+		padding: 0.75rem 0 0;
+	}
+
+	/* Position cards */
 	.pos-card {
 		background: var(--bg-card);
 		border: 1px solid var(--border);
@@ -370,22 +520,21 @@
 		gap: 0.75rem;
 	}
 
-	.pos-ordem {
-		background: var(--border);
-		color: var(--text-secondary);
-		font-weight: 700;
-		font-size: 0.8rem;
-		width: 28px;
-		height: 28px;
+	.pos-check {
+		width: 24px;
+		height: 24px;
 		border-radius: 50%;
+		border: 2px solid var(--border);
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		flex-shrink: 0;
+		font-size: 0.7rem;
+		color: white;
+		transition: all 0.2s;
 	}
 
-	.pos-card.answered .pos-ordem {
-		background: #16a34a;
+	.pos-check.done {
 		color: white;
 	}
 
@@ -415,7 +564,7 @@
 		font-size: 0.875rem;
 		line-height: 1.5;
 		margin: 0.5rem 0 0;
-		padding-left: calc(28px + 0.75rem);
+		padding-left: calc(24px + 0.75rem);
 	}
 
 	.slider-area {

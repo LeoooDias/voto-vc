@@ -53,9 +53,21 @@
 	let votosLoaded = $state(false);
 	let expandedVotoId: number | null = $state(null);
 
+	let expandedPosVotes = $derived.by(() => {
+		if (userPosicaoRespostas.length === 0 || cachedPosicaoItems.length === 0) return [];
+		return expandPositions(userPosicaoRespostas, cachedPosicaoItems, []);
+	});
+
+	let allVotes = $derived.by(() => {
+		const direct = userRespostas.filter((r) => r.voto !== 'pular');
+		// Also include expanded posicao votes (only those not already in direct)
+		const directIds = new Set(direct.map((r) => r.proposicao_id));
+		const expanded = expandedPosVotes.filter((r) => !directIds.has(r.proposicao_id));
+		return [...direct, ...expanded];
+	});
+
 	let meusVotos = $derived(
-		userRespostas
-			.filter((r) => r.voto !== 'pular')
+		allVotes
 			.map((r) => ({
 				...r,
 				prop: proposicoes.get(r.proposicao_id)
@@ -92,10 +104,26 @@
 
 	async function loadVotosData() {
 		if (votosLoaded) return;
-		const ids = userRespostas.filter((r) => r.voto !== 'pular').map((r) => r.proposicao_id);
-		if (ids.length === 0) return;
+
+		// Load posicao items if we have posicao respostas but no cached items
+		if (userPosicaoRespostas.length > 0 && cachedPosicaoItems.length === 0) {
+			try {
+				const posItems = await api.get<PosicaoItem[]>('/posicoes/items');
+				cachedPosicaoItems = posItems;
+				posicaoItems.set(posItems);
+			} catch (e) {
+				console.error('Failed to load posicao items:', e);
+			}
+		}
+
+		// Collect all proposition IDs from direct votes + expanded position votes
+		const directIds = userRespostas.filter((r) => r.voto !== 'pular').map((r) => r.proposicao_id);
+		const expandedIds = expandedPosVotes.map((r) => r.proposicao_id);
+		const allIds = [...new Set([...directIds, ...expandedIds])];
+		if (allIds.length === 0) return;
+
 		try {
-			const data = await api.post<ProposicaoInfo[]>('/proposicoes/batch', { ids });
+			const data = await api.post<ProposicaoInfo[]>('/proposicoes/batch', { ids: allIds });
 			const map = new Map<number, ProposicaoInfo>();
 			for (const p of data) map.set(p.proposicao_id, p);
 			proposicoes = map;
@@ -176,7 +204,9 @@
 				return;
 			}
 
-			totalRespostas = userRespostas.filter((r) => r.voto !== 'pular').length;
+			const directCount = userRespostas.filter((r) => r.voto !== 'pular').length;
+		const posCount = userPosicaoRespostas.filter((r) => r.voto !== 'pular').length;
+		totalRespostas = directCount + posCount;
 
 			const user = get(authUser);
 			if (user?.uf) {
@@ -288,7 +318,7 @@
 						<span class="rank">#{i + 1}</span>
 						<div class="info">
 							<div class="nome">{result.sigla}</div>
-							<div class="meta">{result.nome} · {result.concordou}/{result.votos_comparados} posições em comum</div>
+							<div class="meta">{result.nome} · {result.concordou}/{result.votos_comparados} votos em comum</div>
 						</div>
 						{#if scopeLoading}
 							<div class="score"><span class="spinner"></span></div>
