@@ -1,14 +1,11 @@
 <script lang="ts">
 	import { authUser, checkAuth } from '$lib/stores/auth';
 	import { theme, setTheme, type Theme } from '$lib/stores/theme';
-	import { respostas, selectedUf as selectedUfStore } from '$lib/stores/questionario';
+	import { selectedUf as selectedUfStore } from '$lib/stores/questionario';
 	import { UF_SIGLAS } from '$lib/constants';
 	import { get } from 'svelte/store';
 
 	let { open = $bindable(false) } = $props();
-	let confirmingDelete = $state(false);
-	let deleting = $state(false);
-
 	let selectedUf = $state(get(authUser)?.uf ?? '');
 	let currentTheme: Theme = $state(get(theme));
 	let saving = $state(false);
@@ -48,25 +45,7 @@
 		}
 	}
 
-	async function apagarVotos() {
-		deleting = true;
-		try {
-			const res = await fetch('/api/vote/respostas', {
-				method: 'DELETE',
-				credentials: 'include'
-			});
-			if (res.ok) {
-				respostas.set([]);
-				confirmingDelete = false;
-				close();
-			}
-		} finally {
-			deleting = false;
-		}
-	}
-
 	function close() {
-		confirmingDelete = false;
 		open = false;
 	}
 
@@ -131,25 +110,7 @@
 				</div>
 			</div>
 
-			{#if $authUser}
-				<div class="setting last">
-					<span class="setting-label">Meus dados</span>
-					{#if confirmingDelete}
-						<div class="confirm-box">
-							<p class="confirm-text">Todos os seus votos serão apagados permanentemente. Isso não pode ser desfeito.</p>
-							<div class="confirm-actions">
-								<button class="confirm-cancel" onclick={() => confirmingDelete = false}>Cancelar</button>
-								<button class="confirm-delete" onclick={apagarVotos} disabled={deleting}>
-									{deleting ? 'Apagando...' : 'Apagar tudo'}
-								</button>
-							</div>
-						</div>
-					{:else}
-						<button class="danger-btn" onclick={() => confirmingDelete = true}>Apagar meus votos</button>
-					{/if}
-				</div>
-			{/if}
-		</div>
+			</div>
 	</div>
 {/if}
 
@@ -263,70 +224,4 @@
 		border-color: #2563eb;
 	}
 
-	.danger-btn {
-		background: none;
-		border: 1px solid #dc26264d;
-		border-radius: 8px;
-		padding: 0.5rem 1rem;
-		color: #dc2626;
-		font-weight: 500;
-		font-size: 0.875rem;
-		cursor: pointer;
-		transition: background 0.15s;
-	}
-
-	.danger-btn:hover {
-		background: #dc26261a;
-	}
-
-	.confirm-box {
-		background: #dc26261a;
-		border: 1px solid #dc26264d;
-		border-radius: 10px;
-		padding: 1rem;
-	}
-
-	.confirm-text {
-		margin: 0 0 0.75rem;
-		font-size: 0.875rem;
-		color: #dc2626;
-		line-height: 1.4;
-	}
-
-	.confirm-actions {
-		display: flex;
-		gap: 0.5rem;
-		justify-content: flex-end;
-	}
-
-	.confirm-cancel {
-		background: none;
-		border: 1px solid var(--border);
-		border-radius: 8px;
-		padding: 0.375rem 0.75rem;
-		color: var(--text-secondary);
-		font-weight: 500;
-		font-size: 0.813rem;
-		cursor: pointer;
-	}
-
-	.confirm-delete {
-		background: #dc2626;
-		border: none;
-		border-radius: 8px;
-		padding: 0.375rem 0.75rem;
-		color: white;
-		font-weight: 600;
-		font-size: 0.813rem;
-		cursor: pointer;
-	}
-
-	.confirm-delete:disabled {
-		opacity: 0.6;
-		cursor: default;
-	}
-
-	.confirm-delete:not(:disabled):hover {
-		background: #b91c1c;
-	}
 </style>

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { api } from '$lib/api';
-	import { selectedUf } from '$lib/stores/questionario';
+	import { selectedUf, respostas as respostasAvancado } from '$lib/stores/questionario';
 	import { authUser, authLoading } from '$lib/stores/auth';
 	import {
 		posicaoItems,
@@ -200,6 +200,30 @@
 	function verResultado() {
 		goto('/perfil');
 	}
+
+	let confirmingReset = $state(false);
+	let resetting = $state(false);
+
+	async function resetarVotos() {
+		resetting = true;
+		try {
+			const user = get(authUser);
+			if (user) {
+				await Promise.all([
+					fetch('/api/posicoes/respostas', { method: 'DELETE', credentials: 'include' }),
+					fetch('/api/vote/respostas', { method: 'DELETE', credentials: 'include' })
+				]);
+			}
+			respostas = [];
+			overrides = [];
+			respostasPosicoes.set([]);
+			overridesPosicoes.set([]);
+			respostasAvancado.set([]);
+			confirmingReset = false;
+		} finally {
+			resetting = false;
+		}
+	}
 </script>
 
 <svelte:head>
@@ -338,6 +362,22 @@
 		<div class="mode-link">
 			<a href="/vote/avancado">Modo avançado (proposições individuais)</a>
 		</div>
+
+		{#if answeredCount > 0}
+			<div class="mode-link">
+				{#if confirmingReset}
+					<span class="reset-confirm">
+						Apagar todos os votos?
+						<button class="reset-confirm-btn yes" onclick={resetarVotos} disabled={resetting}>
+							{resetting ? 'Apagando...' : 'Sim'}
+						</button>
+						<button class="reset-confirm-btn no" onclick={() => confirmingReset = false}>Não</button>
+					</span>
+				{:else}
+					<button class="link-btn" onclick={() => confirmingReset = true}>Recomeçar (apagar votos)</button>
+				{/if}
+			</div>
+		{/if}
 	</div>
 
 	{#if activePos}
@@ -663,7 +703,10 @@
 
 	.mode-link {
 		text-align: center;
-		margin-top: 1.5rem;
+		margin-top: 1rem;
+	}
+
+	.mode-link:last-child {
 		padding-bottom: 2rem;
 	}
 
@@ -673,9 +716,59 @@
 		font-size: 0.85rem;
 	}
 
-	.mode-link a:hover {
+	.mode-link a:hover,
+	.mode-link .link-btn:hover {
 		color: var(--link);
 		text-decoration: underline;
+	}
+
+	.mode-link .link-btn {
+		background: none;
+		border: none;
+		padding: 0;
+		color: var(--text-secondary);
+		text-decoration: none;
+		font-size: 0.85rem;
+		cursor: pointer;
+		font-family: inherit;
+	}
+
+	.reset-confirm {
+		color: var(--text-secondary);
+		font-size: 0.85rem;
+	}
+
+	.reset-confirm-btn {
+		background: none;
+		border: 1px solid var(--border);
+		border-radius: 6px;
+		padding: 0.2rem 0.6rem;
+		font-size: 0.8rem;
+		cursor: pointer;
+		margin-left: 0.4rem;
+		font-family: inherit;
+	}
+
+	.reset-confirm-btn.yes {
+		color: #dc2626;
+		border-color: #dc26264d;
+	}
+
+	.reset-confirm-btn.yes:hover {
+		background: #dc26261a;
+	}
+
+	.reset-confirm-btn.yes:disabled {
+		opacity: 0.6;
+		cursor: default;
+	}
+
+	.reset-confirm-btn.no {
+		color: var(--text-secondary);
+	}
+
+	.reset-confirm-btn.no:hover {
+		border-color: var(--text-secondary);
 	}
 
 	.loading,
