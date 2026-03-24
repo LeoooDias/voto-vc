@@ -31,6 +31,8 @@ POSICOES = [
             (1195, "sim"),  # Eletrobras
             (1244, "sim"),  # Correios
             (1368, "sim"),  # BNB
+            (1653, "sim"),  # Novo Marco do Saneamento (abre para privatização) [Senado]
+            (1508, "sim"),  # Novo Modelo do Mercado de Energia Elétrica [Senado]
         ],
     },
     {
@@ -95,6 +97,7 @@ POSICOES = [
             (1473, "sim"),  # Antifacções
             (1302, "sim"),  # Penas furto
             (1224, "sim"),  # Psicológico
+            (1862, "sim"),  # Endurecimento da Execução Penal [Senado]
         ],
     },
     {
@@ -106,6 +109,7 @@ POSICOES = [
         "proposicoes": [
             (584, "sim"),  # Armas
             (1285, "sim"),  # Agentes
+            (1632, "sim"),  # Anulação do Decreto das Armas de Bolsonaro [Senado]
         ],
     },
     {
@@ -132,6 +136,9 @@ POSICOES = [
             (1192, "nao"),  # Licenciamento (flexibiliza, então contra = proteção)
             (1477, "nao"),  # Simplificado (flexibiliza)
             (1416, "sim"),  # Pantanal
+            (1655, "sim"),  # Nova Lei de Segurança de Barragens [Senado]
+            (1611, "nao"),  # Redução de Áreas Protegidas no Pará (reduz proteção) [Senado]
+            (1871, "nao"),  # Marco Temporal Terras Indígenas (restringe proteção) [Senado]
         ],
     },
     {
@@ -147,6 +154,9 @@ POSICOES = [
             (1449, "sim"),  # Sustentável
             (1456, "sim"),  # Educação Clima
             (175, "sim"),  # Animais
+            (1837, "sim"),  # Marco da Energia Eólica no Mar [Senado]
+            (1892, "sim"),  # Mercado de Carbono Brasileiro [Senado]
+            (1882, "sim"),  # Marco Legal do Hidrogênio Verde [Senado]
         ],
     },
     {
@@ -157,6 +167,9 @@ POSICOES = [
         "ordem": 11,
         "proposicoes": [
             (1268, "sim"),  # Cotas
+            (1852, "sim"),  # Programa Emprega + Mulheres e Jovens [Senado]
+            (1884, "sim"),  # PEC do Financiamento Racial nas Eleições [Senado]
+            (1798, "sim"),  # Cota de Recursos para Candidaturas Negras e Femininas [Senado]
         ],
     },
     {
@@ -171,6 +184,8 @@ POSICOES = [
             (1434, "sim"),  # 1ª Infância
             (1298, "sim"),  # Autismo
             (1463, "nao"),  # CONANDA (enfraquece, então contra = proteção)
+            (1897, "sim"),  # Lei do Celular nas Escolas [Senado]
+            (1819, "sim"),  # Saúde Mental nas Escolas [Senado]
         ],
     },
     {
@@ -182,6 +197,8 @@ POSICOES = [
         "proposicoes": [
             (1297, "sim"),  # Estupro Virtual
             (1468, "sim"),  # Falso Advogado
+            (1720, "sim"),  # Lei das Fake News [Senado]
+            (1765, "sim"),  # Penas Mais Duras para Crimes Digitais [Senado]
         ],
     },
     {
@@ -197,6 +214,9 @@ POSICOES = [
             (1419, "sim"),  # Alimentação
             (1471, "sim"),  # Mototáxi
             (1240, "sim"),  # Gestantes
+            (1851, "sim"),  # Novas Regras do Vale-Alimentação [Senado]
+            (1175, "sim"),  # Programa Emergencial de Suporte a Empregos [Senado]
+            (1852, "sim"),  # Programa Emprega + Mulheres e Jovens [Senado]
         ],
     },
     {
@@ -212,6 +232,7 @@ POSICOES = [
             (1443, "sim"),  # Carreiras Judiciário 2
             (1360, "sim"),  # Servidores
             (1417, "sim"),  # TCU
+            (1626, "sim"),  # Salários dos Servidores dos Ex-Territórios [Senado]
         ],
     },
     {
@@ -224,6 +245,9 @@ POSICOES = [
             (919, "sim"),  # Aposentadoria
             (898, "sim"),  # Contribuição
             (503, "sim"),  # Benefícios
+            (1119, "sim"),  # Reforma da Previdência 2019 [Senado: 891 votos]
+            (1506, "sim"),  # Reforma da Previdência 2003 [Senado: 729 votos]
+            (1503, "sim"),  # PEC Paralela da Previdência 2003 [Senado: 972 votos]
         ],
     },
     {
@@ -238,6 +262,8 @@ POSICOES = [
             (1426, "sim"),  # Especialistas
             (1218, "sim"),  # Medicamentos
             (1204, "sim"),  # Indígena
+            (1420, "sim"),  # Educação e Saúde Fora do Teto de Gastos [Senado]
+            (1500, "sim"),  # Regulação do Preço de Medicamentos [Senado]
         ],
     },
     {
@@ -248,6 +274,7 @@ POSICOES = [
         "ordem": 18,
         "proposicoes": [
             (1487, "sim"),  # Remédio Barato
+            (1226, "sim"),  # Quebra de Patentes em Emergências de Saúde [Senado]
         ],
     },
     {
@@ -263,6 +290,9 @@ POSICOES = [
             (1300, "sim"),  # Semana Cultural
             (862, "sim"),  # Política escolar
             (623, "sim"),  # Merenda
+            (1541, "sim"),  # Criação do FUNDEB [Senado: 243 votos]
+            (1050, "sim"),  # Reforma do FIES [Senado]
+            (1784, "sim"),  # Renovação das Cotas em Universidades [Senado]
         ],
     },
     {
@@ -278,6 +308,9 @@ POSICOES = [
             (649, "sim"),  # Vale-Cultura
             (1354, "sim"),  # Fomento
             (1421, "sim"),  # Caixa Cultural
+            (1814, "sim"),  # Lei Aldir Blanc de Apoio Emergencial à Cultura [Senado]
+            (1823, "sim"),  # Política Nacional Aldir Blanc [Senado]
+            (1510, "sim"),  # Plano Nacional de Cultura [Senado]
         ],
     },
 ]
