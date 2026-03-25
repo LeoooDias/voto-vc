@@ -307,6 +307,12 @@
 										/>
 									</div>
 
+									<ChatWidget
+										posicaoId={pos.id}
+										proposicaoTitulo={pos.titulo}
+										inline={true}
+									/>
+
 									{#if pos.proposicoes.length > 0}
 										<button class="drill-toggle" onclick={() => toggleExpand(pos.id)}>
 											<span class="drill-label">{pos.proposicoes.length} {pos.proposicoes.length === 1 ? 'proposição' : 'proposições'}</span>
@@ -349,11 +355,6 @@
 											{/each}
 										</div>
 									{/if}
-
-									<ChatWidget
-										posicaoId={pos.id}
-										proposicaoTitulo={pos.titulo}
-									/>
 								</div>
 							{/each}
 						</div>
