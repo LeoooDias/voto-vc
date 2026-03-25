@@ -4,9 +4,10 @@
 	import { get } from 'svelte/store';
 	import { api } from '$lib/api';
 	import { getTema, fmtPct, POSICAO_CATEGORIAS } from '$lib/constants';
-	import { stanceLabel, stanceColor } from '$lib/utils/position';
-	import type { PosicaoInferida } from '$lib/types/posicao';
+	import { stanceLabel, stanceColor, userResponseToStance } from '$lib/utils/position';
+	import type { PosicaoInferida, RespostaPosicaoItem } from '$lib/types/posicao';
 	import { respostas, carregarRespostas } from '$lib/stores/questionario';
+	import { respostasPosicoes, carregarRespostasPosicoes } from '$lib/stores/posicoes';
 	import { authUser, authLoading } from '$lib/stores/auth';
 
 	interface ParlamentarDetail {
@@ -66,6 +67,13 @@
 
 	let comparacao = $state<{ concordou: number; discordou: number; total: number; score: number | null }>({ concordou: 0, discordou: 0, total: 0, score: null });
 	let posicoes = $state<PosicaoInferida[]>([]);
+	let userPosRespostas: Map<number, RespostaPosicaoItem> = $state(new Map());
+
+	function getUserStance(posicaoId: number) {
+		const r = userPosRespostas.get(posicaoId);
+		if (!r || r.voto === 'pular') return null;
+		return userResponseToStance(r.voto, r.peso);
+	}
 
 	function buildUserVotoMap(lista: Array<{ proposicao_id: number; voto: string; peso: number }>) {
 		const map = new Map<number, 'sim' | 'nao'>();
@@ -131,6 +139,14 @@
 		} catch (e) {
 			console.error('Failed to load posições:', e);
 		}
+
+		// Load user position responses
+		let posResps = get(respostasPosicoes);
+		if (posResps.length === 0 && get(authUser)) {
+			posResps = await carregarRespostasPosicoes();
+			if (posResps.length > 0) respostasPosicoes.set(posResps);
+		}
+		userPosRespostas = new Map(posResps.map((r) => [r.posicao_id, r]));
 	});
 
 	function toggleExpand(idx: number) {
@@ -257,6 +273,7 @@
 							</h3>
 							<div class="posicoes-grid">
 								{#each catPosicoes as pos}
+									{@const userStance = getUserStance(pos.posicao_id)}
 									<div class="posicao-card">
 										<div class="posicao-info">
 											<span class="posicao-titulo">{pos.titulo}</span>
@@ -265,6 +282,15 @@
 										{#if pos.score_pct != null}
 											<div class="posicao-bar">
 												<div class="posicao-fill" style="width: {pos.score_pct}%; background: {stanceColor(pos.stance)}"></div>
+											</div>
+										{/if}
+										{#if userStance}
+											<div class="posicao-user">
+												<span class="posicao-user-label">Você</span>
+												<span class="posicao-user-stance" style="color: {stanceColor(userStance.stance)}">{stanceLabel(userStance.stance)}</span>
+											</div>
+											<div class="posicao-bar user">
+												<div class="posicao-fill" style="width: {userStance.score_pct}%; background: {stanceColor(userStance.stance)}"></div>
 											</div>
 										{/if}
 									</div>
@@ -830,12 +856,40 @@
 		white-space: nowrap;
 	}
 
+	.posicao-user {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+		gap: 0.5rem;
+		margin-top: 0.35rem;
+	}
+
+	.posicao-user-label {
+		font-size: 0.65rem;
+		font-weight: 600;
+		color: var(--text-secondary);
+		text-transform: uppercase;
+		letter-spacing: 0.03em;
+	}
+
+	.posicao-user-stance {
+		font-size: 0.65rem;
+		font-weight: 700;
+		white-space: nowrap;
+	}
+
 	.posicao-bar {
 		height: 4px;
 		border-radius: 2px;
 		background: var(--border);
 		margin-top: 0.4rem;
 		overflow: hidden;
+	}
+
+	.posicao-bar.user {
+		margin-top: 0.2rem;
+		height: 3px;
+		opacity: 0.6;
 	}
 
 	.posicao-fill {

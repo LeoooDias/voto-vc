@@ -102,6 +102,34 @@ export function expandPositions(
 	return result;
 }
 
+/**
+ * Converts a user's position response (voto + peso) into stance + score_pct,
+ * using the same scale as parlamentar/partido inference.
+ */
+export function userResponseToStance(voto: string, peso: number): { stance: string; score_pct: number } {
+	if (voto === 'pular') return { stance: 'sem_dados', score_pct: 0 };
+
+	// Map voto+peso to a 0-100 score (favor %)
+	let score_pct: number;
+	if (voto === 'sim') {
+		if (peso === 0) score_pct = 50;       // Neutro
+		else if (peso <= 0.5) score_pct = 75;  // A favor leve
+		else score_pct = 100;                   // A favor
+	} else {
+		if (peso <= 0.5) score_pct = 25;       // Contra leve
+		else score_pct = 0;                     // Contra
+	}
+
+	let stance: string;
+	if (score_pct > 75) stance = 'fortemente_favor';
+	else if (score_pct > 50) stance = 'levemente_favor';
+	else if (score_pct === 50) stance = 'misto';
+	else if (score_pct > 25) stance = 'levemente_contra';
+	else stance = 'fortemente_contra';
+
+	return { stance, score_pct };
+}
+
 export function stanceLabel(stance: string): string {
 	const labels: Record<string, string> = {
 		fortemente_favor: 'Fortemente a favor',
