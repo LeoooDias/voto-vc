@@ -63,7 +63,6 @@
 						<span class="nav-disabled">Parlamentares</span>
 						<span class="nav-disabled">Partidos</span>
 					{/if}
-					<a href="/proposicoes" onclick={closeMenu}>Proposições</a>
 					<span class="nav-sep">|</span>
 					<a href="/sobre" onclick={closeMenu}>Sobre</a>
 					{#if perfilEnabled}
