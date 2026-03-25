@@ -55,6 +55,40 @@ export function getTema(slug: string | null | undefined) {
 	return TEMAS[slug] ?? TEMAS.geral;
 }
 
+export interface PosicaoCategoria {
+	id: string;
+	label: string;
+	cor: string;
+	ordens: number[];
+}
+
+export const POSICAO_CATEGORIAS: PosicaoCategoria[] = [
+	{
+		id: 'economia',
+		label: 'Economia & Tributação',
+		cor: '#CA8A04',
+		ordens: [1, 2, 3, 4, 5]
+	},
+	{
+		id: 'seguranca',
+		label: 'Segurança & Direitos Humanos',
+		cor: '#2563EB',
+		ordens: [6, 7, 11, 12, 13]
+	},
+	{
+		id: 'social',
+		label: 'Educação, Saúde & Meio Ambiente',
+		cor: '#16A34A',
+		ordens: [9, 10, 17, 18, 19]
+	},
+	{
+		id: 'outros',
+		label: 'Outros temas',
+		cor: '#6B7280',
+		ordens: [8, 14, 15, 16, 20]
+	}
+];
+
 export const TIER1 = 10;
 export const TIER2 = 25;
 export const TIER3 = 50;

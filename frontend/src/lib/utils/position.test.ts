@@ -51,8 +51,8 @@ describe('expandPositions', () => {
 			tema: 'economia',
 			ordem: 1,
 			proposicoes: [
-				{ proposicao_id: 10, tipo: 'PL', numero: 1, ano: 2024, resumo: null, direcao: 'sim' as const },
-				{ proposicao_id: 20, tipo: 'PL', numero: 2, ano: 2024, resumo: null, direcao: 'nao' as const }
+				{ proposicao_id: 10, tipo: 'PL', numero: 1, ano: 2024, resumo: null, direcao: 'sim' as const, casa_origem: 'camara' as const },
+				{ proposicao_id: 20, tipo: 'PL', numero: 2, ano: 2024, resumo: null, direcao: 'nao' as const, casa_origem: 'senado' as const }
 			]
 		}
 	];

@@ -3,7 +3,7 @@
 	import { page } from '$app/state';
 	import { get } from 'svelte/store';
 	import { api } from '$lib/api';
-	import { getTema, fmtPct } from '$lib/constants';
+	import { getTema, fmtPct, POSICAO_CATEGORIAS } from '$lib/constants';
 	import { stanceLabel, stanceColor } from '$lib/utils/position';
 	import type { PosicaoInferida } from '$lib/types/posicao';
 	import { respostas, carregarRespostas } from '$lib/stores/questionario';
@@ -247,21 +247,32 @@
 		{#if posicoes.length > 0}
 			<div class="posicionamentos">
 				<h2>Posicionamentos</h2>
-				<div class="posicoes-grid">
-					{#each posicoes.filter(p => p.stance !== 'sem_dados') as pos}
-						<div class="posicao-card">
-							<div class="posicao-info">
-								<span class="posicao-titulo">{pos.titulo}</span>
-								<span class="posicao-stance" style="color: {stanceColor(pos.stance)}">{stanceLabel(pos.stance)}</span>
+				{#each POSICAO_CATEGORIAS as cat}
+					{@const catPosicoes = posicoes.filter(p => p.stance !== 'sem_dados' && cat.ordens.includes(p.ordem))}
+					{#if catPosicoes.length > 0}
+						<div class="posicao-cat">
+							<h3 class="posicao-cat-label" style="color: {cat.cor}">
+								<span class="posicao-cat-dot" style="background: {cat.cor}"></span>
+								{cat.label}
+							</h3>
+							<div class="posicoes-grid">
+								{#each catPosicoes as pos}
+									<div class="posicao-card">
+										<div class="posicao-info">
+											<span class="posicao-titulo">{pos.titulo}</span>
+											<span class="posicao-stance" style="color: {stanceColor(pos.stance)}">{stanceLabel(pos.stance)}</span>
+										</div>
+										{#if pos.score_pct != null}
+											<div class="posicao-bar">
+												<div class="posicao-fill" style="width: {pos.score_pct}%; background: {stanceColor(pos.stance)}"></div>
+											</div>
+										{/if}
+									</div>
+								{/each}
 							</div>
-							{#if pos.score_pct != null}
-								<div class="posicao-bar">
-									<div class="posicao-fill" style="width: {pos.score_pct}%; background: {stanceColor(pos.stance)}"></div>
-								</div>
-							{/if}
 						</div>
-					{/each}
-				</div>
+					{/if}
+				{/each}
 			</div>
 		{/if}
 
@@ -759,6 +770,26 @@
 
 	.posicionamentos h2 {
 		margin-bottom: 1rem;
+	}
+
+	.posicao-cat {
+		margin-bottom: 1rem;
+	}
+
+	.posicao-cat-label {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		font-size: 0.85rem;
+		font-weight: 700;
+		margin: 0 0 0.5rem;
+	}
+
+	.posicao-cat-dot {
+		width: 10px;
+		height: 10px;
+		border-radius: 50%;
+		flex-shrink: 0;
 	}
 
 	.posicoes-grid {

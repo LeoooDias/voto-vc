@@ -5,6 +5,7 @@ export interface PosicaoProposicaoItem {
 	ano: number;
 	resumo: string | null;
 	direcao: 'sim' | 'nao';
+	casa_origem: 'camara' | 'senado';
 }
 
 export interface PosicaoItem {
@@ -28,6 +29,7 @@ export interface PosicaoInferida {
 	slug: string;
 	titulo: string;
 	tema: string;
+	ordem: number;
 	stance: string;
 	score_pct: number | null;
 	n_voted: number;

@@ -47,6 +47,7 @@ async def listar_posicoes(db: AsyncSession) -> list[dict]:
                         "ano": prop.ano,
                         "resumo": prop.resumo_cidadao or prop.ementa,
                         "direcao": pp.direcao.value,
+                        "casa_origem": prop.casa_origem.value.lower(),
                     }
                 )
         items.append(
@@ -231,6 +232,7 @@ async def inferir_posicoes_parlamentar(db: AsyncSession, parlamentar_id: int) ->
                 "slug": pos.slug,
                 "titulo": pos.titulo,
                 "tema": pos.tema,
+                "ordem": pos.ordem,
                 "stance": stance,
                 "score_pct": score_pct,
                 "n_voted": n_voted,
@@ -266,6 +268,7 @@ async def inferir_posicoes_partido(
                 "slug": pos.slug,
                 "titulo": pos.titulo,
                 "tema": pos.tema,
+                "ordem": pos.ordem,
                 "stance": "sem_dados",
                 "score_pct": None,
                 "n_voted": 0,
@@ -360,6 +363,7 @@ async def inferir_posicoes_partido(
                 "slug": pos.slug,
                 "titulo": pos.titulo,
                 "tema": pos.tema,
+                "ordem": pos.ordem,
                 "stance": stance,
                 "score_pct": score_pct,
                 "n_voted": n_voted,

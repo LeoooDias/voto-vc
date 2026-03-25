@@ -6,6 +6,7 @@
 		proposicaoId?: number;
 		posicaoId?: number;
 		proposicaoTitulo: string;
+		inline?: boolean;
 	}
 
 	interface ChatMessage {
@@ -13,7 +14,7 @@
 		content: string;
 	}
 
-	let { proposicaoId, posicaoId, proposicaoTitulo }: Props = $props();
+	let { proposicaoId, posicaoId, proposicaoTitulo, inline = false }: Props = $props();
 
 	const chatEndpoint = $derived(
 		posicaoId ? `/api/chat/posicao/${posicaoId}` : `/api/chat/proposicao/${proposicaoId}`
@@ -208,15 +209,21 @@
 </script>
 
 {#if $authUser}
-	<!-- Floating button -->
-	<button class="chat-fab" class:open={isOpen} onclick={toggle}>
-		{#if isOpen}
-			<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-		{:else}
-			<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-			<span class="fab-label">{posicaoId ? 'Pergunte sobre esta posição' : 'Pergunte sobre esta proposição'}</span>
-		{/if}
-	</button>
+	{#if inline}
+		<button class="chat-inline-btn" onclick={toggle}>
+			<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+			<span>{posicaoId ? 'Pergunte sobre esta posição' : 'Pergunte sobre esta proposição'}</span>
+		</button>
+	{:else}
+		<button class="chat-fab" class:open={isOpen} onclick={toggle}>
+			{#if isOpen}
+				<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+			{:else}
+				<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+				<span class="fab-label">{posicaoId ? 'Pergunte sobre esta posição' : 'Pergunte sobre esta proposição'}</span>
+			{/if}
+		</button>
+	{/if}
 
 	<!-- Chat modal -->
 	{#if isOpen}
@@ -295,6 +302,28 @@
 {/if}
 
 <style>
+	/* Inline button (inside card) */
+	.chat-inline-btn {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		background: none;
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		padding: 0.4rem 0.75rem;
+		color: #2563eb;
+		font-size: 0.8rem;
+		font-weight: 600;
+		cursor: pointer;
+		margin-top: 0.75rem;
+		transition: border-color 0.2s, background 0.2s;
+	}
+
+	.chat-inline-btn:hover {
+		border-color: #2563eb;
+		background: #2563eb0d;
+	}
+
 	/* Floating Action Button */
 	.chat-fab {
 		position: fixed;

@@ -66,7 +66,6 @@
 	let expandedId: number | null = $state(null);
 	let openCategoryId: string | null = $state(null);
 
-	let activePos = $derived(items.find((i) => i.id === expandedId));
 	let answeredCount = $derived(respostas.filter((r) => r.voto !== 'pular').length);
 	let canFinish = $derived(answeredCount >= 10);
 	let progressPct = $derived(Math.min((answeredCount / 20) * 100, 100));
@@ -321,7 +320,12 @@
 												{@const override = getOverride(prop.proposicao_id)}
 												<div class="drill-item">
 													<div class="drill-info">
+														<div class="drill-title-row">
 														<span class="drill-tipo">{prop.tipo} {prop.numero}/{prop.ano}</span>
+														<span class="casa-pill" class:camara={prop.casa_origem === 'camara'} class:senado={prop.casa_origem === 'senado'}>
+															{prop.casa_origem === 'camara' ? 'Câmara' : 'Senado'}
+														</span>
+													</div>
 														<p class="drill-resumo">{prop.resumo ?? 'Sem descrição'}</p>
 														<span class="drill-direcao">
 															Direção na posição: {prop.direcao === 'sim' ? 'A favor' : 'Contra'}
@@ -345,6 +349,11 @@
 											{/each}
 										</div>
 									{/if}
+
+									<ChatWidget
+										posicaoId={pos.id}
+										proposicaoTitulo={pos.titulo}
+									/>
 								</div>
 							{/each}
 						</div>
@@ -380,12 +389,6 @@
 		{/if}
 	</div>
 
-	{#if activePos}
-		<ChatWidget
-			posicaoId={activePos.id}
-			proposicaoTitulo={activePos.titulo}
-		/>
-	{/if}
 {/if}
 
 <style>
@@ -629,6 +632,45 @@
 
 	.drill-info {
 		flex: 1;
+	}
+
+	.drill-title-row {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		flex-wrap: wrap;
+	}
+
+	.casa-pill {
+		font-size: 0.65rem;
+		font-weight: 600;
+		padding: 0.1rem 0.4rem;
+		border-radius: 4px;
+		border: 1px solid;
+	}
+
+	.casa-pill.camara {
+		background: #dbeafe;
+		color: #1d4ed8;
+		border-color: #93c5fd;
+	}
+
+	.casa-pill.senado {
+		background: #fce7f3;
+		color: #be185d;
+		border-color: #f9a8d4;
+	}
+
+	:global(.dark) .casa-pill.camara {
+		background: #1e3a5f;
+		color: #93c5fd;
+		border-color: #2563eb;
+	}
+
+	:global(.dark) .casa-pill.senado {
+		background: #4a1942;
+		color: #f9a8d4;
+		border-color: #be185d;
 	}
 
 	.drill-tipo {
