@@ -4,10 +4,10 @@
 	import { api } from '$lib/api';
 	import { authUser, authLoading } from '$lib/stores/auth';
 	import { selectedUf, respostas, carregarRespostas } from '$lib/stores/questionario';
-	import { respostasPosicoes, carregarRespostasPosicoes } from '$lib/stores/posicoes';
+	import { respostasPosicoes, carregarRespostasPosicoes, posicaoItems, overridesPosicoes } from '$lib/stores/posicoes';
 	import { get } from 'svelte/store';
 	import { UF_SIGLAS, getTema, fmtPct, POSICAO_CATEGORIAS } from '$lib/constants';
-	import { stanceLabel, stanceColor, userResponseToStance } from '$lib/utils/position';
+	import { stanceLabel, stanceColor, userResponseToStance, expandPositions } from '$lib/utils/position';
 	import type { PosicaoInferida, RespostaPosicaoItem } from '$lib/types/posicao';
 
 	interface VotoBreakdown {
@@ -161,16 +161,50 @@
 		loadPartido();
 	}
 
-	onMount(() => {
-		// Load user votes
-		const storeRespostas = get(respostas);
-		if (storeRespostas.length > 0) {
-			buildUserVotoMap(storeRespostas);
-			userRespostas = storeRespostas;
+	async function loadAllUserRespostas(): Promise<Array<{ proposicao_id: number; voto: string; peso: number }>> {
+		let directResps = get(respostas);
+		if (directResps.length === 0 && get(authUser)) {
+			const r = await carregarRespostas();
+			if (r.length > 0) {
+				respostas.set(r);
+				directResps = r;
+			}
 		}
 
-		// Esperar auth resolver para ter UF do perfil
-		function init() {
+		let posResps = get(respostasPosicoes);
+		if (posResps.length === 0 && get(authUser)) {
+			posResps = await carregarRespostasPosicoes();
+			if (posResps.length > 0) respostasPosicoes.set(posResps);
+		}
+		userPosRespostas = new Map(posResps.map((r) => [r.posicao_id, r]));
+
+		if (posResps.length > 0) {
+			let items = get(posicaoItems);
+			if (items.length === 0) {
+				try {
+					items = await api.get('/posicoes/items');
+					posicaoItems.set(items);
+				} catch { /* ignore */ }
+			}
+			if (items.length > 0) {
+				const overrides = get(overridesPosicoes);
+				const expanded = expandPositions(posResps, items, overrides);
+				const seen = new Set(directResps.map((r) => r.proposicao_id));
+				const merged = [...directResps];
+				for (const e of expanded) {
+					if (!seen.has(e.proposicao_id)) {
+						seen.add(e.proposicao_id);
+						merged.push(e);
+					}
+				}
+				return merged;
+			}
+		}
+		return directResps;
+	}
+
+	onMount(() => {
+		async function init() {
 			const user = get(authUser);
 			if (user?.uf) {
 				ufSelecionada = user.uf;
@@ -178,29 +212,12 @@
 				const storeUf = get(selectedUf);
 				if (storeUf) ufSelecionada = storeUf;
 			}
-			// Load respostas from DB if store was empty and user logged in
-			if (storeRespostas.length === 0 && user) {
-				carregarRespostas().then((r) => {
-					if (r.length > 0) {
-						respostas.set(r);
-						buildUserVotoMap(r);
-						userRespostas = r;
-					}
-				});
-			}
 			if (ufSelecionada) escopo = 'estado';
 
-			// Load user position responses
-			let posResps = get(respostasPosicoes);
-			if (posResps.length === 0 && user) {
-				carregarRespostasPosicoes().then((r) => {
-					if (r.length > 0) {
-						respostasPosicoes.set(r);
-						userPosRespostas = new Map(r.map((x) => [x.posicao_id, x]));
-					}
-				});
-			} else {
-				userPosRespostas = new Map(posResps.map((x) => [x.posicao_id, x]));
+			const allRespostas = await loadAllUserRespostas();
+			if (allRespostas.length > 0) {
+				buildUserVotoMap(allRespostas);
+				userRespostas = allRespostas;
 			}
 
 			loadPartido();

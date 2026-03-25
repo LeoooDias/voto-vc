@@ -4,10 +4,10 @@
 	import { get } from 'svelte/store';
 	import { api } from '$lib/api';
 	import { getTema, fmtPct, POSICAO_CATEGORIAS } from '$lib/constants';
-	import { stanceLabel, stanceColor, userResponseToStance } from '$lib/utils/position';
+	import { stanceLabel, stanceColor, userResponseToStance, expandPositions } from '$lib/utils/position';
 	import type { PosicaoInferida, RespostaPosicaoItem } from '$lib/types/posicao';
 	import { respostas, carregarRespostas } from '$lib/stores/questionario';
-	import { respostasPosicoes, carregarRespostasPosicoes } from '$lib/stores/posicoes';
+	import { respostasPosicoes, carregarRespostasPosicoes, posicaoItems, overridesPosicoes } from '$lib/stores/posicoes';
 	import { authUser, authLoading } from '$lib/stores/auth';
 
 	interface ParlamentarDetail {
@@ -94,59 +94,86 @@
 		}
 	}
 
-	onMount(async () => {
-		// Load user votes
-		let userRespostas = get(respostas);
-		if (userRespostas.length === 0) {
-			// Try loading from DB for logged-in users
-			async function tryLoadRespostas() {
-				const user = get(authUser);
-				if (user) {
-					const r = await carregarRespostas();
-					if (r.length > 0) {
-						respostas.set(r);
-						userRespostas = r;
-						buildUserVotoMap(r);
-						loadComparacao(r);
-					}
-				}
+	async function loadAllUserRespostas(): Promise<Array<{ proposicao_id: number; voto: string; peso: number }>> {
+		// Direct respostas
+		let directResps = get(respostas);
+		if (directResps.length === 0 && get(authUser)) {
+			const r = await carregarRespostas();
+			if (r.length > 0) {
+				respostas.set(r);
+				directResps = r;
 			}
-			if (!get(authLoading)) {
-				await tryLoadRespostas();
-			} else {
-				const unsub = authLoading.subscribe((loading) => {
-					if (!loading) {
-						unsub();
-						tryLoadRespostas();
-					}
-				});
-			}
-		} else {
-			buildUserVotoMap(userRespostas);
-			loadComparacao(userRespostas);
 		}
 
-		// Load parlamentar + posições
-		try {
-			parlamentar = await api.get<ParlamentarDetail>(`/parlamentares/${page.params.id}`);
-		} catch (e) {
-			console.error('Failed to load parlamentar:', e);
-			error = true;
-		}
-
-		try {
-			posicoes = await api.get<PosicaoInferida[]>(`/parlamentares/${page.params.id}/posicoes`);
-		} catch (e) {
-			console.error('Failed to load posições:', e);
-		}
-
-		// Load user position responses
+		// Position respostas
 		let posResps = get(respostasPosicoes);
 		if (posResps.length === 0 && get(authUser)) {
 			posResps = await carregarRespostasPosicoes();
 			if (posResps.length > 0) respostasPosicoes.set(posResps);
 		}
 		userPosRespostas = new Map(posResps.map((r) => [r.posicao_id, r]));
+
+		// Expand position respostas into proposition-level
+		if (posResps.length > 0) {
+			let items = get(posicaoItems);
+			if (items.length === 0) {
+				try {
+					items = await api.get('/posicoes/items');
+					posicaoItems.set(items);
+				} catch { /* ignore */ }
+			}
+			if (items.length > 0) {
+				const overrides = get(overridesPosicoes);
+				const expanded = expandPositions(posResps, items, overrides);
+				// Merge: direct respostas take precedence
+				const seen = new Set(directResps.map((r) => r.proposicao_id));
+				const merged = [...directResps];
+				for (const e of expanded) {
+					if (!seen.has(e.proposicao_id)) {
+						seen.add(e.proposicao_id);
+						merged.push(e);
+					}
+				}
+				return merged;
+			}
+		}
+
+		return directResps;
+	}
+
+	onMount(async () => {
+		async function init() {
+			const allRespostas = await loadAllUserRespostas();
+			if (allRespostas.length > 0) {
+				buildUserVotoMap(allRespostas);
+				loadComparacao(allRespostas);
+			}
+
+			// Load parlamentar + posições
+			try {
+				parlamentar = await api.get<ParlamentarDetail>(`/parlamentares/${page.params.id}`);
+			} catch (e) {
+				console.error('Failed to load parlamentar:', e);
+				error = true;
+			}
+
+			try {
+				posicoes = await api.get<PosicaoInferida[]>(`/parlamentares/${page.params.id}/posicoes`);
+			} catch (e) {
+				console.error('Failed to load posições:', e);
+			}
+		}
+
+		if (!get(authLoading)) {
+			await init();
+		} else {
+			const unsub = authLoading.subscribe((loading) => {
+				if (!loading) {
+					unsub();
+					init();
+				}
+			});
+		}
 	});
 
 	function toggleExpand(idx: number) {
