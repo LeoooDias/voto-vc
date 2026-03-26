@@ -4,7 +4,7 @@ from app.services.posicoes import expandir_posicoes_para_respostas
 
 
 def test_expansion_basic():
-    """Posição com 3 props, peso=1.0 → cada prop peso=0.33."""
+    """Posição com 3 props, peso=1.0 → cada prop recebe peso=1.0 (sem diluição)."""
     posicao_respostas = [{"posicao_id": 1, "voto": "sim", "peso": 1.0}]
     posicoes_map = {
         1: [
@@ -17,7 +17,7 @@ def test_expansion_basic():
     assert len(result) == 3
     for r in result:
         assert r["voto"] == "sim"
-        assert abs(r["peso"] - 1.0 / 3) < 0.001
+        assert r["peso"] == 1.0
 
 
 def test_expansion_direcao_invertida():

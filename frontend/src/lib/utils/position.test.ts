@@ -57,15 +57,15 @@ describe('expandPositions', () => {
 		}
 	];
 
-	it('expands position into per-prop respostas with P/N', () => {
+	it('expands position into per-prop respostas with full peso', () => {
 		const result = expandPositions(
 			[{ posicao_id: 1, voto: 'sim', peso: 1.0 }],
 			posicoes,
 			[]
 		);
 		expect(result).toHaveLength(2);
-		expect(result[0]).toEqual({ proposicao_id: 10, voto: 'sim', peso: 0.5 });
-		expect(result[1]).toEqual({ proposicao_id: 20, voto: 'nao', peso: 0.5 });
+		expect(result[0]).toEqual({ proposicao_id: 10, voto: 'sim', peso: 1.0 });
+		expect(result[1]).toEqual({ proposicao_id: 20, voto: 'nao', peso: 1.0 });
 	});
 
 	it('overrides take precedence', () => {

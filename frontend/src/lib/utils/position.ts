@@ -67,7 +67,7 @@ export function expandPositions(
 
 		const n = pos.proposicoes.length;
 		if (n === 0) continue;
-		const pesoPorProp = pr.peso / n;
+		const pesoPorProp = pr.peso;
 
 		for (const pp of pos.proposicoes) {
 			const propId = pp.proposicao_id;
