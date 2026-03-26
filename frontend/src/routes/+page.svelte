@@ -16,7 +16,7 @@
 	     Formatos: PNG para screenshot, SVG para ilustração estilizada.
 	     Alternativa: GIF animado curto mostrando o fluxo votação → resultado. -->
 
-	<div class="como-funciona">
+	<section class="como-funciona">
 		<h2>Como funciona</h2>
 		<div class="steps">
 			<div class="step">
@@ -35,9 +35,9 @@
 				<p>Descubra quais políticos e partidos votam como você votaria</p>
 			</div>
 		</div>
-	</div>
+	</section>
 
-	<div class="features">
+	<section class="features">
 		<div class="feature">
 			<h3>Dados reais</h3>
 			<p>Baseado em votações nominais da Câmara dos Deputados e do Senado Federal</p>
@@ -50,7 +50,7 @@
 			<h3>Rápido e anônimo</h3>
 			<p>Responda 10 perguntas em minutos. Não precisa criar conta</p>
 		</div>
-	</div>
+	</section>
 </div>
 
 <style>
@@ -76,7 +76,7 @@
 
 	.cta {
 		display: inline-block;
-		background: #2563eb;
+		background: var(--link);
 		color: white;
 		padding: 1rem 2.5rem;
 		border-radius: 8px;
@@ -87,7 +87,7 @@
 	}
 
 	.cta:hover {
-		background: #1d4ed8;
+		background: var(--link-hover);
 	}
 
 	.features {
@@ -145,7 +145,7 @@
 		width: 40px;
 		height: 40px;
 		border-radius: 50%;
-		background: #2563eb;
+		background: var(--link);
 		color: white;
 		font-weight: 700;
 		font-size: 1.125rem;

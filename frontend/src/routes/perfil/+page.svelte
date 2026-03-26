@@ -148,7 +148,7 @@
 		<p class="uf-subtitle">Filtrar parlamentares e partidos por estado</p>
 		<div class="uf-grid">
 			{#each UF_SIGLAS as sigla}
-				<button class="uf-btn" onclick={() => escolherUf(sigla)}>
+				<button class="uf-btn" aria-label="Selecionar estado {sigla}" onclick={() => escolherUf(sigla)}>
 					{sigla}
 				</button>
 			{/each}
@@ -167,11 +167,11 @@
 		<h1>Seu alinhamento político</h1>
 		<p class="subtitle">Baseado nos seus {totalRespostas} votos · <a href="/sobre" class="methodology-link">como é calculado?</a></p>
 
-		<div class="tabs">
-			<button class="tab" class:active={tab === 'partidos'} onclick={() => tab = 'partidos'}>
+		<div class="tabs" role="tablist">
+			<button class="tab" class:active={tab === 'partidos'} role="tab" aria-selected={tab === 'partidos'} onclick={() => tab = 'partidos'}>
 				Partidos
 			</button>
-			<button class="tab" class:active={tab === 'parlamentares'} onclick={() => tab = 'parlamentares'}>
+			<button class="tab" class:active={tab === 'parlamentares'} role="tab" aria-selected={tab === 'parlamentares'} onclick={() => tab = 'parlamentares'}>
 				Parlamentares
 			</button>
 		</div>
@@ -194,19 +194,21 @@
 				class="search-input"
 				type="text"
 				placeholder="Buscar por nome ou partido..."
+				aria-label="Buscar por nome ou partido"
 				bind:value={searchQuery}
 			/>
 		</div>
 
 		{#if tab === 'parlamentares'}
+			<div role="tabpanel">
 			<div class="casa-filter">
-				<button class="casa-btn" class:active={casaFilter === 'todos'} onclick={() => casaFilter = 'todos'}>
+				<button class="casa-btn" class:active={casaFilter === 'todos'} aria-label="Filtrar por todas as casas" onclick={() => casaFilter = 'todos'}>
 					Todos ({parlResults.length})
 				</button>
-				<button class="casa-btn" class:active={casaFilter === 'camara'} onclick={() => casaFilter = 'camara'}>
+				<button class="casa-btn" class:active={casaFilter === 'camara'} aria-label="Filtrar pela Câmara dos Deputados" onclick={() => casaFilter = 'camara'}>
 					Câmara ({countCamara})
 				</button>
-				<button class="casa-btn" class:active={casaFilter === 'senado'} onclick={() => casaFilter = 'senado'}>
+				<button class="casa-btn" class:active={casaFilter === 'senado'} aria-label="Filtrar pelo Senado Federal" onclick={() => casaFilter = 'senado'}>
 					Senado ({countSenado})
 				</button>
 			</div>
@@ -227,7 +229,9 @@
 					</a>
 				{/each}
 			</div>
+			</div>
 		{:else if tab === 'partidos'}
+			<div role="tabpanel">
 			<div class="lista">
 				{#each partidoFiltered as result, i}
 					<a href="/partido/{result.partido_id}" class="result-card">
@@ -248,6 +252,7 @@
 						{/if}
 					</a>
 				{/each}
+			</div>
 			</div>
 		{/if}
 
@@ -447,9 +452,9 @@
 		font-weight: 700;
 	}
 
-	.high { color: #16a34a; }
-	.mid { color: #ca8a04; }
-	.low { color: #dc2626; }
+	.high { color: var(--color-favor); }
+	.mid { color: var(--color-warning); }
+	.low { color: var(--color-contra); }
 
 	.score-na {
 		color: var(--text-secondary) !important;
@@ -475,7 +480,7 @@
 
 	.cta {
 		display: inline-block;
-		background: #2563eb;
+		background: var(--link);
 		color: white;
 		padding: 0.75rem 2rem;
 		border-radius: 8px;

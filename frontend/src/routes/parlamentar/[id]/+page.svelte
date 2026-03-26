@@ -233,7 +233,7 @@
 	<div class="perfil">
 		<div class="header">
 			{#if parlamentar.foto_url}
-				<img src={parlamentar.foto_url} alt={parlamentar.nome_parlamentar} class="foto" />
+				<img src={parlamentar.foto_url} alt={parlamentar.nome_parlamentar} class="foto" loading="lazy" width="100" height="100" />
 			{/if}
 			<div class="header-info">
 				<h1>{parlamentar.nome_parlamentar}</h1>
@@ -513,8 +513,8 @@
 		color: var(--text-secondary);
 	}
 
-	.stat-item.voto-sim .stat-count { color: #16a34a; }
-	.stat-item.voto-nao .stat-count { color: #dc2626; }
+	.stat-item.voto-sim .stat-count { color: var(--color-favor); }
+	.stat-item.voto-nao .stat-count { color: var(--color-contra); }
 	.stat-item.voto-outro .stat-count { color: var(--text-secondary); }
 
 	.historico-header {
@@ -594,9 +594,9 @@
 		white-space: nowrap;
 	}
 
-	.voto-badge.voto-sim { background: #16a34a1a; color: #16a34a; }
-	.voto-badge.voto-nao { background: #dc26261a; color: #dc2626; }
-	.voto-badge.voto-outro { background: #6b72801a; color: var(--text-secondary); }
+	.voto-badge.voto-sim { background: color-mix(in srgb, var(--color-favor) 10%, transparent); color: var(--color-favor); }
+	.voto-badge.voto-nao { background: color-mix(in srgb, var(--color-contra) 10%, transparent); color: var(--color-contra); }
+	.voto-badge.voto-outro { background: color-mix(in srgb, var(--text-secondary) 10%, transparent); color: var(--text-secondary); }
 
 	.voto-info { flex: 1; }
 
@@ -611,7 +611,7 @@
 		font-size: 0.8rem;
 		font-weight: 600;
 		color: var(--link);
-		background: #2563eb1a;
+		background: color-mix(in srgb, var(--link) 10%, transparent);
 		padding: 0.1rem 0.5rem;
 		border-radius: 4px;
 	}
@@ -690,9 +690,9 @@
 	}
 
 	.casa-pill.camara {
-		background: #dbeafe;
-		color: #1d4ed8;
-		border-color: #93c5fd;
+		background: color-mix(in srgb, var(--link) 12%, transparent);
+		color: var(--link-hover);
+		border-color: color-mix(in srgb, var(--link) 30%, transparent);
 	}
 
 	.casa-pill.senado {
@@ -702,9 +702,9 @@
 	}
 
 	:global([data-theme='escuro']) .casa-pill.camara {
-		background: #1e3a5f;
-		color: #93c5fd;
-		border-color: #2563eb44;
+		background: color-mix(in srgb, var(--link) 20%, transparent);
+		color: var(--link-hover);
+		border-color: color-mix(in srgb, var(--link) 25%, transparent);
 	}
 
 	:global([data-theme='escuro']) .casa-pill.senado {
@@ -775,13 +775,13 @@
 		color: var(--text-secondary);
 	}
 
-	.comp-item.concordou .comp-count { color: #16a34a; }
-	.comp-item.discordou .comp-count { color: #dc2626; }
+	.comp-item.concordou .comp-count { color: var(--color-favor); }
+	.comp-item.discordou .comp-count { color: var(--color-contra); }
 	.comp-item.total .comp-count { color: var(--link); }
 	.comp-item.alinhamento .comp-count { font-size: 1.75rem; }
-	.comp-item.alinhamento.high .comp-count { color: #16a34a; }
-	.comp-item.alinhamento.mid .comp-count { color: #ca8a04; }
-	.comp-item.alinhamento.low .comp-count { color: #dc2626; }
+	.comp-item.alinhamento.high .comp-count { color: var(--color-favor); }
+	.comp-item.alinhamento.mid .comp-count { color: var(--color-warning); }
+	.comp-item.alinhamento.low .comp-count { color: var(--color-contra); }
 
 	.filter-toggles {
 		display: flex;
@@ -791,11 +791,11 @@
 
 	/* User vote on cards */
 	.voto-card.card-concordou {
-		border-left: 3px solid #16a34a;
+		border-left: 3px solid var(--color-favor);
 	}
 
 	.voto-card.card-discordou {
-		border-left: 3px solid #dc2626;
+		border-left: 3px solid var(--color-contra);
 	}
 
 	.meu-voto-row {
@@ -819,17 +819,17 @@
 	}
 
 	.match-concordou {
-		background: #16a34a1a;
-		color: #16a34a;
+		background: color-mix(in srgb, var(--color-favor) 10%, transparent);
+		color: var(--color-favor);
 	}
 
 	.match-discordou {
-		background: #dc26261a;
-		color: #dc2626;
+		background: color-mix(in srgb, var(--color-contra) 10%, transparent);
+		color: var(--color-contra);
 	}
 
 	.match-naovotou {
-		background: #6b72801a;
+		background: color-mix(in srgb, var(--text-secondary) 10%, transparent);
 		color: var(--text-secondary);
 	}
 

@@ -11,8 +11,10 @@
 		carregarRespostasPosicoes
 	} from '$lib/stores/posicoes';
 	import PositionSlider from '$lib/components/PositionSlider.svelte';
+	import VoteSlider from '$lib/components/VoteSlider.svelte';
 	import ChatWidget from '$lib/components/ChatWidget.svelte';
 	import { positionToVote5, voteToPosition5 } from '$lib/utils/position';
+	import { positionToVote, voteToPosition } from '$lib/utils/vote';
 	import type { PosicaoItem, RespostaPosicaoItem } from '$lib/types/posicao';
 	import type { RespostaItem } from '$lib/types';
 	import { goto } from '$app/navigation';
@@ -211,22 +213,36 @@
 		expandedId = expandedId === posicaoId ? null : posicaoId;
 	}
 
-	function getOverride(proposicaoId: number): RespostaItem | undefined {
-		return overrides.find((o) => o.proposicao_id === proposicaoId);
+	function getOverridePos(proposicaoId: number): number | null {
+		const o = overrides.find((o) => o.proposicao_id === proposicaoId);
+		if (!o) return null;
+		return voteToPosition(o.voto, o.peso);
 	}
 
-	function setOverride(proposicaoId: number, voto: 'sim' | 'nao') {
+	/** Compute default proposition slider position inherited from parent position */
+	function getDefaultPropPos(posicaoId: number, direcao: 'sim' | 'nao'): number | null {
+		const parentPos = getRespostaPos(posicaoId);
+		if (parentPos == null) return null;
+		return direcao === 'sim' ? parentPos : 6 - parentPos;
+	}
+
+	function setOverrideFromSlider(proposicaoId: number, posicaoId: number, direcao: 'sim' | 'nao', sliderPos: number) {
+		const defaultPos = getDefaultPropPos(posicaoId, direcao);
+
+		// If user selected the default (inherited) position, remove override
+		if (defaultPos != null && sliderPos === defaultPos) {
+			overrides = overrides.filter((o) => o.proposicao_id !== proposicaoId);
+			overridesPosicoes.set(overrides);
+			return;
+		}
+
+		const { voto, peso } = positionToVote(sliderPos);
+		const item: RespostaItem = { proposicao_id: proposicaoId, voto, peso };
 		const existing = overrides.findIndex((o) => o.proposicao_id === proposicaoId);
-		const item: RespostaItem = { proposicao_id: proposicaoId, voto, peso: 1.0 };
 		if (existing >= 0) {
 			const updated = [...overrides];
-			if (overrides[existing].voto === voto) {
-				updated.splice(existing, 1);
-				overrides = updated;
-			} else {
-				updated[existing] = item;
-				overrides = updated;
-			}
+			updated[existing] = item;
+			overrides = updated;
 		} else {
 			overrides = [...overrides, item];
 		}
@@ -273,7 +289,7 @@
 		<p class="uf-subtitle">Vamos mostrar parlamentares do seu estado</p>
 		<div class="uf-grid">
 			{#each UFS as estado}
-				<button class="uf-btn" onclick={() => escolherUf(estado.sigla)}>
+				<button class="uf-btn" aria-label="Selecionar {estado.sigla}" onclick={() => escolherUf(estado.sigla)}>
 					<span class="uf-sigla">{estado.sigla}</span>
 					<span class="uf-nome">{estado.nome}</span>
 				</button>
@@ -286,7 +302,7 @@
 	<div class="empty">Nenhuma posição disponível no momento.</div>
 {:else}
 	{#if showOnboarding}
-		<div class="onboarding-overlay">
+		<div class="onboarding-overlay" role="dialog" aria-modal="true" aria-label="Como funciona">
 			<div class="onboarding-modal">
 				<h2>Como funciona</h2>
 				<div class="onboarding-steps">
@@ -311,7 +327,7 @@
 	<div class="posicoes-page">
 		<div class="uf-badge-row">
 			<span class="uf-badge" title="Trocar estado">
-				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+				<svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
 				{uf}
 			</span>
 			<button class="uf-change-btn" onclick={() => { uf = ''; selectedUf.set(''); }}>Trocar estado</button>
@@ -399,7 +415,9 @@
 									{#if isExpanded}
 										<div class="drill-down">
 											{#each pos.proposicoes as prop}
-												{@const override = getOverride(prop.proposicao_id)}
+												{@const overridePos = getOverridePos(prop.proposicao_id)}
+												{@const defaultPos = getDefaultPropPos(pos.id, prop.direcao)}
+												{@const effectivePos = overridePos ?? defaultPos}
 												<div class="drill-item">
 													<div class="drill-info">
 														<div class="drill-title-row">
@@ -407,25 +425,21 @@
 														<span class="casa-pill" class:camara={prop.casa_origem === 'camara'} class:senado={prop.casa_origem === 'senado'}>
 															{prop.casa_origem === 'camara' ? 'Câmara' : 'Senado'}
 														</span>
+														{#if overridePos != null}
+															<span class="override-badge">personalizado</span>
+														{/if}
 													</div>
 														<p class="drill-resumo">{prop.resumo ?? 'Sem descrição'}</p>
-														<span class="drill-direcao">
-															Direção na posição: {prop.direcao === 'sim' ? 'A favor' : 'Contra'}
-														</span>
 													</div>
-													<div class="drill-actions">
-														<button
-															class="drill-btn favor"
-															class:active={override?.voto === 'sim'}
-															onclick={() => setOverride(prop.proposicao_id, 'sim')}
-															title="A favor"
-														>&#10003;</button>
-														<button
-															class="drill-btn contra"
-															class:active={override?.voto === 'nao'}
-															onclick={() => setOverride(prop.proposicao_id, 'nao')}
-															title="Contra"
-														>&#10007;</button>
+													<div class="drill-slider">
+														<VoteSlider
+															value={effectivePos}
+															compact={true}
+															onvote={(voto, peso) => {
+																const sliderPos = voteToPosition(voto, peso);
+																if (sliderPos != null) setOverrideFromSlider(prop.proposicao_id, pos.id, prop.direcao, sliderPos);
+															}}
+														/>
 													</div>
 												</div>
 											{/each}
@@ -450,12 +464,10 @@
 		</div>
 
 		{#if showModeModal}
-			<!-- svelte-ignore a11y_click_events_have_key_events -->
 			<!-- svelte-ignore a11y_no_static_element_interactions -->
-			<div class="mode-overlay" onclick={() => showModeModal = false}>
+			<div class="mode-overlay" onclick={() => showModeModal = false} onkeydown={(e) => { if (e.key === 'Escape') showModeModal = false; }}>
 				<!-- svelte-ignore a11y_click_events_have_key_events -->
-				<!-- svelte-ignore a11y_no_static_element_interactions -->
-				<div class="mode-modal" onclick={(e) => e.stopPropagation()}>
+				<div class="mode-modal" role="dialog" aria-modal="true" aria-label="Escolha o modo de votação" tabindex="-1" onclick={(e) => e.stopPropagation()}>
 					<h2>Escolha o modo de votação</h2>
 					<div class="mode-options">
 						<div class="mode-option current">
@@ -519,7 +531,7 @@
 
 	.progress-fill {
 		height: 100%;
-		background: #16a34a;
+		background: var(--color-favor);
 		transition: width 0.3s ease;
 	}
 
@@ -538,7 +550,7 @@
 	}
 
 	.btn-resultado {
-		background: #2563eb;
+		background: var(--link);
 		color: white;
 		border: none;
 		padding: 0.5rem 1.5rem;
@@ -550,7 +562,7 @@
 	}
 
 	.btn-resultado:hover {
-		background: #1d4ed8;
+		background: var(--link-hover);
 	}
 
 	/* Category cards grid */
@@ -636,7 +648,7 @@
 	}
 
 	.pos-card.answered {
-		border-color: #16a34a44;
+		border-color: color-mix(in srgb, var(--color-favor) 27%, transparent);
 	}
 
 	.pos-header {
@@ -743,8 +755,8 @@
 
 	.drill-item {
 		display: flex;
-		gap: 0.75rem;
-		align-items: flex-start;
+		flex-direction: column;
+		gap: 0.25rem;
 	}
 
 	.drill-info {
@@ -794,7 +806,7 @@
 		font-size: 0.75rem;
 		font-weight: 600;
 		color: var(--link);
-		background: #2563eb1a;
+		background: color-mix(in srgb, var(--link) 10%, transparent);
 		padding: 0.1rem 0.5rem;
 		border-radius: 4px;
 	}
@@ -806,53 +818,17 @@
 		line-height: 1.4;
 	}
 
-	.drill-direcao {
-		font-size: 0.7rem;
-		color: var(--text-secondary);
+	.drill-slider {
+		margin-top: 0.5rem;
 	}
 
-	.drill-actions {
-		display: flex;
-		gap: 0.25rem;
-		flex-shrink: 0;
-	}
-
-	.drill-btn {
-		width: 32px;
-		height: 32px;
+	.override-badge {
+		font-size: 0.6rem;
+		font-weight: 600;
+		padding: 0.1rem 0.4rem;
 		border-radius: 8px;
-		border: 1px solid var(--border);
-		background: var(--bg-card);
-		font-size: 1rem;
-		cursor: pointer;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		transition: all 0.15s;
-	}
-
-	.drill-btn.favor {
-		color: #16a34a;
-	}
-
-	.drill-btn.contra {
-		color: #dc2626;
-	}
-
-	.drill-btn.favor.active {
-		background: #16a34a;
-		color: white;
-		border-color: #16a34a;
-	}
-
-	.drill-btn.contra.active {
-		background: #dc2626;
-		color: white;
-		border-color: #dc2626;
-	}
-
-	.drill-btn:hover:not(.active) {
-		border-color: var(--text-secondary);
+		background: color-mix(in srgb, var(--link) 12%, transparent);
+		color: var(--link);
 	}
 
 	.bottom-cta {
@@ -902,12 +878,12 @@
 	}
 
 	.reset-confirm-btn.yes {
-		color: #dc2626;
-		border-color: #dc26264d;
+		color: var(--color-contra);
+		border-color: color-mix(in srgb, var(--color-contra) 30%, transparent);
 	}
 
 	.reset-confirm-btn.yes:hover {
-		background: #dc26261a;
+		background: color-mix(in srgb, var(--color-contra) 10%, transparent);
 	}
 
 	.reset-confirm-btn.yes:disabled {
@@ -966,7 +942,7 @@
 		display: inline-block;
 		font-size: 0.7rem;
 		font-weight: 600;
-		color: #16a34a;
+		color: var(--color-favor);
 		margin-top: 0.25rem;
 		animation: fadeInOut 1.2s ease forwards;
 	}
@@ -1023,7 +999,7 @@
 		width: 28px;
 		height: 28px;
 		border-radius: 50%;
-		background: #2563eb;
+		background: var(--link);
 		color: white;
 		font-weight: 700;
 		font-size: 0.875rem;
@@ -1044,7 +1020,7 @@
 	.onboarding-btn {
 		width: 100%;
 		padding: 0.75rem;
-		background: #2563eb;
+		background: var(--link);
 		color: white;
 		border: none;
 		border-radius: 10px;
@@ -1055,7 +1031,7 @@
 	}
 
 	.onboarding-btn:hover {
-		background: #1d4ed8;
+		background: var(--link-hover);
 	}
 
 	/* Mode selection modal */
@@ -1108,8 +1084,8 @@
 	}
 
 	.mode-option.current {
-		border-color: #16a34a44;
-		background: #16a34a0a;
+		border-color: color-mix(in srgb, var(--color-favor) 27%, transparent);
+		background: color-mix(in srgb, var(--color-favor) 4%, transparent);
 	}
 
 	.mode-option h3 {
@@ -1128,7 +1104,7 @@
 	.mode-tag {
 		font-size: 0.7rem;
 		font-weight: 700;
-		color: #16a34a;
+		color: var(--color-favor);
 	}
 
 	.mode-tag.go {

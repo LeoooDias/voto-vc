@@ -167,7 +167,7 @@
 		<p class="uf-subtitle">Filtrar parlamentares por estado</p>
 		<div class="uf-grid">
 			{#each UF_SIGLAS as sigla}
-				<button class="uf-btn" onclick={() => escolherUf(sigla)}>{sigla}</button>
+				<button class="uf-btn" aria-label="Selecionar estado {sigla}" onclick={() => escolherUf(sigla)}>{sigla}</button>
 			{/each}
 		</div>
 		<button class="uf-cancel" onclick={() => showUfPicker = false}>Cancelar</button>
@@ -205,13 +205,13 @@
 		</div>
 
 		<div class="casa-filter">
-			<button class="casa-btn" class:active={casaFilter === 'todos'} onclick={() => setCasaFilter('todos')}>
+			<button class="casa-btn" class:active={casaFilter === 'todos'} aria-label="Filtrar por todas as casas" onclick={() => setCasaFilter('todos')}>
 				Todos ({results.length})
 			</button>
-			<button class="casa-btn" class:active={casaFilter === 'camara'} onclick={() => setCasaFilter('camara')}>
+			<button class="casa-btn" class:active={casaFilter === 'camara'} aria-label="Filtrar pela Câmara dos Deputados" onclick={() => setCasaFilter('camara')}>
 				Câmara ({countCamara})
 			</button>
-			<button class="casa-btn" class:active={casaFilter === 'senado'} onclick={() => setCasaFilter('senado')}>
+			<button class="casa-btn" class:active={casaFilter === 'senado'} aria-label="Filtrar pelo Senado Federal" onclick={() => setCasaFilter('senado')}>
 				Senado ({countSenado})
 			</button>
 		</div>
@@ -221,13 +221,13 @@
 				<thead>
 					<tr>
 						<th class="col-rank">#</th>
-						<th class="col-name sortable" onclick={() => toggleSort('nome')}>Nome{sortIndicator('nome')}</th>
-						<th class="col-partido sortable" onclick={() => toggleSort('partido')}>Partido{sortIndicator('partido')}</th>
-						<th class="col-uf sortable" onclick={() => toggleSort('uf')}>UF{sortIndicator('uf')}</th>
+						<th class="col-name sortable" aria-sort={sortKey === 'nome' ? (sortAsc ? 'ascending' : 'descending') : 'none'}><button type="button" class="sort-btn" onclick={() => toggleSort('nome')}>Nome{sortIndicator('nome')}</button></th>
+						<th class="col-partido sortable" aria-sort={sortKey === 'partido' ? (sortAsc ? 'ascending' : 'descending') : 'none'}><button type="button" class="sort-btn" onclick={() => toggleSort('partido')}>Partido{sortIndicator('partido')}</button></th>
+						<th class="col-uf sortable" aria-sort={sortKey === 'uf' ? (sortAsc ? 'ascending' : 'descending') : 'none'}><button type="button" class="sort-btn" onclick={() => toggleSort('uf')}>UF{sortIndicator('uf')}</button></th>
 						<th class="col-casa">Casa</th>
-						<th class="col-num sortable" onclick={() => toggleSort('votos_comparados')}>Votos Comparados{sortIndicator('votos_comparados')}</th>
-						<th class="col-num sortable" onclick={() => toggleSort('concordou')}>Votos Em Comum{sortIndicator('concordou')}</th>
-						<th class="col-score sortable" onclick={() => toggleSort('score')}>Alinhamento{sortIndicator('score')}</th>
+						<th class="col-num sortable" aria-sort={sortKey === 'votos_comparados' ? (sortAsc ? 'ascending' : 'descending') : 'none'}><button type="button" class="sort-btn" onclick={() => toggleSort('votos_comparados')}>Votos Comparados{sortIndicator('votos_comparados')}</button></th>
+						<th class="col-num sortable" aria-sort={sortKey === 'concordou' ? (sortAsc ? 'ascending' : 'descending') : 'none'}><button type="button" class="sort-btn" onclick={() => toggleSort('concordou')}>Votos Em Comum{sortIndicator('concordou')}</button></th>
+						<th class="col-score sortable" aria-sort={sortKey === 'score' ? (sortAsc ? 'ascending' : 'descending') : 'none'}><button type="button" class="sort-btn" onclick={() => toggleSort('score')}>Alinhamento{sortIndicator('score')}</button></th>
 					</tr>
 				</thead>
 				<tbody>
@@ -376,8 +376,21 @@
 		white-space: nowrap;
 	}
 
-	th.sortable { cursor: pointer; user-select: none; }
-	th.sortable:hover { color: var(--link); }
+	th.sortable { user-select: none; }
+
+	.sort-btn {
+		background: none;
+		border: none;
+		padding: 0;
+		font: inherit;
+		font-size: inherit;
+		font-weight: inherit;
+		color: inherit;
+		cursor: pointer;
+		white-space: nowrap;
+	}
+
+	.sort-btn:hover { color: var(--link); }
 
 	td {
 		padding: 0.625rem 0.75rem;
@@ -414,9 +427,9 @@
 	.col-score { text-align: right; }
 
 	.score { font-weight: 700; }
-	.high { color: #16a34a; }
-	.mid { color: #ca8a04; }
-	.low { color: #dc2626; }
+	.high { color: var(--color-favor); }
+	.mid { color: var(--color-warning); }
+	.low { color: var(--color-contra); }
 
 	.pagination {
 		display: flex;
@@ -500,5 +513,46 @@
 
 	@keyframes spin {
 		to { transform: rotate(360deg); }
+	}
+
+	@media (max-width: 768px) {
+		thead { display: none; }
+		tbody, tr { display: block; }
+		tr {
+			background: var(--bg-card);
+			border: 1px solid var(--border);
+			border-radius: 12px;
+			padding: 1rem;
+			margin-bottom: 0.75rem;
+		}
+		tr:hover td { background: none; }
+		td {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			border-bottom: none;
+			padding: 0.25rem 0;
+			font-size: 0.875rem;
+		}
+		td::before {
+			font-weight: 600;
+			color: var(--text-secondary);
+			font-size: 0.75rem;
+			min-width: 6rem;
+		}
+		td.col-rank { display: none; }
+		td.col-name::before { content: ''; }
+		td.col-name { font-size: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); margin-bottom: 0.25rem; }
+		td.col-partido::before { content: 'Partido'; }
+		td.col-uf::before { content: 'UF'; }
+		td.col-casa::before { content: 'Casa'; }
+		td.col-num:nth-of-type(6)::before { content: 'Comparados'; }
+		td.col-num:nth-of-type(7)::before { content: 'Em comum'; }
+		td.col-score::before { content: 'Alinhamento'; }
+		td.col-score { text-align: left; }
+		td.col-num { text-align: left; }
+		td.col-partido, td.col-uf, td.col-casa { color: var(--text-primary); }
+		.table-wrap { overflow-x: visible; }
+		table { border-collapse: separate; border-spacing: 0; }
 	}
 </style>

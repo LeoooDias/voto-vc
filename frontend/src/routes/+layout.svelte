@@ -48,9 +48,9 @@
 
 			<button class="hamburger" onclick={() => menuOpen = !menuOpen} aria-label="Menu">
 				{#if menuOpen}
-					<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+					<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 				{:else}
-					<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+					<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
 				{/if}
 			</button>
 
@@ -60,15 +60,15 @@
 						<a href="/parlamentares" onclick={closeMenu}>Parlamentares</a>
 						<a href="/partidos" onclick={closeMenu}>Partidos</a>
 					{:else}
-						<span class="nav-disabled" title="Responda ao menos 10 proposições para desbloquear">Parlamentares</span>
-						<span class="nav-disabled" title="Responda ao menos 10 proposições para desbloquear">Partidos</span>
+						<span class="nav-disabled" title="Responda ao menos 10 proposições para desbloquear" aria-disabled="true" role="link">Parlamentares</span>
+						<span class="nav-disabled" title="Responda ao menos 10 proposições para desbloquear" aria-disabled="true" role="link">Partidos</span>
 					{/if}
 					<span class="nav-sep">|</span>
 					<a href="/sobre" onclick={closeMenu}>Sobre</a>
 					{#if perfilEnabled}
 						<a href="/perfil" class="nav-perfil" onclick={closeMenu}>Meu Perfil</a>
 					{:else}
-						<span class="nav-disabled" title="Responda ao menos 10 proposições para desbloquear">Meu Perfil</span>
+						<span class="nav-disabled" title="Responda ao menos 10 proposições para desbloquear" aria-disabled="true" role="link">Meu Perfil</span>
 					{/if}
 					<a href="/vote" class="nav-vote" onclick={closeMenu}>Vote</a>
 				</div>
@@ -79,8 +79,8 @@
 						{:else}
 							<a href="/login" class="nav-btn-login" onclick={closeMenu}>Entrar</a>
 						{/if}
-						<button class="nav-btn-icon" onclick={() => { settingsOpen = true; closeMenu(); }} title="Configurações">
-							<svg width="27" height="27" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
+						<button class="nav-btn-icon" onclick={() => { settingsOpen = true; closeMenu(); }} title="Configurações" aria-label="Abrir configurações">
+							<svg width="27" height="27" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
 						</button>
 					</div>
 				{/if}
@@ -121,10 +121,19 @@
 		--text-primary: #1a1a2e;
 		--text-secondary: #6b7280;
 		--text-footer: #9ca3af;
+		--text-footer-hover: #d1d5db;
 		--border: #e5e7eb;
 		--border-hover: #2563eb;
 		--link: #2563eb;
 		--link-hover: #1d4ed8;
+		--color-contra: #dc2626;
+		--color-contra-leve: #f87171;
+		--color-neutro: #a3a3a3;
+		--color-neutro-dark: #737373;
+		--color-favor-leve: #4ade80;
+		--color-favor: #16a34a;
+		--color-warning: #ea580c;
+		--color-code-bg: rgba(0, 0, 0, 0.08);
 	}
 
 	:global([data-theme='escuro']) {
@@ -135,10 +144,19 @@
 		--text-primary: #e5e7eb;
 		--text-secondary: #9ca3af;
 		--text-footer: #6b7280;
+		--text-footer-hover: #e5e7eb;
 		--border: #2d3348;
 		--border-hover: #3b82f6;
 		--link: #3b82f6;
 		--link-hover: #60a5fa;
+		--color-contra: #ef4444;
+		--color-contra-leve: #f87171;
+		--color-neutro: #a3a3a3;
+		--color-neutro-dark: #9ca3af;
+		--color-favor-leve: #4ade80;
+		--color-favor: #22c55e;
+		--color-warning: #f97316;
+		--color-code-bg: rgba(255, 255, 255, 0.08);
 	}
 
 	:global(body) {
@@ -146,6 +164,19 @@
 		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 		color: var(--text-primary);
 		background: var(--bg-page);
+	}
+
+	:global(:focus-visible) {
+		outline: 2px solid var(--link);
+		outline-offset: 2px;
+	}
+
+	:global(input:focus-visible),
+	:global(select:focus-visible),
+	:global(textarea:focus-visible) {
+		outline: none;
+		border-color: var(--link);
+		box-shadow: 0 0 0 2px color-mix(in srgb, var(--link) 25%, transparent);
 	}
 
 	.app {
@@ -228,14 +259,14 @@
 	}
 
 	.nav-vote {
-		background: #2563eb;
+		background: var(--link);
 		color: white !important;
 		border-radius: 6px;
 		padding: 0.375rem 0.75rem;
 	}
 
 	.nav-vote:hover {
-		background: #1d4ed8;
+		background: var(--link-hover);
 		color: white !important;
 	}
 
@@ -282,6 +313,9 @@
 		border-radius: 6px;
 		display: flex;
 		align-items: center;
+		min-width: 44px;
+		min-height: 44px;
+		justify-content: center;
 	}
 
 	.nav-btn-icon:hover {
@@ -296,7 +330,7 @@
 	}
 
 	.nav-btn-login {
-		background: #2563eb;
+		background: var(--link);
 		color: white !important;
 		text-decoration: none;
 		border-radius: 6px;
@@ -305,7 +339,7 @@
 	}
 
 	.nav-btn-login:hover {
-		background: #1d4ed8;
+		background: var(--link-hover);
 		color: white !important;
 	}
 
@@ -345,7 +379,7 @@
 	}
 
 	.footer-links a:hover {
-		color: #d1d5db;
+		color: var(--text-footer-hover);
 		text-decoration: underline;
 	}
 

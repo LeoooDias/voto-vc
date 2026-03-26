@@ -449,7 +449,7 @@
 			<div class="posicionamentos">
 				<button class="section-toggle" onclick={() => posicionamentosOpen = !posicionamentosOpen}>
 					<h2>Posicionamentos</h2>
-					<svg class="section-chevron" class:open={posicionamentosOpen} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+					<svg class="section-chevron" class:open={posicionamentosOpen} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
 				</button>
 				{#if posicionamentosOpen}
 					{#each POSICAO_CATEGORIAS as cat}
@@ -461,7 +461,7 @@
 										<span class="posicao-cat-dot" style="background: {cat.cor}"></span>
 										{cat.label}
 									</h3>
-									<svg class="cat-chevron" class:open={openCatIds.has(cat.id)} style="color: {cat.cor}" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+									<svg class="cat-chevron" class:open={openCatIds.has(cat.id)} style="color: {cat.cor}" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
 								</button>
 								{#if openCatIds.has(cat.id)}
 									<div class="posicoes-grid">
@@ -744,8 +744,8 @@
 		color: var(--text-secondary);
 	}
 
-	.stat-item.voto-sim .stat-count { color: #16a34a; }
-	.stat-item.voto-nao .stat-count { color: #dc2626; }
+	.stat-item.voto-sim .stat-count { color: var(--color-favor); }
+	.stat-item.voto-nao .stat-count { color: var(--color-contra); }
 	.stat-item.voto-outro .stat-count { color: var(--text-secondary); }
 
 	.historico-header {
@@ -826,9 +826,9 @@
 		white-space: nowrap;
 	}
 
-	.voto-badge.voto-sim { background: #16a34a1a; color: #16a34a; }
-	.voto-badge.voto-nao { background: #dc26261a; color: #dc2626; }
-	.voto-badge.voto-outro { background: #6b72801a; color: var(--text-secondary); }
+	.voto-badge.voto-sim { background: color-mix(in srgb, var(--color-favor) 10%, transparent); color: var(--color-favor); }
+	.voto-badge.voto-nao { background: color-mix(in srgb, var(--color-contra) 10%, transparent); color: var(--color-contra); }
+	.voto-badge.voto-outro { background: color-mix(in srgb, var(--text-secondary) 10%, transparent); color: var(--text-secondary); }
 
 	.voto-info { flex: 1; }
 
@@ -843,7 +843,7 @@
 		font-size: 0.8rem;
 		font-weight: 600;
 		color: var(--link);
-		background: #2563eb1a;
+		background: color-mix(in srgb, var(--link) 10%, transparent);
 		padding: 0.1rem 0.5rem;
 		border-radius: 4px;
 	}
@@ -877,9 +877,9 @@
 		transition: width 0.3s;
 	}
 
-	.bar-seg.bd-sim { background: #16a34a; }
-	.bar-seg.bd-nao { background: #dc2626; }
-	.bar-seg.bd-outro { background: #9ca3af; }
+	.bar-seg.bd-sim { background: var(--color-favor); }
+	.bar-seg.bd-nao { background: var(--color-contra); }
+	.bar-seg.bd-outro { background: var(--color-neutro); }
 
 	.breakdown-legend {
 		display: flex;
@@ -893,15 +893,15 @@
 		font-weight: 500;
 	}
 
-	.legend-item.bd-sim { color: #16a34a; }
-	.legend-item.bd-nao { color: #dc2626; }
+	.legend-item.bd-sim { color: var(--color-favor); }
+	.legend-item.bd-nao { color: var(--color-contra); }
 	.legend-item.bd-outro { color: var(--text-secondary); }
 
 	.legend-divergencia {
 		font-size: 0.7rem;
 		font-weight: 600;
-		color: #d97706;
-		background: #d976061a;
+		color: var(--color-warning);
+		background: color-mix(in srgb, var(--color-warning) 10%, transparent);
 		padding: 0.05rem 0.4rem;
 		border-radius: 4px;
 	}
@@ -965,9 +965,9 @@
 	}
 
 	.casa-pill.camara {
-		background: #dbeafe;
-		color: #1d4ed8;
-		border-color: #93c5fd;
+		background: color-mix(in srgb, var(--link) 12%, transparent);
+		color: var(--link-hover);
+		border-color: color-mix(in srgb, var(--link) 30%, transparent);
 	}
 
 	.casa-pill.senado {
@@ -977,9 +977,9 @@
 	}
 
 	:global([data-theme='escuro']) .casa-pill.camara {
-		background: #1e3a5f;
-		color: #93c5fd;
-		border-color: #2563eb44;
+		background: color-mix(in srgb, var(--link) 20%, transparent);
+		color: var(--link-hover);
+		border-color: color-mix(in srgb, var(--link) 25%, transparent);
 	}
 
 	:global([data-theme='escuro']) .casa-pill.senado {
@@ -1056,9 +1056,9 @@
 		margin-top: 0.25rem;
 	}
 
-	.metrica-card.high .metrica-valor { color: #16a34a; }
-	.metrica-card.mid .metrica-valor { color: #ca8a04; }
-	.metrica-card.low .metrica-valor { color: #dc2626; }
+	.metrica-card.high .metrica-valor { color: var(--color-favor); }
+	.metrica-card.mid .metrica-valor { color: var(--color-warning); }
+	.metrica-card.low .metrica-valor { color: var(--color-contra); }
 
 	.metricas-footnote {
 		display: flex;
@@ -1076,8 +1076,8 @@
 		color: var(--text-secondary);
 	}
 
-	.comparacao-concordou { color: #16a34a; font-weight: 600; }
-	.comparacao-discordou { color: #dc2626; font-weight: 600; }
+	.comparacao-concordou { color: var(--color-favor); font-weight: 600; }
+	.comparacao-discordou { color: var(--color-contra); font-weight: 600; }
 	.comparacao-total { color: var(--text-secondary); }
 	.comparacao-sep { color: var(--border); margin: 0 0.15rem; }
 
@@ -1089,11 +1089,11 @@
 
 	/* User vote on cards */
 	.voto-card.card-concordou {
-		border-left: 3px solid #16a34a;
+		border-left: 3px solid var(--color-favor);
 	}
 
 	.voto-card.card-discordou {
-		border-left: 3px solid #dc2626;
+		border-left: 3px solid var(--color-contra);
 	}
 
 	.meu-voto-row {
@@ -1117,13 +1117,13 @@
 	}
 
 	.match-concordou {
-		background: #16a34a1a;
-		color: #16a34a;
+		background: color-mix(in srgb, var(--color-favor) 10%, transparent);
+		color: var(--color-favor);
 	}
 
 	.match-discordou {
-		background: #dc26261a;
-		color: #dc2626;
+		background: color-mix(in srgb, var(--color-contra) 10%, transparent);
+		color: var(--color-contra);
 	}
 
 	.posicionamentos {

@@ -89,6 +89,28 @@ export const POSICAO_CATEGORIAS: PosicaoCategoria[] = [
 	}
 ];
 
+/** Cores semânticas de voto — fonte única de verdade */
+export const VOTE_COLORS = {
+	contra: '#dc2626',
+	contraLeve: '#f87171',
+	neutro: '#a3a3a3',
+	favorLeve: '#4ade80',
+	favor: '#16a34a',
+} as const;
+
+/** Mapa posição → cor para sliders */
+export const POS_COLORS: Record<number, string> = {
+	1: VOTE_COLORS.contra,
+	2: VOTE_COLORS.contraLeve,
+	3: VOTE_COLORS.neutro,
+	4: VOTE_COLORS.favorLeve,
+	5: VOTE_COLORS.favor,
+};
+
+export function colorForPos(pos: number): string {
+	return POS_COLORS[pos] ?? VOTE_COLORS.neutro;
+}
+
 export const TIER1 = 10;
 export const TIER2 = 25;
 export const TIER3 = 50;

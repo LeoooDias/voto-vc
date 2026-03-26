@@ -261,7 +261,7 @@
 	{#if uf}
 		<div class="top-right">
 			<span class="uf-badge">
-				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+				<svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
 				{uf}
 			</span>
 			<button class="votes-panel-btn" onclick={() => showVotesPanel = !showVotesPanel}>
@@ -277,7 +277,7 @@
 		<p class="uf-subtitle">Vamos mostrar parlamentares do seu estado</p>
 		<div class="uf-grid">
 			{#each UFS as estado}
-				<button class="uf-btn" onclick={() => escolherUf(estado.sigla)}>
+				<button class="uf-btn" aria-label="Selecionar {estado.sigla}" onclick={() => escolherUf(estado.sigla)}>
 					<span class="uf-sigla">{estado.sigla}</span>
 					<span class="uf-nome">{estado.nome}</span>
 				</button>
@@ -371,13 +371,11 @@
 	</div>
 
 	{#if showVotesPanel}
-		<!-- svelte-ignore a11y_click_events_have_key_events -->
-		<!-- svelte-ignore a11y_no_static_element_interactions -->
-		<div class="votes-panel-backdrop" onclick={() => showVotesPanel = false}></div>
-		<div class="votes-panel">
+		<button class="votes-panel-backdrop" aria-label="Fechar painel de votos" onclick={() => showVotesPanel = false}></button>
+		<div class="votes-panel" role="dialog" aria-modal="true" aria-label="Meus votos">
 			<div class="votes-panel-header">
 				<h3>Meus votos ({answeredCount})</h3>
-				<button class="votes-panel-close" onclick={() => showVotesPanel = false}>&times;</button>
+				<button class="votes-panel-close" aria-label="Fechar painel de votos" onclick={() => showVotesPanel = false}>&times;</button>
 			</div>
 			<div class="votes-panel-list">
 				{#if answeredItems.length === 0}
@@ -420,8 +418,8 @@
 	}
 
 	.progress-seg.yellow { background: #eab308; }
-	.progress-seg.green { background: #16a34a; }
-	.progress-seg.blue { background: #2563eb; }
+	.progress-seg.green { background: var(--color-favor); }
+	.progress-seg.blue { background: var(--link); }
 
 	.counter-row {
 		display: flex;
@@ -478,19 +476,19 @@
 	}
 
 	.meta-banner.success {
-		background: #16a34a1a;
-		color: #16a34a;
-		border: 1px solid #16a34a33;
+		background: color-mix(in srgb, var(--color-favor) 10%, transparent);
+		color: var(--color-favor);
+		border: 1px solid color-mix(in srgb, var(--color-favor) 20%, transparent);
 	}
 
 	.meta-banner.expert {
-		background: #2563eb1a;
-		color: #2563eb;
-		border: 1px solid #2563eb33;
+		background: color-mix(in srgb, var(--link) 10%, transparent);
+		color: var(--link);
+		border: 1px solid color-mix(in srgb, var(--link) 20%, transparent);
 	}
 
 	.btn-resultado {
-		background: #2563eb;
+		background: var(--link);
 		color: white;
 		border: none;
 		padding: 0.5rem 1.5rem;
@@ -502,7 +500,7 @@
 	}
 
 	.btn-resultado:hover {
-		background: #1d4ed8;
+		background: var(--link-hover);
 	}
 
 	.card {
@@ -528,8 +526,8 @@
 	}
 
 	.tipo {
-		background: #eff6ff;
-		color: #2563eb;
+		background: color-mix(in srgb, var(--link) 10%, transparent);
+		color: var(--link);
 		padding: 0.25rem 0.75rem;
 		border-radius: 20px;
 		font-size: 0.8rem;
@@ -644,13 +642,13 @@
 	}
 
 	.btn-votar.active {
-		background: #2563eb;
+		background: var(--link);
 		color: white;
 		cursor: pointer;
 	}
 
 	.btn-votar.active:hover {
-		background: #1d4ed8;
+		background: var(--link-hover);
 		transform: scale(1.03);
 	}
 
@@ -818,6 +816,9 @@
 		inset: 0;
 		background: rgba(0, 0, 0, 0.3);
 		z-index: 99;
+		border: none;
+		cursor: default;
+		padding: 0;
 	}
 
 	.votes-panel {
@@ -910,12 +911,12 @@
 	}
 
 	.votes-panel-voto.favor {
-		background: #16a34a1a;
-		color: #16a34a;
+		background: color-mix(in srgb, var(--color-favor) 10%, transparent);
+		color: var(--color-favor);
 	}
 
 	.votes-panel-voto.contra {
-		background: #dc26261a;
-		color: #dc2626;
+		background: color-mix(in srgb, var(--color-contra) 10%, transparent);
+		color: var(--color-contra);
 	}
 </style>

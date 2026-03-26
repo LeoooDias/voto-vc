@@ -14,6 +14,8 @@
 	 * In compact mode (perfil re-vote), clicking a dot fires onvote directly.
 	 */
 
+	import { colorForPos } from '$lib/constants';
+
 	interface Props {
 		value?: number | null;
 		onselect?: (pos: number) => void;
@@ -56,15 +58,21 @@
 		}
 	}
 
-	function colorForPos(pos: number): string {
-		const colors: Record<number, string> = {
-			1: '#dc2626',
-			2: '#f87171',
-			3: '#a3a3a3',
-			4: '#4ade80',
-			5: '#16a34a',
-		};
-		return colors[pos] ?? '#a3a3a3';
+	function handleKeydown(e: KeyboardEvent, p: Position) {
+		const idx = POSITIONS.findIndex((pos) => pos.pos === p.pos);
+		if (e.key === 'ArrowLeft' && idx > 0) {
+			e.preventDefault();
+			const prev = POSITIONS[idx - 1];
+			handleClick(prev);
+			const sibling = (e.currentTarget as HTMLElement)?.previousElementSibling as HTMLElement | null;
+			sibling?.focus();
+		} else if (e.key === 'ArrowRight' && idx < POSITIONS.length - 1) {
+			e.preventDefault();
+			const next = POSITIONS[idx + 1];
+			handleClick(next);
+			const sibling = (e.currentTarget as HTMLElement)?.nextElementSibling as HTMLElement | null;
+			sibling?.focus();
+		}
 	}
 </script>
 
@@ -84,7 +92,9 @@
 				class:active={value === p.pos}
 				class:endpoint={p.pos === 1 || p.pos === 3 || p.pos === 5}
 				onclick={() => handleClick(p)}
+				onkeydown={(e) => handleKeydown(e, p)}
 				title={TOOLTIP[p.pos]}
+				aria-label={TOOLTIP[p.pos]}
 				style:--dot-color={colorForPos(p.pos)}
 			>
 				<span class="dot"></span>
@@ -116,9 +126,9 @@
 		color: var(--text-secondary);
 	}
 
-	.end-label.left { color: #dc2626; }
-	.end-label.center { color: #737373; }
-	.end-label.right { color: #16a34a; }
+	.end-label.left { color: var(--color-contra); }
+	.end-label.center { color: var(--color-neutro-dark); }
+	.end-label.right { color: var(--color-favor); }
 
 	.slider-row {
 		display: flex;
@@ -143,7 +153,7 @@
 	.track-fill {
 		position: absolute;
 		inset: 0;
-		background: linear-gradient(to right, #dc2626, #f87171, #d4d4d4, #4ade80, #16a34a);
+		background: linear-gradient(to right, var(--color-contra), var(--color-contra-leve), #d4d4d4, var(--color-favor-leve), var(--color-favor));
 		opacity: 0.4;
 	}
 
@@ -157,7 +167,7 @@
 		padding: 4px 0;
 		position: relative;
 		z-index: 1;
-		width: 36px;
+		width: 44px;
 	}
 
 	.dot {
@@ -168,6 +178,7 @@
 		background: var(--bg-card);
 		transition: all 0.15s ease;
 		flex-shrink: 0;
+		will-change: transform;
 	}
 
 	.pos-btn.endpoint .dot {
@@ -205,7 +216,7 @@
 	}
 
 	.compact .pos-btn {
-		width: 26px;
+		width: 36px;
 	}
 
 	.compact .end-label {
@@ -230,7 +241,7 @@
 	/* Mobile */
 	@media (max-width: 480px) {
 		.pos-btn {
-			width: 30px;
+			width: 48px;
 		}
 
 		.dot {

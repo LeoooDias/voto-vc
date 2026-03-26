@@ -134,26 +134,27 @@
 		<input
 			type="text"
 			placeholder="Buscar por texto..."
+			aria-label="Buscar proposições por texto"
 			value={busca}
 			oninput={onBuscaInput}
 			class="search-input"
 		/>
 		<div class="filter-row">
 			{#if filtros}
-				<select bind:value={filtroTema} onchange={applyFilter}>
+				<select bind:value={filtroTema} aria-label="Filtrar por tema" onchange={applyFilter}>
 					<option value="">Todos os temas</option>
 					{#each filtros.temas.toSorted((a, b) => (TEMAS[a.valor]?.label ?? a.valor).localeCompare(TEMAS[b.valor]?.label ?? b.valor, 'pt-BR')) as t}
 						{@const info = getTema(t.valor)}
 						<option value={t.valor}>{info?.label ?? t.valor} ({t.count})</option>
 					{/each}
 				</select>
-				<select bind:value={filtroTipo} onchange={applyFilter}>
+				<select bind:value={filtroTipo} aria-label="Filtrar por tipo" onchange={applyFilter}>
 					<option value="">Todos os tipos</option>
 					{#each filtros.tipos.toSorted((a, b) => a.valor.localeCompare(b.valor)) as t}
 						<option value={t.valor}>{t.valor} ({t.count})</option>
 					{/each}
 				</select>
-				<select bind:value={filtroAno} onchange={applyFilter}>
+				<select bind:value={filtroAno} aria-label="Filtrar por ano" onchange={applyFilter}>
 					<option value="">Todos os anos</option>
 					{#each filtros.anos as a}
 						<option value={a}>{a}</option>
@@ -253,7 +254,7 @@
 	}
 
 	.filter-toggle input {
-		accent-color: #2563eb;
+		accent-color: var(--link);
 	}
 
 	.filter-hint {
@@ -354,7 +355,7 @@
 		font-size: 0.8rem;
 		font-weight: 600;
 		color: var(--link);
-		background: #2563eb1a;
+		background: color-mix(in srgb, var(--link) 10%, transparent);
 		padding: 0.1rem 0.5rem;
 		border-radius: 4px;
 	}
@@ -370,9 +371,9 @@
 	.prop-badge {
 		font-size: 0.7rem;
 		font-weight: 600;
-		color: #16a34a;
-		background: #dcfce71a;
-		border: 1px solid #16a34a33;
+		color: var(--color-favor);
+		background: color-mix(in srgb, var(--color-favor) 10%, transparent);
+		border: 1px solid color-mix(in srgb, var(--color-favor) 20%, transparent);
 		padding: 0.1rem 0.4rem;
 		border-radius: 10px;
 	}
@@ -420,9 +421,9 @@
 	}
 
 	.casa-pill.camara {
-		background: #2563eb1a;
-		color: #2563eb;
-		border: 1px solid #2563eb33;
+		background: color-mix(in srgb, var(--link) 10%, transparent);
+		color: var(--link);
+		border: 1px solid color-mix(in srgb, var(--link) 20%, transparent);
 	}
 
 	.casa-pill.senado {
@@ -435,17 +436,16 @@
 		filter: brightness(0.85);
 	}
 
-	@media (prefers-color-scheme: dark) {
-		.casa-pill.camara {
-			background: #2563eb33;
-			color: #60a5fa;
-			border-color: #2563eb55;
-		}
-		.casa-pill.senado {
-			background: #db277833;
-			color: #f472b6;
-			border-color: #db277855;
-		}
+	:global([data-theme='escuro']) .casa-pill.camara {
+		background: color-mix(in srgb, var(--link) 20%, transparent);
+		color: var(--link-hover);
+		border-color: color-mix(in srgb, var(--link) 33%, transparent);
+	}
+
+	:global([data-theme='escuro']) .casa-pill.senado {
+		background: #db277833;
+		color: #f472b6;
+		border-color: #db277855;
 	}
 
 	.pagination {

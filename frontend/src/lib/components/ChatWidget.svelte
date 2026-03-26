@@ -209,22 +209,19 @@
 		}
 	}
 
-	function handleBackdropKeydown(e: KeyboardEvent) {
-		if (e.key === 'Escape') close();
-	}
 </script>
 
 {#if inline}
-	<button class="chat-inline-btn" onclick={toggle}>
-		<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+	<button class="chat-inline-btn" onclick={toggle} aria-label={posicaoId ? 'Pergunte sobre esta posição' : 'Pergunte sobre esta proposição'}>
+		<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
 		<span>{posicaoId ? 'Pergunte sobre esta posição' : 'Pergunte sobre esta proposição'}</span>
 	</button>
 {:else}
-	<button class="chat-fab" class:open={isOpen} onclick={toggle}>
+	<button class="chat-fab" class:open={isOpen} onclick={toggle} aria-label={isOpen ? 'Fechar chat' : 'Abrir chat'}>
 		{#if isOpen}
-			<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+			<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 		{:else}
-			<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+			<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
 			<span class="fab-label">{posicaoId ? 'Pergunte sobre esta posição' : 'Pergunte sobre esta proposição'}</span>
 		{/if}
 	</button>
@@ -232,26 +229,25 @@
 
 <!-- Chat modal -->
 {#if isOpen}
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<div class="chat-backdrop" onclick={close} onkeydown={handleBackdropKeydown}></div>
+	<button class="chat-backdrop" onclick={close} aria-label="Fechar chat"></button>
 	<div class="chat-modal" class:expanded={isExpanded} role="dialog" aria-label="Chat sobre proposição">
 		<div class="chat-header">
 			<div class="chat-title">
 				<span class="chat-icon">
-					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
 				</span>
 				<span class="chat-prop-title">{proposicaoTitulo}</span>
 			</div>
 			<div class="chat-header-actions">
 				<button class="chat-expand" onclick={toggleExpand} aria-label={isExpanded ? 'Reduzir chat' : 'Expandir chat'}>
 					{#if isExpanded}
-						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
 					{:else}
-						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
 					{/if}
 				</button>
 				<button class="chat-close" onclick={close} aria-label="Fechar chat">
-					<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+					<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 				</button>
 			</div>
 		</div>
@@ -262,19 +258,19 @@
 				<a href="/login" class="chat-login-btn">Entrar com Google</a>
 			</div>
 		{:else}
-			<div class="chat-messages" bind:this={messagesEl}>
+			<div class="chat-messages" bind:this={messagesEl} aria-live="polite">
 				{#if messages.length === 0}
 					<div class="chat-empty">
 						<p>{posicaoId ? 'Pergunte qualquer coisa sobre esta posição temática.' : 'Pergunte qualquer coisa sobre esta proposição.'}</p>
 						<div class="suggestions">
 							{#if posicaoId}
-								<button class="suggestion" onclick={() => { inputText = 'Explique esta posição e as proposições relacionadas.'; sendMessage(); }}>Explicar posição e proposições</button>
-								<button class="suggestion" onclick={() => { inputText = 'Quais os argumentos a favor e contra esta posição?'; sendMessage(); }}>Argumentos a favor e contra</button>
-								<button class="suggestion" onclick={() => { inputText = 'Como essa questão afeta o dia a dia do cidadão?'; sendMessage(); }}>Impacto no dia a dia</button>
+								<button class="suggestion" aria-label="Perguntar: Explique esta posição e as proposições relacionadas" onclick={() => { inputText = 'Explique esta posição e as proposições relacionadas.'; sendMessage(); }}>Explicar posição e proposições</button>
+								<button class="suggestion" aria-label="Perguntar: Quais os argumentos a favor e contra esta posição" onclick={() => { inputText = 'Quais os argumentos a favor e contra esta posição?'; sendMessage(); }}>Argumentos a favor e contra</button>
+								<button class="suggestion" aria-label="Perguntar: Como essa questão afeta o dia a dia do cidadão" onclick={() => { inputText = 'Como essa questão afeta o dia a dia do cidadão?'; sendMessage(); }}>Impacto no dia a dia</button>
 							{:else}
-								<button class="suggestion" onclick={() => { inputText = 'Resuma os principais pontos desta proposição.'; sendMessage(); }}>Resumo dos pontos principais</button>
-								<button class="suggestion" onclick={() => { inputText = 'Quais os argumentos a favor e contra?'; sendMessage(); }}>Argumentos a favor e contra</button>
-								<button class="suggestion" onclick={() => { inputText = 'Como isso pode afetar meu dia a dia?'; sendMessage(); }}>Impacto no dia a dia</button>
+								<button class="suggestion" aria-label="Perguntar: Resuma os principais pontos desta proposição" onclick={() => { inputText = 'Resuma os principais pontos desta proposição.'; sendMessage(); }}>Resumo dos pontos principais</button>
+								<button class="suggestion" aria-label="Perguntar: Quais os argumentos a favor e contra" onclick={() => { inputText = 'Quais os argumentos a favor e contra?'; sendMessage(); }}>Argumentos a favor e contra</button>
+								<button class="suggestion" aria-label="Perguntar: Como isso pode afetar meu dia a dia" onclick={() => { inputText = 'Como isso pode afetar meu dia a dia?'; sendMessage(); }}>Impacto no dia a dia</button>
 							{/if}
 						</div>
 					</div>
@@ -314,7 +310,7 @@
 					disabled={isStreaming || !inputText.trim()}
 					aria-label="Enviar"
 				>
-					<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+					<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
 				</button>
 			</div>
 		{/if}
@@ -331,7 +327,7 @@
 		border: 1px solid var(--border);
 		border-radius: 8px;
 		padding: 0.4rem 0.75rem;
-		color: #2563eb;
+		color: var(--link);
 		font-size: 0.8rem;
 		font-weight: 600;
 		cursor: pointer;
@@ -340,8 +336,8 @@
 	}
 
 	.chat-inline-btn:hover {
-		border-color: #2563eb;
-		background: #2563eb0d;
+		border-color: var(--link);
+		background: color-mix(in srgb, var(--link) 5%, transparent);
 	}
 
 	/* Floating Action Button */
@@ -352,7 +348,7 @@
 		height: 44px;
 		padding: 0 1rem;
 		border-radius: 22px;
-		background: #2563eb;
+		background: var(--link);
 		color: white;
 		border: none;
 		cursor: pointer;
@@ -373,7 +369,7 @@
 
 	.chat-fab:hover {
 		transform: scale(1.03);
-		background: #1d4ed8;
+		background: var(--link-hover);
 	}
 
 	.chat-fab.open {
@@ -390,6 +386,12 @@
 		inset: 0;
 		background: rgba(0, 0, 0, 0.3);
 		z-index: 1001;
+		border: none;
+		cursor: default;
+		padding: 0;
+		margin: 0;
+		width: 100%;
+		height: 100%;
 	}
 
 	/* Modal */
@@ -407,6 +409,14 @@
 		flex-direction: column;
 		z-index: 1002;
 		overflow: hidden;
+	}
+
+	/* Tablet breakpoint */
+	@media (min-width: 481px) and (max-width: 1024px) {
+		.chat-modal {
+			width: calc(100vw - 3rem);
+			max-width: 500px;
+		}
 	}
 
 	/* Expanded state — desktop only */
@@ -456,7 +466,7 @@
 	}
 
 	.chat-icon {
-		color: #2563eb;
+		color: var(--link);
 		flex-shrink: 0;
 		display: flex;
 	}
@@ -465,9 +475,13 @@
 		font-size: 0.8rem;
 		font-weight: 600;
 		color: var(--text-primary);
-		white-space: nowrap;
+		white-space: normal;
 		overflow: hidden;
 		text-overflow: ellipsis;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
+		-webkit-box-orient: vertical;
 	}
 
 	.chat-header-actions {
@@ -482,7 +496,7 @@
 		border: none;
 		color: var(--text-secondary);
 		cursor: pointer;
-		padding: 0.25rem;
+		padding: 0.5rem;
 		display: none;
 		border-radius: 4px;
 	}
@@ -503,7 +517,7 @@
 		border: none;
 		color: var(--text-secondary);
 		cursor: pointer;
-		padding: 0.25rem;
+		padding: 0.5rem;
 		display: flex;
 		flex-shrink: 0;
 		border-radius: 4px;
@@ -580,7 +594,7 @@
 
 	.user .msg-content {
 		white-space: pre-wrap;
-		background: #2563eb;
+		background: var(--link);
 		color: white;
 		border-bottom-right-radius: 4px;
 	}
@@ -620,7 +634,7 @@
 	}
 
 	.msg-content.markdown :global(code) {
-		background: rgba(0, 0, 0, 0.08);
+		background: var(--color-code-bg);
 		padding: 0.1em 0.3em;
 		border-radius: 3px;
 		font-size: 0.8em;
@@ -648,7 +662,7 @@
 
 	.chat-error {
 		font-size: 0.8rem;
-		color: #dc2626;
+		color: var(--color-contra);
 		text-align: center;
 		padding: 0.5rem;
 	}
@@ -673,7 +687,7 @@
 
 	.chat-login-btn {
 		display: inline-block;
-		background: #2563eb;
+		background: var(--link);
 		color: white;
 		padding: 0.6rem 1.5rem;
 		border-radius: 8px;
@@ -684,7 +698,7 @@
 	}
 
 	.chat-login-btn:hover {
-		background: #1d4ed8;
+		background: var(--link-hover);
 	}
 
 	/* Typing indicator */
@@ -752,7 +766,7 @@
 		width: 38px;
 		height: 38px;
 		border-radius: 8px;
-		background: #2563eb;
+		background: var(--link);
 		color: white;
 		border: none;
 		cursor: pointer;
@@ -764,7 +778,7 @@
 	}
 
 	.chat-send:hover:not(:disabled) {
-		background: #1d4ed8;
+		background: var(--link-hover);
 	}
 
 	.chat-send:disabled {

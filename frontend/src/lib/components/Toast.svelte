@@ -7,7 +7,7 @@
 		{#each $toasts as toast (toast.id)}
 			<div class="toast toast-{toast.type}" role="alert">
 				<span class="toast-msg">{toast.message}</span>
-				<button class="toast-close" onclick={() => dismissToast(toast.id)}>&times;</button>
+				<button class="toast-close" onclick={() => dismissToast(toast.id)} aria-label="Fechar notificação">&times;</button>
 			</div>
 		{/each}
 	</div>
@@ -50,22 +50,22 @@
 	}
 
 	.toast-success {
-		background: #16a34a;
+		background: var(--color-favor);
 		color: white;
 	}
 
 	.toast-error {
-		background: #dc2626;
+		background: var(--color-contra);
 		color: white;
 	}
 
 	.toast-warning {
-		background: #ea580c;
+		background: var(--color-warning);
 		color: white;
 	}
 
 	.toast-info {
-		background: #2563eb;
+		background: var(--link);
 		color: white;
 	}
 
@@ -82,6 +82,11 @@
 		padding: 0;
 		line-height: 1;
 		opacity: 0.8;
+		min-width: 44px;
+		min-height: 44px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 	}
 
 	.toast-close:hover {

@@ -49,68 +49,104 @@
 		open = false;
 	}
 
-	function handleBackdrop(e: MouseEvent) {
-		if (e.target === e.currentTarget) close();
+	let modalEl: HTMLDivElement | undefined = $state();
+
+	function handleBackdropClick() {
+		close();
 	}
 
 	function handleKeydown(e: KeyboardEvent) {
-		if (e.key === 'Escape') close();
+		if (e.key === 'Escape') {
+			close();
+			return;
+		}
+		// Focus trap
+		if (e.key === 'Tab' && modalEl) {
+			const focusable = modalEl.querySelectorAll<HTMLElement>(
+				'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+			);
+			if (focusable.length === 0) return;
+			const first = focusable[0];
+			const last = focusable[focusable.length - 1];
+			if (e.shiftKey) {
+				if (document.activeElement === first) {
+					e.preventDefault();
+					last.focus();
+				}
+			} else {
+				if (document.activeElement === last) {
+					e.preventDefault();
+					first.focus();
+				}
+			}
+		}
 	}
+
+	$effect(() => {
+		if (open && modalEl) {
+			const focusable = modalEl.querySelectorAll<HTMLElement>(
+				'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+			);
+			if (focusable.length > 0) {
+				focusable[0].focus();
+			}
+		}
+	});
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
 
 {#if open}
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<!-- svelte-ignore a11y_click_events_have_key_events -->
-	<div class="backdrop" onclick={handleBackdrop}>
-		<div class="modal">
-			<div class="modal-header">
-				<h2>Configurações</h2>
-				<button class="close-btn" onclick={close}>&times;</button>
-			</div>
+	<button class="backdrop" onclick={handleBackdropClick} aria-label="Fechar configurações"></button>
+	<div class="modal" role="dialog" aria-modal="true" aria-labelledby="settings-title" bind:this={modalEl}>
+		<div class="modal-header">
+			<h2 id="settings-title">Configurações</h2>
+			<button class="close-btn" onclick={close} aria-label="Fechar configurações">&times;</button>
+		</div>
 
-			<div class="setting">
-				<span class="setting-label">Estado (UF)</span>
-				{#if $authUser}
-					<div class="uf-row">
-						<select bind:value={selectedUf} onchange={saveUf}>
-							<option value="">Selecione...</option>
-							{#each UF_SIGLAS as uf}
-								<option value={uf}>{uf}</option>
-							{/each}
-						</select>
-						{#if saving}
-							<span class="saving">Salvando...</span>
-						{/if}
-					</div>
-				{:else}
-					<p class="hint">Entre com sua conta para salvar seu estado.</p>
-				{/if}
-			</div>
-
-			<div class="setting">
-				<span class="setting-label">Tema</span>
-				<div class="theme-options">
-					<button
-						class="theme-btn"
-						class:active={currentTheme === 'claro'}
-						onclick={() => handleTheme('claro')}
-					>Claro</button>
-					<button
-						class="theme-btn"
-						class:active={currentTheme === 'escuro'}
-						onclick={() => handleTheme('escuro')}
-					>Escuro</button>
-					<button
-						class="theme-btn"
-						class:active={currentTheme === 'auto'}
-						onclick={() => handleTheme('auto')}
-					>Auto</button>
+		<div class="setting">
+			<span class="setting-label" id="settings-uf-label">Estado (UF)</span>
+			{#if $authUser}
+				<div class="uf-row">
+					<select bind:value={selectedUf} onchange={saveUf} aria-labelledby="settings-uf-label">
+						<option value="">Selecione...</option>
+						{#each UF_SIGLAS as uf}
+							<option value={uf}>{uf}</option>
+						{/each}
+					</select>
+					{#if saving}
+						<span class="saving">Salvando...</span>
+					{/if}
 				</div>
-			</div>
+			{:else}
+				<p class="hint">Entre com sua conta para salvar seu estado.</p>
+			{/if}
+		</div>
 
+		<div class="setting">
+			<span class="setting-label">Tema</span>
+			<div class="theme-options">
+				<button
+					class="theme-btn"
+					class:active={currentTheme === 'claro'}
+					aria-pressed={currentTheme === 'claro'}
+					onclick={() => handleTheme('claro')}
+				>Claro</button>
+				<button
+					class="theme-btn"
+					class:active={currentTheme === 'escuro'}
+					aria-pressed={currentTheme === 'escuro'}
+					onclick={() => handleTheme('escuro')}
+				>Escuro</button>
+				<button
+					class="theme-btn"
+					class:active={currentTheme === 'auto'}
+					aria-pressed={currentTheme === 'auto'}
+					onclick={() => handleTheme('auto')}
+				>Auto</button>
 			</div>
+		</div>
+
 	</div>
 {/if}
 
@@ -119,13 +155,21 @@
 		position: fixed;
 		inset: 0;
 		background: rgba(0, 0, 0, 0.4);
-		display: flex;
-		align-items: center;
-		justify-content: center;
 		z-index: 100;
+		border: none;
+		cursor: default;
+		padding: 0;
+		margin: 0;
+		width: 100%;
+		height: 100%;
 	}
 
 	.modal {
+		position: fixed;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		z-index: 101;
 		background: var(--bg-card);
 		border-radius: 16px;
 		padding: 2rem;
@@ -219,9 +263,9 @@
 	}
 
 	.theme-btn.active {
-		background: #2563eb;
+		background: var(--link);
 		color: white;
-		border-color: #2563eb;
+		border-color: var(--link);
 	}
 
 </style>

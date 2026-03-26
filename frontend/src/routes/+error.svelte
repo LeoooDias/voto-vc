@@ -58,7 +58,7 @@
 	}
 
 	.error-cta {
-		background: #2563eb;
+		background: var(--link);
 		color: white;
 		padding: 0.6rem 1.5rem;
 		border-radius: 8px;
@@ -68,6 +68,6 @@
 	}
 
 	.error-cta:hover {
-		background: #1d4ed8;
+		background: var(--link-hover);
 	}
 </style>

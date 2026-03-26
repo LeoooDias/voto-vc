@@ -10,6 +10,8 @@
 	 *   5 = A favor      (sim, peso 1.0)
 	 */
 
+	import { colorForPos } from '$lib/constants';
+
 	interface Props {
 		value?: number | null;
 		onselect?: (pos: number) => void;
@@ -34,15 +36,19 @@
 		onselect?.(pos);
 	}
 
-	function colorForPos(pos: number): string {
-		const colors: Record<number, string> = {
-			1: '#dc2626',
-			2: '#f87171',
-			3: '#a3a3a3',
-			4: '#4ade80',
-			5: '#16a34a'
-		};
-		return colors[pos] ?? '#a3a3a3';
+	function handleKeydown(e: KeyboardEvent, pos: number) {
+		const idx = POSITIONS.findIndex((p) => p.pos === pos);
+		if (e.key === 'ArrowLeft' && idx > 0) {
+			e.preventDefault();
+			handleClick(POSITIONS[idx - 1].pos);
+			const sibling = (e.currentTarget as HTMLElement)?.previousElementSibling as HTMLElement | null;
+			sibling?.focus();
+		} else if (e.key === 'ArrowRight' && idx < POSITIONS.length - 1) {
+			e.preventDefault();
+			handleClick(POSITIONS[idx + 1].pos);
+			const sibling = (e.currentTarget as HTMLElement)?.nextElementSibling as HTMLElement | null;
+			sibling?.focus();
+		}
 	}
 </script>
 
@@ -62,7 +68,9 @@
 				class:active={value === p.pos}
 				class:endpoint={p.pos === 1 || p.pos === 3 || p.pos === 5}
 				onclick={() => handleClick(p.pos)}
+				onkeydown={(e) => handleKeydown(e, p.pos)}
 				title={p.label}
+				aria-label={p.label}
 				style:--dot-color={colorForPos(p.pos)}
 			>
 				<span class="dot"></span>
@@ -95,13 +103,13 @@
 	}
 
 	.end-label.left {
-		color: #dc2626;
+		color: var(--color-contra);
 	}
 	.end-label.center {
-		color: #737373;
+		color: var(--color-neutro-dark);
 	}
 	.end-label.right {
-		color: #16a34a;
+		color: var(--color-favor);
 	}
 
 	.slider-row {
@@ -127,7 +135,7 @@
 	.track-fill {
 		position: absolute;
 		inset: 0;
-		background: linear-gradient(to right, #dc2626, #f87171, #d4d4d4, #4ade80, #16a34a);
+		background: linear-gradient(to right, var(--color-contra), var(--color-contra-leve), #d4d4d4, var(--color-favor-leve), var(--color-favor));
 		opacity: 0.4;
 	}
 
@@ -141,7 +149,7 @@
 		padding: 4px 0;
 		position: relative;
 		z-index: 1;
-		width: 36px;
+		width: 44px;
 	}
 
 	.dot {
@@ -152,6 +160,7 @@
 		background: var(--bg-card);
 		transition: all 0.15s ease;
 		flex-shrink: 0;
+		will-change: transform;
 	}
 
 	.pos-btn.endpoint .dot {
@@ -177,7 +186,7 @@
 
 	@media (max-width: 480px) {
 		.pos-btn {
-			width: 30px;
+			width: 48px;
 		}
 
 		.dot {
