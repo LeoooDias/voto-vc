@@ -505,8 +505,9 @@
 		top: 90px;
 		z-index: 40;
 		background: var(--bg-page);
-		padding: 0.75rem 0 0;
-		margin: -0.75rem 0 0;
+		padding: 1rem 0 0.75rem;
+		margin: -0.5rem 0 0.5rem;
+		border-bottom: 1px solid var(--border);
 	}
 
 	.progress {
