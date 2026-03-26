@@ -104,7 +104,7 @@
 			await tick();
 			const el = document.getElementById(`cat-${catId}`);
 			if (el) {
-				el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+				el.scrollIntoView({ behavior: 'instant', block: 'start' });
 			}
 		}
 	}
@@ -316,16 +316,18 @@
 			</span>
 			<button class="uf-change-btn" onclick={() => { uf = ''; selectedUf.set(''); }}>Trocar estado</button>
 		</div>
-		<div class="progress">
-			<div class="progress-fill" style="width: {progressPct}%"></div>
-		</div>
-		<div class="counter-row">
-			<p class="answered-text">
-				{answeredCount}/20 posições respondidas
-				{#if remaining > 0}
-					<span class="remaining-hint"> · faltam {remaining} para ver seu perfil</span>
+		<div class="progress-sticky">
+			<div class="progress">
+				<div class="progress-fill" style="width: {progressPct}%"></div>
+			</div>
+			<div class="counter-row">
+				<p class="answered-text">
+					{answeredCount}/20 posições respondidas
+					{#if remaining > 0}
+						<span class="remaining-hint"> · faltam {remaining} para ver seu perfil</span>
 				{/if}
 			</p>
+			</div>
 		</div>
 
 		<div class="categories-grid">
@@ -498,6 +500,15 @@
 		margin: 0 auto;
 	}
 
+	.progress-sticky {
+		position: sticky;
+		top: 90px;
+		z-index: 40;
+		background: var(--bg-page);
+		padding: 0.75rem 0 0;
+		margin: -0.75rem 0 0;
+	}
+
 	.progress {
 		background: var(--border);
 		border-radius: 4px;
@@ -515,7 +526,7 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		margin: 0.5rem 0 1rem;
+		margin: 0.25rem 0 0.5rem;
 	}
 
 	.answered-text {
@@ -546,6 +557,10 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.75rem;
+	}
+
+	.cat-section {
+		scroll-margin-top: 150px;
 	}
 
 	.cat-card {
@@ -1203,5 +1218,15 @@
 	.uf-nome {
 		color: var(--text-primary);
 		font-size: 0.85rem;
+	}
+
+	@media (max-width: 768px) {
+		.progress-sticky {
+			top: 70px;
+		}
+
+		.cat-section {
+			scroll-margin-top: 130px;
+		}
 	}
 </style>
