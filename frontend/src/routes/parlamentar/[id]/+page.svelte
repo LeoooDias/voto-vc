@@ -67,7 +67,25 @@
 
 	let comparacao = $state<{ concordou: number; discordou: number; total: number; score: number | null }>({ concordou: 0, discordou: 0, total: 0, score: null });
 	let posicoes = $state<PosicaoInferida[]>([]);
+	let posicionamentosOpen = $state(true);
+	let openCatIds: Set<string> = $state(new Set());
+	let catsInitialized = $state(false);
 	let userPosRespostas: Map<number, RespostaPosicaoItem> = $state(new Map());
+
+	function toggleCat(catId: string) {
+		const next = new Set(openCatIds);
+		if (next.has(catId)) next.delete(catId);
+		else next.add(catId);
+		openCatIds = next;
+	}
+
+	// Auto-open all categories when posições load (once)
+	$effect(() => {
+		if (posicoes.length > 0 && !catsInitialized) {
+			catsInitialized = true;
+			openCatIds = new Set(POSICAO_CATEGORIAS.map(c => c.id));
+		}
+	});
 
 	function getUserStance(posicaoId: number) {
 		const r = userPosRespostas.get(posicaoId);
@@ -289,43 +307,53 @@
 
 		{#if posicoes.length > 0}
 			<div class="posicionamentos">
-				<h2>Posicionamentos</h2>
-				{#each POSICAO_CATEGORIAS as cat}
-					{@const catPosicoes = posicoes.filter(p => p.stance !== 'sem_dados' && cat.ordens.includes(p.ordem))}
-					{#if catPosicoes.length > 0}
-						<div class="posicao-cat">
-							<h3 class="posicao-cat-label" style="color: {cat.cor}">
-								<span class="posicao-cat-dot" style="background: {cat.cor}"></span>
-								{cat.label}
-							</h3>
-							<div class="posicoes-grid">
-								{#each catPosicoes as pos}
-									{@const userStance = getUserStance(pos.posicao_id)}
-									<div class="posicao-card">
-										<div class="posicao-info">
-											<span class="posicao-titulo">{pos.titulo}</span>
-											<span class="posicao-stance" style="color: {stanceColor(pos.stance)}">{stanceLabel(pos.stance)}</span>
-										</div>
-										{#if pos.score_pct != null}
-											<div class="posicao-bar">
-												<div class="posicao-fill" style="width: {pos.score_pct}%; background: {stanceColor(pos.stance)}"></div>
+				<button class="section-toggle" onclick={() => posicionamentosOpen = !posicionamentosOpen}>
+					<h2>Posicionamentos</h2>
+					<svg class="section-chevron" class:open={posicionamentosOpen} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+				</button>
+				{#if posicionamentosOpen}
+					{#each POSICAO_CATEGORIAS as cat}
+						{@const catPosicoes = posicoes.filter(p => p.stance !== 'sem_dados' && cat.ordens.includes(p.ordem))}
+						{#if catPosicoes.length > 0}
+							<div class="posicao-cat">
+								<button class="posicao-cat-toggle" onclick={() => toggleCat(cat.id)}>
+									<h3 class="posicao-cat-label" style="color: {cat.cor}">
+										<span class="posicao-cat-dot" style="background: {cat.cor}"></span>
+										{cat.label}
+									</h3>
+									<svg class="cat-chevron" class:open={openCatIds.has(cat.id)} style="color: {cat.cor}" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+								</button>
+								{#if openCatIds.has(cat.id)}
+									<div class="posicoes-grid">
+										{#each catPosicoes as pos}
+											{@const userStance = getUserStance(pos.posicao_id)}
+											<div class="posicao-card">
+												<div class="posicao-info">
+													<span class="posicao-titulo">{pos.titulo}</span>
+													<span class="posicao-stance" style="color: {stanceColor(pos.stance)}">{stanceLabel(pos.stance)}</span>
+												</div>
+												{#if pos.score_pct != null}
+													<div class="posicao-bar">
+														<div class="posicao-fill" style="width: {pos.score_pct}%; background: {stanceColor(pos.stance)}"></div>
+													</div>
+												{/if}
+												{#if userStance}
+													<div class="posicao-user">
+														<span class="posicao-user-label">Você</span>
+														<span class="posicao-user-stance" style="color: {stanceColor(userStance.stance)}">{stanceLabel(userStance.stance)}</span>
+													</div>
+													<div class="posicao-bar user">
+														<div class="posicao-fill" style="width: {userStance.score_pct}%; background: {stanceColor(userStance.stance)}"></div>
+													</div>
+												{/if}
 											</div>
-										{/if}
-										{#if userStance}
-											<div class="posicao-user">
-												<span class="posicao-user-label">Você</span>
-												<span class="posicao-user-stance" style="color: {stanceColor(userStance.stance)}">{stanceLabel(userStance.stance)}</span>
-											</div>
-											<div class="posicao-bar user">
-												<div class="posicao-fill" style="width: {userStance.score_pct}%; background: {stanceColor(userStance.stance)}"></div>
-											</div>
-										{/if}
+										{/each}
 									</div>
-								{/each}
+								{/if}
 							</div>
-						</div>
-					{/if}
-				{/each}
+						{/if}
+					{/each}
+				{/if}
 			</div>
 		{/if}
 
@@ -837,12 +865,63 @@
 		margin-bottom: 2rem;
 	}
 
-	.posicionamentos h2 {
+	.section-toggle {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		width: 100%;
+		background: none;
+		border: none;
+		padding: 0;
+		cursor: pointer;
+		font: inherit;
+		text-align: left;
 		margin-bottom: 1rem;
+	}
+
+	.section-toggle h2 {
+		margin: 0;
+		color: var(--text-primary);
+	}
+
+	.section-chevron {
+		color: var(--text-secondary);
+		transition: transform 0.2s;
+		flex-shrink: 0;
+	}
+
+	.section-chevron.open {
+		transform: rotate(180deg);
 	}
 
 	.posicao-cat {
 		margin-bottom: 1rem;
+	}
+
+	.posicao-cat-toggle {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		width: 100%;
+		background: none;
+		border: none;
+		padding: 0.25rem 0;
+		cursor: pointer;
+		font: inherit;
+		text-align: left;
+	}
+
+	.posicao-cat-toggle:hover .posicao-cat-label {
+		opacity: 0.8;
+	}
+
+	.cat-chevron {
+		transition: transform 0.2s;
+		flex-shrink: 0;
+	}
+
+	.cat-chevron.open {
+		transform: rotate(180deg);
 	}
 
 	.posicao-cat-label {
@@ -851,7 +930,7 @@
 		gap: 0.4rem;
 		font-size: 0.85rem;
 		font-weight: 700;
-		margin: 0 0 0.5rem;
+		margin: 0;
 	}
 
 	.posicao-cat-dot {
@@ -865,6 +944,7 @@
 		display: grid;
 		grid-template-columns: 1fr 1fr;
 		gap: 0.5rem;
+		margin-top: 0.5rem;
 	}
 
 	@media (max-width: 600px) {
