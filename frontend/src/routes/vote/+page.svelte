@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import { api } from '$lib/api';
 	import { selectedUf, respostas as respostasAvancado } from '$lib/stores/questionario';
 	import { authUser, authLoading } from '$lib/stores/auth';
@@ -95,9 +95,18 @@
 		).length;
 	}
 
-	function toggleCategory(catId: string) {
-		openCategoryId = openCategoryId === catId ? null : catId;
+	async function toggleCategory(catId: string) {
+		const isOpening = openCategoryId !== catId;
+		openCategoryId = isOpening ? catId : null;
 		expandedId = null;
+
+		if (isOpening) {
+			await tick();
+			const el = document.getElementById(`cat-${catId}`);
+			if (el) {
+				el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+			}
+		}
 	}
 
 	function escolherUf(sigla: string) {
@@ -325,7 +334,7 @@
 				{@const catAnswered = categoryAnswered(cat)}
 				{@const isOpen = openCategoryId === cat.id}
 				{@const isDone = catAnswered === catItems.length}
-				<div class="cat-section" class:open={isOpen}>
+				<div id="cat-{cat.id}" class="cat-section" class:open={isOpen}>
 					<button
 						class="cat-card"
 						class:done={isDone}
