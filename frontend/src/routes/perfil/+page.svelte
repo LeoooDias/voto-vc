@@ -164,6 +164,7 @@
 	</div>
 {:else}
 	<div class="perfil-page">
+		<p class="result-eyebrow">Resultado</p>
 		<h1>Seu alinhamento político</h1>
 		<p class="subtitle">Baseado nos seus {totalRespostas} votos · <a href="/sobre" class="methodology-link">como é calculado?</a></p>
 
@@ -271,15 +272,31 @@
 		margin: 0 auto;
 	}
 
+	.result-eyebrow {
+		text-align: center;
+		font-family: var(--font-heading);
+		font-size: 0.75rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.15em;
+		color: var(--accent);
+		margin: 0 0 0.5rem;
+	}
+
 	h1 {
 		text-align: center;
 		color: var(--text-primary);
+		font-family: var(--font-heading);
+		font-size: 2rem;
+		font-weight: 800;
+		letter-spacing: -0.02em;
+		margin: 0 0 0.5rem;
 	}
 
 	.subtitle {
 		text-align: center;
 		color: var(--text-secondary);
-		margin-bottom: 1rem;
+		margin-bottom: 1.5rem;
 	}
 
 	.methodology-link {
@@ -307,8 +324,9 @@
 		border: none;
 		border-bottom: 2px solid transparent;
 		margin-bottom: -2px;
+		font-family: var(--font-heading);
 		font-size: 0.938rem;
-		font-weight: 600;
+		font-weight: 700;
 		color: var(--text-secondary);
 		cursor: pointer;
 		transition: color 0.2s, border-color 0.2s;
@@ -336,10 +354,11 @@
 		padding: 0.75rem 1rem;
 		background: none;
 		border: none;
-		border-bottom: 2px solid transparent;
+		border-bottom: 3px solid transparent;
 		margin-bottom: -2px;
+		font-family: var(--font-heading);
 		font-size: 1rem;
-		font-weight: 600;
+		font-weight: 700;
 		color: var(--text-secondary);
 		cursor: pointer;
 		transition: color 0.2s, border-color 0.2s;
@@ -418,18 +437,29 @@
 		margin-bottom: 0.75rem;
 		text-decoration: none;
 		color: inherit;
-		transition: border-color 0.2s;
+		transition: border-color 0.2s, box-shadow 0.2s;
+	}
+
+	.result-card:first-child {
+		border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+		box-shadow: 0 2px 12px color-mix(in srgb, var(--accent) 10%, transparent);
 	}
 
 	.result-card:hover {
 		border-color: var(--border-hover);
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 	}
 
 	.rank {
 		color: var(--text-secondary);
-		font-weight: 700;
+		font-family: var(--font-heading);
+		font-weight: 800;
 		font-size: 1.125rem;
 		min-width: 2.5rem;
+	}
+
+	.result-card:first-child .rank {
+		color: var(--accent);
 	}
 
 	.info {
@@ -437,7 +467,8 @@
 	}
 
 	.nome {
-		font-weight: 600;
+		font-family: var(--font-heading);
+		font-weight: 700;
 		color: var(--text-primary);
 	}
 
@@ -448,8 +479,10 @@
 	}
 
 	.score {
-		font-size: 1.5rem;
-		font-weight: 700;
+		font-family: var(--font-heading);
+		font-size: 1.75rem;
+		font-weight: 800;
+		letter-spacing: -0.02em;
 	}
 
 	.high { color: var(--color-favor); }
@@ -480,12 +513,18 @@
 
 	.cta {
 		display: inline-block;
-		background: var(--link);
+		background: var(--accent);
 		color: white;
 		padding: 0.75rem 2rem;
-		border-radius: 8px;
+		border-radius: 10px;
 		text-decoration: none;
-		font-weight: 600;
+		font-family: var(--font-heading);
+		font-weight: 700;
+		transition: background 0.2s;
+	}
+
+	.cta:hover {
+		background: var(--accent-hover);
 	}
 
 	.loading, .empty {

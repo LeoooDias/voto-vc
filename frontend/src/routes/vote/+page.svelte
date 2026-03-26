@@ -360,7 +360,7 @@
 						onclick={() => toggleCategory(cat.id)}
 					>
 						<div class="cat-left">
-							<span class="cat-dot" style="background: {cat.cor}"></span>
+							<span class="cat-dot" style="background: {cat.cor}; box-shadow: 0 0 0 3px {cat.cor}1a"></span>
 							<div>
 								<span class="cat-label">{cat.label}</span>
 								<span class="cat-count">{catAnswered}/{catItems.length}</span>
@@ -524,22 +524,23 @@
 
 	.progress {
 		background: var(--border);
-		border-radius: 4px;
-		height: 8px;
+		border-radius: 6px;
+		height: 10px;
 		overflow: hidden;
 	}
 
 	.progress-fill {
 		height: 100%;
-		background: var(--color-favor);
-		transition: width 0.3s ease;
+		background: linear-gradient(90deg, var(--color-favor) 0%, #10b981 100%);
+		transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+		border-radius: 6px;
 	}
 
 	.counter-row {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		margin: 0.25rem 0 0.5rem;
+		margin: 0.375rem 0 0.5rem;
 	}
 
 	.answered-text {
@@ -547,22 +548,30 @@
 		font-size: 0.875rem;
 		font-weight: 600;
 		margin: 0;
+		font-family: var(--font-heading);
 	}
 
 	.btn-resultado {
-		background: var(--link);
+		background: var(--accent);
 		color: white;
 		border: none;
-		padding: 0.5rem 1.5rem;
-		border-radius: 8px;
-		font-weight: 600;
-		font-size: 0.9rem;
+		padding: 0.75rem 2rem;
+		border-radius: 10px;
+		font-family: var(--font-heading);
+		font-weight: 700;
+		font-size: 1rem;
 		cursor: pointer;
-		transition: background 0.2s;
+		transition: background 0.2s, transform 0.15s;
+		box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 30%, transparent);
 	}
 
 	.btn-resultado:hover {
-		background: var(--link-hover);
+		background: var(--accent-hover);
+		transform: translateY(-1px);
+	}
+
+	.btn-resultado:active {
+		transform: translateY(0);
 	}
 
 	/* Category cards grid */
@@ -581,18 +590,19 @@
 		align-items: center;
 		justify-content: space-between;
 		width: 100%;
-		padding: 1rem 1.25rem;
+		padding: 1.125rem 1.25rem;
 		background: var(--bg-card);
 		border: 2px solid var(--border);
 		border-radius: 14px;
 		cursor: pointer;
-		transition: border-color 0.2s, background 0.2s;
+		transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
 		text-align: left;
 		font: inherit;
 	}
 
 	.cat-card:hover {
 		border-color: var(--text-secondary);
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 	}
 
 	.cat-left {
@@ -602,15 +612,17 @@
 	}
 
 	.cat-dot {
-		width: 14px;
-		height: 14px;
+		width: 16px;
+		height: 16px;
 		border-radius: 50%;
 		flex-shrink: 0;
+		/* box-shadow set via inline style with category color */
 	}
 
 	.cat-label {
+		font-family: var(--font-heading);
 		font-weight: 700;
-		font-size: 1rem;
+		font-size: 1.05rem;
 		color: var(--text-primary);
 		display: block;
 	}
@@ -618,7 +630,8 @@
 	.cat-count {
 		font-size: 0.8rem;
 		color: var(--text-secondary);
-		font-weight: 500;
+		font-weight: 600;
+		font-family: var(--font-heading);
 	}
 
 	.cat-chevron {
@@ -688,7 +701,9 @@
 
 	.pos-titulo {
 		margin: 0;
+		font-family: var(--font-heading);
 		font-size: 1.05rem;
+		font-weight: 700;
 		color: var(--text-primary);
 	}
 
@@ -979,7 +994,10 @@
 		margin: 0 0 1.5rem;
 		color: var(--text-primary);
 		text-align: center;
-		font-size: 1.25rem;
+		font-family: var(--font-heading);
+		font-size: 1.4rem;
+		font-weight: 800;
+		letter-spacing: -0.02em;
 	}
 
 	.onboarding-steps {
@@ -1020,18 +1038,19 @@
 	.onboarding-btn {
 		width: 100%;
 		padding: 0.75rem;
-		background: var(--link);
+		background: var(--accent);
 		color: white;
 		border: none;
 		border-radius: 10px;
-		font-weight: 600;
+		font-family: var(--font-heading);
+		font-weight: 700;
 		font-size: 1rem;
 		cursor: pointer;
 		transition: background 0.2s;
 	}
 
 	.onboarding-btn:hover {
-		background: var(--link-hover);
+		background: var(--accent-hover);
 	}
 
 	/* Mode selection modal */
@@ -1059,7 +1078,9 @@
 		margin: 0 0 1.5rem;
 		color: var(--text-primary);
 		text-align: center;
-		font-size: 1.2rem;
+		font-family: var(--font-heading);
+		font-size: 1.3rem;
+		font-weight: 800;
 	}
 
 	.mode-options {
@@ -1152,6 +1173,10 @@
 	}
 
 	.uf-selector h1 {
+		font-family: var(--font-heading);
+		font-weight: 800;
+		font-size: 2rem;
+		letter-spacing: -0.02em;
 		color: var(--text-primary);
 		margin-bottom: 0.25rem;
 	}

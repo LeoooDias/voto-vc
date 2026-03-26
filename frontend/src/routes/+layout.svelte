@@ -114,18 +114,21 @@
 <style>
 	:global(:root),
 	:global([data-theme='claro']) {
-		--bg-page: #f8f9fa;
+		--bg-page: #f6f5f1;
 		--bg-card: #ffffff;
 		--bg-header: #ffffff;
 		--bg-footer: #1a1a2e;
 		--text-primary: #1a1a2e;
-		--text-secondary: #6b7280;
+		--text-secondary: #64748b;
 		--text-footer: #9ca3af;
 		--text-footer-hover: #d1d5db;
-		--border: #e5e7eb;
-		--border-hover: #2563eb;
-		--link: #2563eb;
-		--link-hover: #1d4ed8;
+		--border: #e2e0d8;
+		--border-hover: #1d4ed8;
+		--link: #1d4ed8;
+		--link-hover: #1e40af;
+		--accent: #d97706;
+		--accent-hover: #b45309;
+		--accent-bg: #fef3c7;
 		--color-contra: #dc2626;
 		--color-contra-leve: #f87171;
 		--color-neutro: #a3a3a3;
@@ -134,21 +137,25 @@
 		--color-favor: #16a34a;
 		--color-warning: #ea580c;
 		--color-code-bg: rgba(0, 0, 0, 0.08);
+		--font-heading: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 	}
 
 	:global([data-theme='escuro']) {
-		--bg-page: #0f1117;
-		--bg-card: #1a1d2e;
-		--bg-header: #151822;
+		--bg-page: #0d0f14;
+		--bg-card: #181b28;
+		--bg-header: #131620;
 		--bg-footer: #0a0c12;
 		--text-primary: #e5e7eb;
-		--text-secondary: #9ca3af;
+		--text-secondary: #94a3b8;
 		--text-footer: #6b7280;
 		--text-footer-hover: #e5e7eb;
-		--border: #2d3348;
+		--border: #2a2f42;
 		--border-hover: #3b82f6;
 		--link: #3b82f6;
 		--link-hover: #60a5fa;
+		--accent: #f59e0b;
+		--accent-hover: #d97706;
+		--accent-bg: #78350f;
 		--color-contra: #ef4444;
 		--color-contra-leve: #f87171;
 		--color-neutro: #a3a3a3;
@@ -157,6 +164,7 @@
 		--color-favor: #22c55e;
 		--color-warning: #f97316;
 		--color-code-bg: rgba(255, 255, 255, 0.08);
+		--font-heading: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 	}
 
 	:global(body) {
@@ -164,6 +172,10 @@
 		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 		color: var(--text-primary);
 		background: var(--bg-page);
+	}
+
+	:global(h1), :global(h2), :global(h3) {
+		font-family: var(--font-heading);
 	}
 
 	:global(:focus-visible) {
@@ -259,14 +271,17 @@
 	}
 
 	.nav-vote {
-		background: var(--link);
+		background: var(--accent);
 		color: white !important;
 		border-radius: 6px;
-		padding: 0.375rem 0.75rem;
+		padding: 0.375rem 0.875rem;
+		font-weight: 700;
+		font-family: var(--font-heading);
+		letter-spacing: -0.01em;
 	}
 
 	.nav-vote:hover {
-		background: var(--link-hover);
+		background: var(--accent-hover);
 		color: white !important;
 	}
 
