@@ -16,7 +16,7 @@
 	let isLoading = $state(true);
 	let scopeLoading = $state(false);
 	let totalRespostas = $state(0);
-	let tab: 'parlamentares' | 'partidos' = $state('parlamentares');
+	let tab: 'parlamentares' | 'partidos' = $state('partidos');
 	let searchQuery = $state('');
 	let casaFilter: 'todos' | 'camara' | 'senado' = $state('todos');
 
