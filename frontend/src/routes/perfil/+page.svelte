@@ -156,7 +156,11 @@
 		<button class="uf-cancel" onclick={() => showUfPicker = false}>Cancelar</button>
 	</div>
 {:else if isLoading && parlResults.length === 0}
-	<div class="loading">Calculando seu alinhamento...</div>
+	<div class="loading">
+		<div class="loading-spinner"></div>
+		<p>Calculando seu alinhamento...</p>
+		<p class="loading-sub">Comparando seus votos com os parlamentares</p>
+	</div>
 {:else if parlResults.length === 0 && partidoResults.length === 0}
 	<div class="empty">
 		<p>Não foi possível calcular o alinhamento.</p>
@@ -215,7 +219,7 @@
 			</div>
 			<div class="lista">
 				{#each parlFiltered as result, i}
-					<a href="/parlamentar/{result.parlamentar_id}" class="result-card">
+					<a href="/parlamentar/{result.parlamentar_id}" class="result-card" style="animation-delay: {Math.min(i * 30, 300)}ms">
 						<span class="rank">#{i + 1}</span>
 						<div class="info">
 							<div class="nome">{result.nome}</div>
@@ -235,7 +239,7 @@
 			<div role="tabpanel">
 			<div class="lista">
 				{#each partidoFiltered as result, i}
-					<a href="/partido/{result.partido_id}" class="result-card">
+					<a href="/partido/{result.partido_id}" class="result-card" style="animation-delay: {Math.min(i * 30, 300)}ms">
 						<span class="rank">#{i + 1}</span>
 						<div class="info">
 							<div class="nome">{result.sigla}</div>
@@ -532,6 +536,47 @@
 		padding: 4rem;
 		color: var(--text-secondary);
 		font-size: 1.125rem;
+	}
+
+	.loading p {
+		margin: 0;
+	}
+
+	.loading-spinner {
+		width: 32px;
+		height: 32px;
+		border: 3px solid var(--border);
+		border-top-color: var(--link);
+		border-radius: 50%;
+		animation: spin 0.7s linear infinite;
+		margin: 0 auto 1.25rem;
+	}
+
+	.loading-sub {
+		font-size: 0.85rem;
+		color: var(--text-secondary);
+		opacity: 0.7;
+		margin-top: 0.375rem !important;
+	}
+
+	@keyframes spin {
+		to { transform: rotate(360deg); }
+	}
+
+	/* Staggered card entrance */
+	.result-card {
+		animation: cardEntrance 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+	}
+
+	@keyframes cardEntrance {
+		from {
+			opacity: 0;
+			transform: translateY(8px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
 	}
 
 	/* UF picker */

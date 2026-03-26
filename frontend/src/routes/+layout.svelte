@@ -178,6 +178,14 @@
 		font-family: var(--font-heading);
 	}
 
+	@media (prefers-reduced-motion: reduce) {
+		:global(*) {
+			animation-duration: 0.01ms !important;
+			animation-iteration-count: 1 !important;
+			transition-duration: 0.01ms !important;
+		}
+	}
+
 	:global(:focus-visible) {
 		outline: 2px solid var(--link);
 		outline-offset: 2px;

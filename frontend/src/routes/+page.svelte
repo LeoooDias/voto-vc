@@ -67,6 +67,12 @@
 		padding: 5rem 0 3rem;
 		max-width: 720px;
 		margin: 0 auto;
+		animation: heroEntrance 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+	}
+
+	@keyframes heroEntrance {
+		from { opacity: 0; transform: translateY(16px); }
+		to { opacity: 1; transform: translateY(0); }
 	}
 
 	.eyebrow {
@@ -143,11 +149,13 @@
 		padding: 1.75rem;
 		border-radius: 14px;
 		border: 1px solid var(--border);
-		transition: border-color 0.2s;
+		transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
 	}
 
 	.feature:hover {
 		border-color: var(--border-hover);
+		transform: translateY(-2px);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 	}
 
 	.feature-icon {

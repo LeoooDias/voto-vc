@@ -334,13 +334,15 @@
 		</div>
 		<div class="progress-sticky">
 			<div class="progress">
-				<div class="progress-fill" style="width: {progressPct}%"></div>
+				<div class="progress-fill" class:milestone={canFinish} style="width: {progressPct}%"></div>
 			</div>
 			<div class="counter-row">
 				<p class="answered-text">
 					{answeredCount}/20 posições respondidas
 					{#if remaining > 0}
 						<span class="remaining-hint"> · faltam {remaining} para ver seu perfil</span>
+					{:else}
+						<span class="ready-hint"> · pronto para ver resultados!</span>
 				{/if}
 			</p>
 			</div>
@@ -366,7 +368,11 @@
 								<span class="cat-count">{catAnswered}/{catItems.length}</span>
 							</div>
 						</div>
-						<svg class="cat-chevron" class:open={isOpen} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+						{#if isDone}
+							<svg class="cat-check" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-favor)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+						{:else}
+							<svg class="cat-chevron" class:open={isOpen} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+						{/if}
 					</button>
 
 					{#if isOpen}
@@ -395,7 +401,10 @@
 											onselect={(p) => votarPosicao(pos.id, p)}
 										/>
 										{#if savedFeedback === pos.id}
-											<span class="saved-indicator">Salvo</span>
+											<span class="saved-indicator">
+												<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+												Salvo
+											</span>
 										{/if}
 									</div>
 
@@ -534,6 +543,10 @@
 		background: linear-gradient(90deg, var(--color-favor) 0%, #10b981 100%);
 		transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 		border-radius: 6px;
+	}
+
+	.progress-fill.milestone {
+		box-shadow: 0 0 8px color-mix(in srgb, var(--color-favor) 40%, transparent);
 	}
 
 	.counter-row {
@@ -846,11 +859,6 @@
 		color: var(--link);
 	}
 
-	.bottom-cta {
-		text-align: center;
-		margin-top: 1.5rem;
-	}
-
 	.mode-link {
 		text-align: center;
 		margin-top: 1rem;
@@ -919,6 +927,11 @@
 		color: var(--text-secondary);
 	}
 
+	.ready-hint {
+		font-weight: 600;
+		color: var(--color-favor);
+	}
+
 	.uf-badge-row {
 		display: flex;
 		align-items: center;
@@ -954,19 +967,51 @@
 	}
 
 	.saved-indicator {
-		display: inline-block;
-		font-size: 0.7rem;
-		font-weight: 600;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+		font-size: 0.75rem;
+		font-weight: 700;
+		font-family: var(--font-heading);
 		color: var(--color-favor);
 		margin-top: 0.25rem;
-		animation: fadeInOut 1.2s ease forwards;
+		animation: savedPop 1.2s ease forwards;
 	}
 
-	@keyframes fadeInOut {
-		0% { opacity: 0; transform: translateY(4px); }
-		20% { opacity: 1; transform: translateY(0); }
+	@keyframes savedPop {
+		0% { opacity: 0; transform: translateY(4px) scale(0.9); }
+		15% { opacity: 1; transform: translateY(-2px) scale(1.05); }
+		30% { transform: translateY(0) scale(1); }
 		80% { opacity: 1; }
 		100% { opacity: 0; }
+	}
+
+	/* Category completion */
+	.cat-card.done {
+		border-color: color-mix(in srgb, var(--color-favor) 30%, transparent);
+		background: color-mix(in srgb, var(--color-favor) 4%, transparent);
+	}
+
+	.cat-check {
+		animation: checkDraw 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+	}
+
+	@keyframes checkDraw {
+		0% { opacity: 0; transform: scale(0.5); }
+		60% { opacity: 1; transform: scale(1.15); }
+		100% { transform: scale(1); }
+	}
+
+	/* "Ver meu perfil" entrance */
+	.bottom-cta {
+		text-align: center;
+		margin-top: 1.5rem;
+		animation: ctaEntrance 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+	}
+
+	@keyframes ctaEntrance {
+		0% { opacity: 0; transform: translateY(12px); }
+		100% { opacity: 1; transform: translateY(0); }
 	}
 
 	/* Onboarding modal */
@@ -1201,13 +1246,18 @@
 		border: 1px solid var(--border);
 		border-radius: 10px;
 		cursor: pointer;
-		transition: border-color 0.2s, background 0.2s;
+		transition: border-color 0.2s, background 0.2s, transform 0.15s;
 		text-align: left;
 	}
 
 	.uf-btn:hover {
 		border-color: var(--link);
 		background: var(--bg-page);
+		transform: translateY(-1px);
+	}
+
+	.uf-btn:active {
+		transform: translateY(0);
 	}
 
 	.uf-sigla {
