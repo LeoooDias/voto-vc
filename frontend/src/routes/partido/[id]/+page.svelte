@@ -83,6 +83,7 @@
 	let posicoes = $state<PosicaoInferida[]>([]);
 	let posicionamentosOpen = $state(true);
 	let openCatIds: Set<string> = $state(new Set());
+	let catsInitialized = $state(false);
 	let userPosRespostas: Map<number, RespostaPosicaoItem> = $state(new Map());
 
 	function toggleCat(catId: string) {
@@ -92,9 +93,10 @@
 		openCatIds = next;
 	}
 
-	// Auto-open all categories when posições load
+	// Auto-open all categories when posições load (once)
 	$effect(() => {
-		if (posicoes.length > 0 && openCatIds.size === 0) {
+		if (posicoes.length > 0 && !catsInitialized) {
+			catsInitialized = true;
 			openCatIds = new Set(POSICAO_CATEGORIAS.map(c => c.id));
 		}
 	});
