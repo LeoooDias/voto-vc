@@ -60,15 +60,15 @@
 						<a href="/parlamentares" onclick={closeMenu}>Parlamentares</a>
 						<a href="/partidos" onclick={closeMenu}>Partidos</a>
 					{:else}
-						<span class="nav-disabled">Parlamentares</span>
-						<span class="nav-disabled">Partidos</span>
+						<span class="nav-disabled" title="Responda ao menos 10 proposições para desbloquear">Parlamentares</span>
+						<span class="nav-disabled" title="Responda ao menos 10 proposições para desbloquear">Partidos</span>
 					{/if}
 					<span class="nav-sep">|</span>
 					<a href="/sobre" onclick={closeMenu}>Sobre</a>
 					{#if perfilEnabled}
 						<a href="/perfil" class="nav-perfil" onclick={closeMenu}>Meu Perfil</a>
 					{:else}
-						<span class="nav-disabled">Meu Perfil</span>
+						<span class="nav-disabled" title="Responda ao menos 10 proposições para desbloquear">Meu Perfil</span>
 					{/if}
 					<a href="/vote" class="nav-vote" onclick={closeMenu}>Vote</a>
 				</div>
@@ -97,6 +97,13 @@
 	</main>
 
 	<footer>
+		<div class="footer-links">
+			<a href="/sobre">Sobre</a>
+			<span class="footer-sep">·</span>
+			<a href="/proposicoes">Proposições</a>
+			<span class="footer-sep">·</span>
+			<a href="/vote">Vote</a>
+		</div>
 		<p>voto.vc — seja representado</p>
 	</footer>
 </div>
@@ -322,6 +329,30 @@
 		text-align: center;
 		padding: 1.5rem;
 		font-size: 0.875rem;
+	}
+
+	.footer-links {
+		display: flex;
+		justify-content: center;
+		gap: 0.5rem;
+		margin-bottom: 0.5rem;
+	}
+
+	.footer-links a {
+		color: var(--text-footer);
+		text-decoration: none;
+		font-size: 0.813rem;
+	}
+
+	.footer-links a:hover {
+		color: #d1d5db;
+		text-decoration: underline;
+	}
+
+	.footer-sep {
+		color: var(--text-footer);
+		opacity: 0.5;
+		font-size: 0.813rem;
 	}
 
 	/* ---- Mobile ---- */

@@ -16,12 +16,23 @@
 	let isLoading = $state(true);
 	let scopeLoading = $state(false);
 	let totalRespostas = $state(0);
-	let tab: 'parlamentares' | 'partidos' = $state('partidos');
+	let tab: 'parlamentares' | 'partidos' = $state('parlamentares');
+	let searchQuery = $state('');
 	let casaFilter: 'todos' | 'camara' | 'senado' = $state('todos');
 
-	let parlFiltered = $derived(
-		casaFilter === 'todos' ? parlResults : parlResults.filter((r) => r.casa === casaFilter)
-	);
+	let parlFiltered = $derived.by(() => {
+		let list = casaFilter === 'todos' ? parlResults : parlResults.filter((r) => r.casa === casaFilter);
+		if (searchQuery.trim()) {
+			const q = searchQuery.trim().toLowerCase();
+			list = list.filter((r) => r.nome.toLowerCase().includes(q) || (r.partido ?? '').toLowerCase().includes(q));
+		}
+		return list;
+	});
+	let partidoFiltered = $derived.by(() => {
+		if (!searchQuery.trim()) return partidoResults;
+		const q = searchQuery.trim().toLowerCase();
+		return partidoResults.filter((r) => r.sigla.toLowerCase().includes(q) || r.nome.toLowerCase().includes(q));
+	});
 	let countCamara = $derived(parlResults.filter((r) => r.casa === 'camara').length);
 	let countSenado = $derived(parlResults.filter((r) => r.casa === 'senado').length);
 
@@ -154,7 +165,7 @@
 {:else}
 	<div class="perfil-page">
 		<h1>Seu alinhamento político</h1>
-		<p class="subtitle">Baseado nos seus {totalRespostas} votos</p>
+		<p class="subtitle">Baseado nos seus {totalRespostas} votos · <a href="/sobre" class="methodology-link">como é calculado?</a></p>
 
 		<div class="tabs">
 			<button class="tab" class:active={tab === 'partidos'} onclick={() => tab = 'partidos'}>
@@ -176,6 +187,15 @@
 					class:active={escopo === 'estado'}
 					onclick={() => setEscopo('estado')}
 				>Meu estado{ufSelecionada ? ` (${ufSelecionada})` : ''}</button>
+		</div>
+
+		<div class="search-row">
+			<input
+				class="search-input"
+				type="text"
+				placeholder="Buscar por nome ou partido..."
+				bind:value={searchQuery}
+			/>
 		</div>
 
 		{#if tab === 'parlamentares'}
@@ -200,7 +220,8 @@
 								{result.partido ?? 'Sem partido'} · {result.uf} · {result.casa === 'camara' ? (result.sexo === 'F' ? 'Deputada' : 'Deputado') : (result.sexo === 'F' ? 'Senadora' : 'Senador')} · {result.concordou}/{result.votos_comparados} votos em comum
 							</div>
 						</div>
-						<div class="score" class:high={!scopeLoading && result.score >= 70} class:mid={!scopeLoading && result.score >= 40 && result.score < 70} class:low={!scopeLoading && result.score < 40}>
+						<div class="score" class:high={!scopeLoading && result.score >= 70} class:mid={!scopeLoading && result.score >= 40 && result.score < 70} class:low={!scopeLoading && result.score < 40}
+							title="Concordou em {result.concordou} de {result.votos_comparados} proposições comparadas">
 							{#if scopeLoading}<span class="spinner"></span>{:else}{fmtPct(result.score)}{/if}
 						</div>
 					</a>
@@ -208,7 +229,7 @@
 			</div>
 		{:else if tab === 'partidos'}
 			<div class="lista">
-				{#each partidoResults as result, i}
+				{#each partidoFiltered as result, i}
 					<a href="/partido/{result.partido_id}" class="result-card">
 						<span class="rank">#{i + 1}</span>
 						<div class="info">
@@ -218,7 +239,8 @@
 						{#if scopeLoading}
 							<div class="score"><span class="spinner"></span></div>
 						{:else if result.score != null}
-							<div class="score" class:high={result.score >= 70} class:mid={result.score >= 40 && result.score < 70} class:low={result.score < 40}>
+							<div class="score" class:high={result.score >= 70} class:mid={result.score >= 40 && result.score < 70} class:low={result.score < 40}
+								title="Concordou em {result.concordou} de {result.votos_comparados} proposições comparadas">
 								{fmtPct(result.score)}
 							</div>
 						{:else}
@@ -253,6 +275,16 @@
 		text-align: center;
 		color: var(--text-secondary);
 		margin-bottom: 1rem;
+	}
+
+	.methodology-link {
+		color: var(--link);
+		text-decoration: none;
+		font-size: 0.813rem;
+	}
+
+	.methodology-link:hover {
+		text-decoration: underline;
 	}
 
 	/* Escopo toggle */
@@ -345,6 +377,28 @@
 		background: var(--link);
 		border-color: var(--link);
 		color: white;
+	}
+
+	/* Search */
+	.search-row {
+		margin-bottom: 1rem;
+	}
+
+	.search-input {
+		width: 100%;
+		padding: 0.6rem 0.875rem;
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		background: var(--bg-card);
+		color: var(--text-primary);
+		font-size: 0.875rem;
+		outline: none;
+		transition: border-color 0.2s;
+		box-sizing: border-box;
+	}
+
+	.search-input:focus {
+		border-color: var(--link);
 	}
 
 	/* Result cards */

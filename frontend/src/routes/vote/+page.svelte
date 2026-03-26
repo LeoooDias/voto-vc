@@ -18,6 +18,17 @@
 	import { goto } from '$app/navigation';
 	import { get } from 'svelte/store';
 	import { UFS, getTema } from '$lib/constants';
+	import { addToast } from '$lib/stores/toast';
+	import { browser } from '$app/environment';
+
+	const TIPOS_LEGENDA: Record<string, string> = {
+		PL: 'Projeto de Lei',
+		PEC: 'Proposta de Emenda à Constituição',
+		MPV: 'Medida Provisória',
+		PLP: 'Projeto de Lei Complementar',
+		PDL: 'Projeto de Decreto Legislativo',
+		MIP: 'Medida de Implementação Provisória'
+	};
 
 	interface Categoria {
 		id: string;
@@ -65,9 +76,12 @@
 	let overrides: RespostaItem[] = $state(get(overridesPosicoes));
 	let expandedId: number | null = $state(null);
 	let openCategoryId: string | null = $state(null);
+	let showOnboarding = $state(false);
+	let savedFeedback: number | null = $state(null);
 
 	let answeredCount = $derived(respostas.filter((r) => r.voto !== 'pular').length);
 	let canFinish = $derived(answeredCount >= 10);
+	let remaining = $derived(Math.max(10 - answeredCount, 0));
 	let progressPct = $derived(Math.min((answeredCount / 20) * 100, 100));
 
 	function categorizedItems(cat: Categoria): PosicaoItem[] {
@@ -116,9 +130,19 @@
 			items = data;
 			posicaoItems.set(data);
 			loaded = true;
+
+			// Show onboarding on first visit
+			if (browser && !localStorage.getItem('voto_onboarding_seen') && respostas.filter(r => r.voto !== 'pular').length === 0) {
+				showOnboarding = true;
+			}
 		} catch (e) {
 			console.error('Failed to load positions:', e);
 		}
+	}
+
+	function dismissOnboarding() {
+		showOnboarding = false;
+		if (browser) localStorage.setItem('voto_onboarding_seen', '1');
 	}
 
 	async function initPage() {
@@ -165,6 +189,10 @@
 		respostas = [...respostas, resposta];
 		respostasPosicoes.set(respostas);
 
+		// Show brief "saved" feedback
+		savedFeedback = posicaoId;
+		setTimeout(() => { if (savedFeedback === posicaoId) savedFeedback = null; }, 1200);
+
 		if (get(authUser)) {
 			salvarRespostaPosicao(resposta);
 		}
@@ -200,6 +228,7 @@
 		goto('/perfil');
 	}
 
+	let showModeModal = $state(false);
 	let confirmingReset = $state(false);
 	let resetting = $state(false);
 
@@ -247,13 +276,46 @@
 {:else if items.length === 0}
 	<div class="empty">Nenhuma posição disponível no momento.</div>
 {:else}
+	{#if showOnboarding}
+		<div class="onboarding-overlay">
+			<div class="onboarding-modal">
+				<h2>Como funciona</h2>
+				<div class="onboarding-steps">
+					<div class="onboarding-step">
+						<span class="onboarding-num">1</span>
+						<p>Escolha sua posição em cada tema: <strong>a favor</strong>, <strong>contra</strong> ou <strong>neutro</strong></p>
+					</div>
+					<div class="onboarding-step">
+						<span class="onboarding-num">2</span>
+						<p>Responda ao menos <strong>10 de 20 posições</strong> para ver seu perfil</p>
+					</div>
+					<div class="onboarding-step">
+						<span class="onboarding-num">3</span>
+						<p>Descubra quais parlamentares e partidos mais se alinham com você</p>
+					</div>
+				</div>
+				<button class="onboarding-btn" onclick={dismissOnboarding}>Entendi, vamos lá</button>
+			</div>
+		</div>
+	{/if}
+
 	<div class="posicoes-page">
+		<div class="uf-badge-row">
+			<span class="uf-badge" title="Trocar estado">
+				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+				{uf}
+			</span>
+			<button class="uf-change-btn" onclick={() => { uf = ''; selectedUf.set(''); }}>Trocar estado</button>
+		</div>
 		<div class="progress">
 			<div class="progress-fill" style="width: {progressPct}%"></div>
 		</div>
 		<div class="counter-row">
 			<p class="answered-text">
 				{answeredCount}/20 posições respondidas
+				{#if remaining > 0}
+					<span class="remaining-hint"> · faltam {remaining} para ver seu perfil</span>
+				{/if}
 			</p>
 		</div>
 
@@ -305,6 +367,9 @@
 											value={currentPos}
 											onselect={(p) => votarPosicao(pos.id, p)}
 										/>
+										{#if savedFeedback === pos.id}
+											<span class="saved-indicator">Salvo</span>
+										{/if}
 									</div>
 
 									<ChatWidget
@@ -327,7 +392,7 @@
 												<div class="drill-item">
 													<div class="drill-info">
 														<div class="drill-title-row">
-														<span class="drill-tipo">{prop.tipo} {prop.numero}/{prop.ano}</span>
+														<span class="drill-tipo" title={TIPOS_LEGENDA[prop.tipo] ?? prop.tipo}>{prop.tipo} {prop.numero}/{prop.ano}</span>
 														<span class="casa-pill" class:camara={prop.casa_origem === 'camara'} class:senado={prop.casa_origem === 'senado'}>
 															{prop.casa_origem === 'camara' ? 'Câmara' : 'Senado'}
 														</span>
@@ -370,8 +435,34 @@
 		{/if}
 
 		<div class="mode-link">
-			<a href="/vote/avancado">Modo avançado (proposições individuais)</a>
+			<button class="link-btn" onclick={() => showModeModal = true}>Modo avançado (proposições individuais)</button>
 		</div>
+
+		{#if showModeModal}
+			<!-- svelte-ignore a11y_click_events_have_key_events -->
+			<!-- svelte-ignore a11y_no_static_element_interactions -->
+			<div class="mode-overlay" onclick={() => showModeModal = false}>
+				<!-- svelte-ignore a11y_click_events_have_key_events -->
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<div class="mode-modal" onclick={(e) => e.stopPropagation()}>
+					<h2>Escolha o modo de votação</h2>
+					<div class="mode-options">
+						<div class="mode-option current">
+							<h3>Por posições</h3>
+							<p>Vote em 20 temas agrupados por categoria. Mais rápido e intuitivo.</p>
+							<span class="mode-tag">Atual</span>
+						</div>
+						<a href="/vote/avancado" class="mode-option">
+							<h3>Avançado</h3>
+							<p>Vote em proposições individuais com mais detalhes. Maior precisão e controle.</p>
+							<span class="mode-tag go">Ir para modo avançado &#8594;</span>
+						</a>
+					</div>
+					<p class="mode-note">Seus votos são mantidos ao trocar de modo. Os dois modos contribuem para seu perfil.</p>
+					<button class="mode-close" onclick={() => showModeModal = false}>Fechar</button>
+				</div>
+			</div>
+		{/if}
 
 		{#if answeredCount > 0}
 			<div class="mode-link">
@@ -753,13 +844,6 @@
 		padding-bottom: 2rem;
 	}
 
-	.mode-link a {
-		color: var(--text-secondary);
-		text-decoration: none;
-		font-size: 0.85rem;
-	}
-
-	.mode-link a:hover,
 	.mode-link .link-btn:hover {
 		color: var(--link);
 		text-decoration: underline;
@@ -812,6 +896,244 @@
 
 	.reset-confirm-btn.no:hover {
 		border-color: var(--text-secondary);
+	}
+
+	.remaining-hint {
+		font-weight: 400;
+		color: var(--text-secondary);
+	}
+
+	.uf-badge-row {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin-bottom: 0.75rem;
+	}
+
+	.uf-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+		background: var(--link);
+		color: white;
+		padding: 0.2rem 0.6rem;
+		border-radius: 6px;
+		font-size: 0.8rem;
+		font-weight: 700;
+	}
+
+	.uf-change-btn {
+		background: none;
+		border: none;
+		color: var(--text-secondary);
+		font-size: 0.75rem;
+		cursor: pointer;
+		padding: 0;
+		text-decoration: underline;
+		font-family: inherit;
+	}
+
+	.uf-change-btn:hover {
+		color: var(--link);
+	}
+
+	.saved-indicator {
+		display: inline-block;
+		font-size: 0.7rem;
+		font-weight: 600;
+		color: #16a34a;
+		margin-top: 0.25rem;
+		animation: fadeInOut 1.2s ease forwards;
+	}
+
+	@keyframes fadeInOut {
+		0% { opacity: 0; transform: translateY(4px); }
+		20% { opacity: 1; transform: translateY(0); }
+		80% { opacity: 1; }
+		100% { opacity: 0; }
+	}
+
+	/* Onboarding modal */
+	.onboarding-overlay {
+		position: fixed;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.5);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 200;
+		padding: 1rem;
+	}
+
+	.onboarding-modal {
+		background: var(--bg-card);
+		border-radius: 16px;
+		padding: 2rem;
+		max-width: 440px;
+		width: 100%;
+		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+	}
+
+	.onboarding-modal h2 {
+		margin: 0 0 1.5rem;
+		color: var(--text-primary);
+		text-align: center;
+		font-size: 1.25rem;
+	}
+
+	.onboarding-steps {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+		margin-bottom: 1.5rem;
+	}
+
+	.onboarding-step {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.75rem;
+	}
+
+	.onboarding-num {
+		width: 28px;
+		height: 28px;
+		border-radius: 50%;
+		background: #2563eb;
+		color: white;
+		font-weight: 700;
+		font-size: 0.875rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+	}
+
+	.onboarding-step p {
+		margin: 0;
+		color: var(--text-secondary);
+		font-size: 0.9rem;
+		line-height: 1.5;
+		padding-top: 0.15rem;
+	}
+
+	.onboarding-btn {
+		width: 100%;
+		padding: 0.75rem;
+		background: #2563eb;
+		color: white;
+		border: none;
+		border-radius: 10px;
+		font-weight: 600;
+		font-size: 1rem;
+		cursor: pointer;
+		transition: background 0.2s;
+	}
+
+	.onboarding-btn:hover {
+		background: #1d4ed8;
+	}
+
+	/* Mode selection modal */
+	.mode-overlay {
+		position: fixed;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.5);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 200;
+		padding: 1rem;
+	}
+
+	.mode-modal {
+		background: var(--bg-card);
+		border-radius: 16px;
+		padding: 2rem;
+		max-width: 520px;
+		width: 100%;
+		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+	}
+
+	.mode-modal h2 {
+		margin: 0 0 1.5rem;
+		color: var(--text-primary);
+		text-align: center;
+		font-size: 1.2rem;
+	}
+
+	.mode-options {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+		margin-bottom: 1rem;
+	}
+
+	.mode-option {
+		padding: 1rem 1.25rem;
+		border: 2px solid var(--border);
+		border-radius: 12px;
+		text-decoration: none;
+		color: inherit;
+		transition: border-color 0.2s;
+		display: block;
+	}
+
+	.mode-option:hover:not(.current) {
+		border-color: var(--link);
+	}
+
+	.mode-option.current {
+		border-color: #16a34a44;
+		background: #16a34a0a;
+	}
+
+	.mode-option h3 {
+		margin: 0 0 0.25rem;
+		color: var(--text-primary);
+		font-size: 1rem;
+	}
+
+	.mode-option p {
+		margin: 0 0 0.5rem;
+		color: var(--text-secondary);
+		font-size: 0.85rem;
+		line-height: 1.4;
+	}
+
+	.mode-tag {
+		font-size: 0.7rem;
+		font-weight: 700;
+		color: #16a34a;
+	}
+
+	.mode-tag.go {
+		color: var(--link);
+	}
+
+	.mode-note {
+		font-size: 0.75rem;
+		color: var(--text-secondary);
+		text-align: center;
+		margin: 0 0 1rem;
+		line-height: 1.4;
+	}
+
+	.mode-close {
+		width: 100%;
+		padding: 0.6rem;
+		background: var(--bg-page);
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		color: var(--text-secondary);
+		font-weight: 500;
+		cursor: pointer;
+		font-family: inherit;
+		font-size: 0.875rem;
+	}
+
+	.mode-close:hover {
+		border-color: var(--text-secondary);
+		color: var(--text-primary);
 	}
 
 	.loading,

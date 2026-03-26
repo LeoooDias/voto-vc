@@ -126,6 +126,7 @@
 		<label class="filter-toggle">
 			<input type="checkbox" checked={soSubstantivas} onchange={toggleSubstantivas} />
 			Só substantivas
+			<span class="filter-hint" title="Proposições com impacto legislativo direto: PL, PEC, MPV, PLP, PDL">?</span>
 		</label>
 	</div>
 
@@ -253,6 +254,21 @@
 
 	.filter-toggle input {
 		accent-color: #2563eb;
+	}
+
+	.filter-hint {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 16px;
+		height: 16px;
+		border-radius: 50%;
+		background: var(--border);
+		color: var(--text-secondary);
+		font-size: 0.6rem;
+		font-weight: 700;
+		cursor: help;
+		flex-shrink: 0;
 	}
 
 	.filters {

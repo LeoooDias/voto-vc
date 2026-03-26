@@ -2,6 +2,7 @@ import { writable } from 'svelte/store';
 import type { PosicaoItem, RespostaPosicaoItem } from '$lib/types/posicao';
 import type { RespostaItem } from '$lib/types';
 import { browser } from '$app/environment';
+import { addToast } from '$lib/stores/toast';
 
 function loadFromStorage<T>(key: string, fallback: T): T {
 	if (!browser) return fallback;
@@ -32,16 +33,22 @@ if (browser) {
 	);
 }
 
-export async function salvarRespostaPosicao(resposta: RespostaPosicaoItem): Promise<void> {
+export async function salvarRespostaPosicao(resposta: RespostaPosicaoItem): Promise<boolean> {
 	try {
-		await fetch('/api/posicoes/responder', {
+		const res = await fetch('/api/posicoes/responder', {
 			method: 'POST',
 			credentials: 'include',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(resposta)
 		});
+		if (!res.ok) {
+			addToast('Erro ao salvar voto. Tente novamente.', 'error');
+			return false;
+		}
+		return true;
 	} catch {
-		// Silently fail — resposta já está no store local
+		addToast('Erro de conexão ao salvar voto.', 'error');
+		return false;
 	}
 }
 

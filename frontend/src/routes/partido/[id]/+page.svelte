@@ -505,6 +505,7 @@
 							<label class="filter-toggle">
 								<input type="checkbox" bind:checked={soSubstantivas} />
 								Só substantivas ({countSubstantivas})
+								<span class="filter-hint" title="Proposições com impacto legislativo direto: PL, PEC, MPV, PLP, PDL">?</span>
 							</label>
 						{/if}
 						{#if userVotoMap.size > 0}
@@ -740,6 +741,21 @@
 
 	.filter-toggle input {
 		accent-color: var(--link);
+	}
+
+	.filter-hint {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 16px;
+		height: 16px;
+		border-radius: 50%;
+		background: var(--border);
+		color: var(--text-secondary);
+		font-size: 0.6rem;
+		font-weight: 700;
+		cursor: help;
+		flex-shrink: 0;
 	}
 
 	.voto-card {

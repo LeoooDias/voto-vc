@@ -1,17 +1,13 @@
 <script lang="ts">
 	/**
-	 * 9-position vote intensity slider.
+	 * 5-position vote intensity slider.
 	 *
 	 * Positions map to:
 	 *   1 = Contra       (nao, peso 1.00)
-	 *   2 =              (nao, peso 0.75)
-	 *   3 =              (nao, peso 0.50)
-	 *   4 =              (nao, peso 0.25)
-	 *   5 = Neutro       (sim, peso 0.00)
-	 *   6 =              (sim, peso 0.25)
-	 *   7 =              (sim, peso 0.50)
-	 *   8 =              (sim, peso 0.75)
-	 *   9 = A favor      (sim, peso 1.00)
+	 *   2 = Contra leve  (nao, peso 0.50)
+	 *   3 = Neutro       (sim, peso 0.00)
+	 *   4 = A favor leve (sim, peso 0.50)
+	 *   5 = A favor      (sim, peso 1.00)
 	 *
 	 * In normal mode, clicking a dot only selects it visually (onselect).
 	 * The parent is responsible for confirming the vote.
@@ -34,26 +30,18 @@
 
 	const POSITIONS: Position[] = [
 		{ pos: 1, voto: 'nao', peso: 1.0, label: 'Contra' },
-		{ pos: 2, voto: 'nao', peso: 0.75 },
-		{ pos: 3, voto: 'nao', peso: 0.5 },
-		{ pos: 4, voto: 'nao', peso: 0.25 },
-		{ pos: 5, voto: 'sim', peso: 0.0, label: 'Neutro' },
-		{ pos: 6, voto: 'sim', peso: 0.25 },
-		{ pos: 7, voto: 'sim', peso: 0.5 },
-		{ pos: 8, voto: 'sim', peso: 0.75 },
-		{ pos: 9, voto: 'sim', peso: 1.0, label: 'A favor' },
+		{ pos: 2, voto: 'nao', peso: 0.5, label: 'Contra leve' },
+		{ pos: 3, voto: 'sim', peso: 0.0, label: 'Neutro' },
+		{ pos: 4, voto: 'sim', peso: 0.5, label: 'A favor leve' },
+		{ pos: 5, voto: 'sim', peso: 1.0, label: 'A favor' },
 	];
 
 	const TOOLTIP: Record<number, string> = {
-		1: 'Contra (máximo)',
-		2: 'Contra (forte)',
-		3: 'Contra (moderado)',
-		4: 'Contra (leve)',
-		5: 'Neutro',
-		6: 'A favor (leve)',
-		7: 'A favor (moderado)',
-		8: 'A favor (forte)',
-		9: 'A favor (máximo)',
+		1: 'Contra',
+		2: 'Contra (leve)',
+		3: 'Neutro',
+		4: 'A favor (leve)',
+		5: 'A favor',
 	};
 
 	let { value = null, onselect, onvote, compact = false }: Props = $props();
@@ -71,14 +59,10 @@
 	function colorForPos(pos: number): string {
 		const colors: Record<number, string> = {
 			1: '#dc2626',
-			2: '#ef4444',
-			3: '#f87171',
-			4: '#fca5a5',
-			5: '#a3a3a3',
-			6: '#86efac',
-			7: '#4ade80',
-			8: '#22c55e',
-			9: '#16a34a',
+			2: '#f87171',
+			3: '#a3a3a3',
+			4: '#4ade80',
+			5: '#16a34a',
 		};
 		return colors[pos] ?? '#a3a3a3';
 	}
@@ -98,7 +82,7 @@
 			<button
 				class="pos-btn"
 				class:active={value === p.pos}
-				class:endpoint={p.pos === 1 || p.pos === 5 || p.pos === 9}
+				class:endpoint={p.pos === 1 || p.pos === 3 || p.pos === 5}
 				onclick={() => handleClick(p)}
 				title={TOOLTIP[p.pos]}
 				style:--dot-color={colorForPos(p.pos)}
@@ -147,8 +131,8 @@
 	.track-bg {
 		position: absolute;
 		top: 50%;
-		left: 16px;
-		right: 16px;
+		left: 20px;
+		right: 20px;
 		height: 4px;
 		margin-top: -2px;
 		border-radius: 2px;
@@ -159,12 +143,7 @@
 	.track-fill {
 		position: absolute;
 		inset: 0;
-		background: linear-gradient(
-			to right,
-			#dc2626, #ef4444, #f87171, #fca5a5,
-			#d4d4d4,
-			#86efac, #4ade80, #22c55e, #16a34a
-		);
+		background: linear-gradient(to right, #dc2626, #f87171, #d4d4d4, #4ade80, #16a34a);
 		opacity: 0.4;
 	}
 
@@ -178,7 +157,7 @@
 		padding: 4px 0;
 		position: relative;
 		z-index: 1;
-		width: 28px;
+		width: 36px;
 	}
 
 	.dot {
@@ -226,7 +205,7 @@
 	}
 
 	.compact .pos-btn {
-		width: 20px;
+		width: 26px;
 	}
 
 	.compact .end-label {
@@ -234,8 +213,8 @@
 	}
 
 	.compact .track-bg {
-		left: 10px;
-		right: 10px;
+		left: 14px;
+		right: 14px;
 		height: 3px;
 		margin-top: -1.5px;
 	}
@@ -251,17 +230,17 @@
 	/* Mobile */
 	@media (max-width: 480px) {
 		.pos-btn {
-			width: 24px;
+			width: 30px;
 		}
 
 		.dot {
-			width: 20px;
-			height: 20px;
+			width: 24px;
+			height: 24px;
 		}
 
 		.pos-btn.endpoint .dot {
-			width: 26px;
-			height: 26px;
+			width: 30px;
+			height: 30px;
 		}
 	}
 </style>
