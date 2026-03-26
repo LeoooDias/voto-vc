@@ -105,6 +105,7 @@
 			<a href="/vote">Vote</a>
 		</div>
 		<p>voto.vc — seja representado</p>
+		<p class="footer-company"><a href="https://clearworks.ca" target="_blank" rel="noopener noreferrer">© 2026 ClearWorks Foundry Inc.</a></p>
 	</footer>
 </div>
 
@@ -410,6 +411,21 @@
 		color: var(--text-footer);
 		opacity: 0.5;
 		font-size: 0.813rem;
+	}
+
+	.footer-company {
+		margin: 0.25rem 0 0;
+		font-size: 0.75rem;
+	}
+
+	.footer-company a {
+		color: var(--text-footer);
+		text-decoration: none;
+	}
+
+	.footer-company a:hover {
+		color: var(--text-footer-hover);
+		text-decoration: underline;
 	}
 
 	/* ---- Mobile ---- */
