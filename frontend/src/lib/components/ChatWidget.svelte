@@ -22,6 +22,7 @@
 	const entityId = $derived(posicaoId ?? proposicaoId ?? 0);
 
 	let isOpen = $state(false);
+	let isExpanded = $state(false);
 	let messages: ChatMessage[] = $state([]);
 	let inputText = $state('');
 	let isStreaming = $state(false);
@@ -54,6 +55,11 @@
 
 	function close() {
 		isOpen = false;
+		isExpanded = false;
+	}
+
+	function toggleExpand() {
+		isExpanded = !isExpanded;
 	}
 
 	function scrollToBottom() {
@@ -228,7 +234,7 @@
 {#if isOpen}
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div class="chat-backdrop" onclick={close} onkeydown={handleBackdropKeydown}></div>
-	<div class="chat-modal" role="dialog" aria-label="Chat sobre proposição">
+	<div class="chat-modal" class:expanded={isExpanded} role="dialog" aria-label="Chat sobre proposição">
 		<div class="chat-header">
 			<div class="chat-title">
 				<span class="chat-icon">
@@ -236,9 +242,18 @@
 				</span>
 				<span class="chat-prop-title">{proposicaoTitulo}</span>
 			</div>
-			<button class="chat-close" onclick={close} aria-label="Fechar chat">
-				<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-			</button>
+			<div class="chat-header-actions">
+				<button class="chat-expand" onclick={toggleExpand} aria-label={isExpanded ? 'Reduzir chat' : 'Expandir chat'}>
+					{#if isExpanded}
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+					{:else}
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+					{/if}
+				</button>
+				<button class="chat-close" onclick={close} aria-label="Fechar chat">
+					<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+				</button>
+			</div>
 		</div>
 
 		{#if !$authUser}
@@ -394,6 +409,18 @@
 		overflow: hidden;
 	}
 
+	/* Expanded state — desktop only */
+	@media (min-width: 481px) {
+		.chat-modal.expanded {
+			width: 700px;
+			max-height: 80vh;
+			bottom: 50%;
+			right: 50%;
+			transform: translate(50%, 50%);
+			border-radius: 20px;
+		}
+	}
+
 	/* Mobile: full screen */
 	@media (max-width: 480px) {
 		.chat-modal {
@@ -443,6 +470,34 @@
 		text-overflow: ellipsis;
 	}
 
+	.chat-header-actions {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+		flex-shrink: 0;
+	}
+
+	.chat-expand {
+		background: none;
+		border: none;
+		color: var(--text-secondary);
+		cursor: pointer;
+		padding: 0.25rem;
+		display: none;
+		border-radius: 4px;
+	}
+
+	.chat-expand:hover {
+		color: var(--text-primary);
+		background: var(--border);
+	}
+
+	@media (min-width: 481px) {
+		.chat-expand {
+			display: flex;
+		}
+	}
+
 	.chat-close {
 		background: none;
 		border: none;
@@ -451,10 +506,12 @@
 		padding: 0.25rem;
 		display: flex;
 		flex-shrink: 0;
+		border-radius: 4px;
 	}
 
 	.chat-close:hover {
 		color: var(--text-primary);
+		background: var(--border);
 	}
 
 	/* Messages */
