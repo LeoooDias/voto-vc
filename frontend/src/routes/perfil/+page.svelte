@@ -175,7 +175,7 @@
 	<div class="perfil-page">
 		<p class="result-eyebrow">Resultado</p>
 		<h1>Seu alinhamento político</h1>
-		<p class="subtitle">Baseado nos seus {totalRespostas} votos · <a href="/sobre" class="methodology-link">como é calculado?</a></p>
+		<p class="subtitle">Baseado nos seus {totalRespostas} votos · <a href="/sobre#metodologia" class="methodology-link">como é calculado?</a></p>
 
 		<div class="tabs" role="tablist">
 			<button class="tab" class:active={tab === 'partidos'} role="tab" aria-selected={tab === 'partidos'} onclick={() => tab = 'partidos'}>
