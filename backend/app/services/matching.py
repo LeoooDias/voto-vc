@@ -19,6 +19,25 @@ def _confidence_score(raw_score: float, n_compared: int) -> float:
     return (raw_score * n_compared + 50 * _CONFIDENCE_K) / (n_compared + _CONFIDENCE_K)
 
 
+def _min_compared(n_opinionated: int) -> int:
+    """Minimum props required for a meaningful score."""
+    return max(3, n_opinionated // 4)
+
+
+def _confianca_label(effective_compared: int) -> str:
+    """Classify confidence based on number of effective comparisons."""
+    if effective_compared >= 8:
+        return "alta"
+    if effective_compared >= 4:
+        return "media"
+    return "baixa"
+
+
+def _count_opinionated(user_votes: dict) -> int:
+    """Count user votes that are neither pular nor Neutro (peso=0)."""
+    return sum(1 for v, p in user_votes.values() if v.value in ("sim", "nao") and p > 0)
+
+
 def _score_parlamentar(
     user_votes: dict,
     prop_votes: dict[int, list[TipoVoto]],
@@ -34,7 +53,7 @@ def _score_parlamentar(
         if prop_id not in user_votes:
             continue
         user_voto, peso = user_votes[prop_id]
-        if user_voto.value == "pular":
+        if user_voto.value == "pular" or peso == 0:
             continue
 
         parl_vote = None
@@ -178,8 +197,12 @@ def _majority_vote(
     prop_id: int,
     parl_ids: set[int],
     parlamentar_votos: dict[int, dict[int, list[TipoVoto]]],
-) -> str | None:
-    """Get majority vote direction for a party's parlamentares on a proposition."""
+) -> tuple[str | None, float]:
+    """Get majority vote direction and strength for a party's parlamentares.
+
+    Returns (direction, strength) where strength = majority_count / total.
+    Returns (None, 0.0) when no votes, tie, or margin < 60%.
+    """
     sim_count = 0
     nao_count = 0
     for parl_id in parl_ids:
@@ -193,12 +216,13 @@ def _majority_vote(
                 break
     total = sim_count + nao_count
     if total == 0:
-        return None
-    if sim_count > nao_count:
-        return "sim"
-    if nao_count > sim_count:
-        return "nao"
-    return None  # tie
+        return None, 0.0
+    majority = max(sim_count, nao_count)
+    ratio = majority / total
+    if ratio < 0.6:
+        return None, 0.0
+    direction = "sim" if sim_count > nao_count else "nao"
+    return direction, ratio
 
 
 def _score_partido_hybrid(
@@ -222,7 +246,7 @@ def _score_partido_hybrid(
 
     for prop_id in proposicao_ids:
         user_voto, peso = user_votes[prop_id]
-        if user_voto.value not in ("sim", "nao"):
+        if user_voto.value not in ("sim", "nao") or peso == 0:
             continue
 
         votacoes_prop = prop_to_votacoes.get(prop_id, [])
@@ -235,26 +259,29 @@ def _score_partido_hybrid(
         )
 
         party_position = None
+        source_is_majority = False
         if orientacao is not None:
             if orientacao == Orientacao.LIBERADO:
                 continue
             if orientacao in (Orientacao.SIM, Orientacao.NAO):
                 party_position = orientacao.value
 
-        # Fallback: majority vote
+        # Fallback: majority vote (weighted by unanimity)
         if party_position is None:
-            party_position = _majority_vote(prop_id, parl_ids, parlamentar_votos)
+            party_position, vote_strength = _majority_vote(prop_id, parl_ids, parlamentar_votos)
+            source_is_majority = True
 
         if party_position is None:
             continue
 
-        total_weight += peso
+        effective_peso = peso * vote_strength if source_is_majority else peso
+        total_weight += effective_peso
         if user_voto.value == party_position:
             concordou += 1
-            total_score += peso
+            total_score += effective_peso
         else:
             discordou += 1
-            total_score -= peso
+            total_score -= effective_peso
 
     score = round(((total_score / total_weight) + 1) * 50, 1) if total_weight > 0 else None
     return score, concordou, discordou
@@ -277,6 +304,8 @@ async def comparar_parlamentar(
     votos = await _load_votes(db, proposicao_ids, {parlamentar_id})
     prop_votes = votos.get(parlamentar_id, {})
 
+    n_opinionated = _count_opinionated(user_votes)
+
     concordou = 0
     discordou = 0
     total_score = 0.0
@@ -286,7 +315,7 @@ async def comparar_parlamentar(
         if prop_id not in user_votes:
             continue
         user_voto, peso = user_votes[prop_id]
-        if user_voto.value == "pular":
+        if user_voto.value == "pular" or peso == 0:
             continue
         parl_vote = None
         for v in votes_for_prop:
@@ -309,7 +338,15 @@ async def comparar_parlamentar(
 
     total = concordou + discordou
     score = round(((total_score / total_weight) + 1) * 50, 1) if total_weight > 0 else None
-    return {"score": score, "concordou": concordou, "discordou": discordou, "total": total}
+    presenca = round(total / n_opinionated, 2) if n_opinionated > 0 else 0.0
+    return {
+        "score": score,
+        "concordou": concordou,
+        "discordou": discordou,
+        "total": total,
+        "presenca": presenca,
+        "confianca": _confianca_label(total),
+    }
 
 
 async def comparar_partido(
@@ -322,13 +359,15 @@ async def comparar_partido(
     orientation when available, parlamentar vote majority as fallback.
     """
     user_votes = {r.proposicao_id: (r.voto, r.peso) for r in respostas}
-    proposicao_ids = [pid for pid, (v, _) in user_votes.items() if v.value != "pular"]
+    n_opinionated = _count_opinionated(user_votes)
+    proposicao_ids = [pid for pid, (v, p) in user_votes.items() if v.value != "pular" and p > 0]
     empty = {
         "score": None,
         "concordou": 0,
         "discordou": 0,
         "total": 0,
         "parlamentares_comparados": 0,
+        "confianca": "baixa",
     }
     if not proposicao_ids:
         return empty
@@ -367,7 +406,7 @@ async def comparar_partido(
     parlamentar_votos = await _load_votes(db, proposicao_ids, parl_ids)
 
     # Count parlamentares with vote overlap
-    min_compared = max(3, len(proposicao_ids) // 4)
+    min_compared = _min_compared(n_opinionated)
     n_comparados = sum(
         1
         for parl_id in parl_ids
@@ -389,12 +428,14 @@ async def comparar_partido(
         partido_para_blocos,
     )
 
+    total = concordou + discordou
     return {
         "score": score,
         "concordou": concordou,
         "discordou": discordou,
-        "total": concordou + discordou,
+        "total": total,
         "parlamentares_comparados": n_comparados,
+        "confianca": _confianca_label(total) if score is not None else "baixa",
     }
 
 
@@ -407,7 +448,8 @@ async def calcular_matching(
 ) -> dict:
     """Calculate both parlamentar and partido rankings with shared vote data."""
     user_votes = {r.proposicao_id: (r.voto, r.peso) for r in respostas}
-    proposicao_ids = list(user_votes.keys())
+    n_opinionated = _count_opinionated(user_votes)
+    proposicao_ids = [pid for pid, (v, p) in user_votes.items() if v.value != "pular" and p > 0]
     if not proposicao_ids:
         return {"parlamentares": [], "partidos": []}
 
@@ -424,8 +466,7 @@ async def calcular_matching(
     if not parlamentar_votos:
         return {"parlamentares": [], "partidos": []}
 
-    n_opinionated = sum(1 for v, _ in user_votes.values() if v.value in ("sim", "nao"))
-    min_compared = max(3, n_opinionated // 4)
+    min_compared = _min_compared(n_opinionated)
 
     # Score all parlamentares
     parl_scores: list[tuple[int, float, int]] = []
@@ -458,6 +499,7 @@ async def calcular_matching(
             p = parlamentares.get(parl_id)
             if not p:
                 continue
+            presenca = round(n_votos / n_opinionated, 2) if n_opinionated > 0 else 0.0
             parlamentar_results.append(
                 {
                     "parlamentar_id": p.id,
@@ -470,6 +512,8 @@ async def calcular_matching(
                     "score": round(score, 1),
                     "votos_comparados": n_votos,
                     "concordou": n_concordou,
+                    "presenca": presenca,
+                    "confianca": _confianca_label(n_votos),
                 }
             )
 
@@ -517,6 +561,7 @@ async def calcular_matching(
                     "parlamentares_comparados": 0,
                     "votos_comparados": 0,
                     "concordou": 0,
+                    "confianca": "baixa",
                 }
             )
             continue
@@ -540,6 +585,7 @@ async def calcular_matching(
                 partido_para_blocos,
             )
 
+        p_votos_comparados = p_concordou + p_discordou
         partido_results.append(
             {
                 "partido_id": p.id,
@@ -547,17 +593,22 @@ async def calcular_matching(
                 "nome": p.nome,
                 "score": score,
                 "parlamentares_comparados": n_comparados,
-                "votos_comparados": p_concordou + p_discordou,
+                "votos_comparados": p_votos_comparados,
                 "concordou": p_concordou,
+                "confianca": _confianca_label(p_votos_comparados) if score is not None else "baixa",
             }
         )
 
-    partido_results.sort(
-        key=lambda x: (
-            -x["score"] if x["score"] is not None else float("inf"),
-            x["sigla"],
-            x["partido_id"],
-        )
-    )
+    def _partido_sort_key(x: dict) -> tuple:
+        if x["score"] is not None:
+            return (
+                -_confidence_score(x["score"], x["votos_comparados"]),
+                -x["score"],
+                x["sigla"],
+                x["partido_id"],
+            )
+        return (float("inf"), float("inf"), x["sigla"], x["partido_id"])
+
+    partido_results.sort(key=_partido_sort_key)
 
     return {"parlamentares": parlamentar_results, "partidos": partido_results}

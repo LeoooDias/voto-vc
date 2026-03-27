@@ -92,7 +92,7 @@ def expandir_posicoes_para_respostas(
         if n == 0:
             continue
 
-        peso_por_prop = peso
+        peso_por_prop = peso / n
 
         for pp in props:
             prop_id = pp["proposicao_id"]

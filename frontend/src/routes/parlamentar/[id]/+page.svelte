@@ -4,6 +4,7 @@
 	import { get } from 'svelte/store';
 	import { api } from '$lib/api';
 	import { getTema, fmtPct, POSICAO_CATEGORIAS } from '$lib/constants';
+	import ScoreDots from '$lib/components/ScoreDots.svelte';
 	import { stanceLabel, stanceColor, userResponseToStance, expandPositions } from '$lib/utils/position';
 	import type { PosicaoInferida, RespostaPosicaoItem } from '$lib/types/posicao';
 	import { respostas, carregarRespostas } from '$lib/stores/questionario';
@@ -284,8 +285,8 @@
 				<h2>Comparação com seus votos</h2>
 				<div class="comparacao-stats">
 					{#if comparacao.score != null}
-						<div class="comp-item alinhamento" class:high={comparacao.score >= 70} class:mid={comparacao.score >= 40 && comparacao.score < 70} class:low={comparacao.score < 40} title="Quanto esse parlamentar votou parecido com você nas proposições em comum">
-							<span class="comp-count">{fmtPct(comparacao.score)}</span>
+						<div class="comp-item alinhamento" title="Quanto esse parlamentar votou parecido com você nas proposições em comum">
+							<span class="comp-count"><ScoreDots score={comparacao.score} votos_comparados={comparacao.total} size="lg" /></span>
 							<span class="comp-label">Alinhamento</span>
 						</div>
 					{/if}
@@ -807,9 +808,6 @@
 	.comp-item.discordou .comp-count { color: var(--color-contra); }
 	.comp-item.total .comp-count { color: var(--link); }
 	.comp-item.alinhamento .comp-count { font-size: 1.75rem; }
-	.comp-item.alinhamento.high .comp-count { color: var(--color-favor); }
-	.comp-item.alinhamento.mid .comp-count { color: var(--color-warning); }
-	.comp-item.alinhamento.low .comp-count { color: var(--color-contra); }
 
 	.filter-toggles {
 		display: flex;

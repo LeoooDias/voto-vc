@@ -61,15 +61,23 @@ pnpm check        # svelte-check
 
 ## Important files
 
-- `backend/app/services/matching.py` — alignment scoring engine
+- `backend/app/services/matching.py` — alignment scoring engine (Bayesian dampening, confidence labels, presença)
+- `backend/app/services/posicoes.py` — position expansion (peso dilution) + stance inference
 - `backend/app/services/questionario.py` — topic-diverse question selection (anchors + round-robin by tema)
 - `backend/app/ingestion/normalize.py` — API data normalization
 - `backend/app/routers/parlamentares.py` — parlamentar detail + voting history
 - `backend/app/routers/partidos.py` — partido detail + aggregated voting + disciplina
 - `backend/app/routers/auth.py` — Google OAuth + JWT auth + user profile
 - `backend/app/routers/questionario.py` — vote endpoints (items, responder, respostas)
+- `backend/app/services/chat.py` — proposição chatbot (Claude Haiku 4.5 with tool use)
+- `backend/app/routers/chat.py` — SSE streaming chat endpoint
 - `backend/app/utils.py` — URL generation (`url_proposicao`, `urls_por_casa`)
-- `frontend/src/routes/vote/+page.svelte` — UF selector + question cards
+- `frontend/src/lib/components/VoteSlider.svelte` — 5-position vote intensity slider
+- `frontend/src/lib/components/ScoreDots.svelte` — 5-dot score display (confidence-adjusted)
+- `frontend/src/lib/components/ChatWidget.svelte` — floating chat widget for proposição Q&A
+- `frontend/src/lib/utils/vote.ts` — vote position ↔ voto/peso mapping utilities
+- `frontend/src/lib/utils/score.ts` — confidence score + dot conversion utilities
+- `frontend/src/routes/vote/+page.svelte` — UF selector + question cards + slider + chat
 - `frontend/src/routes/perfil/+page.svelte` — ranked results (parlamentares, partidos, votos tabs)
 - `frontend/src/routes/parlamentar/[id]/+page.svelte` — parlamentar profile with expandable votes
 - `frontend/src/routes/partido/[id]/+page.svelte` — partido profile with aggregated votes + disciplina
@@ -94,6 +102,13 @@ pnpm check        # svelte-check
 - Questionnaire: backend accepts `exclude` param with already-answered IDs to always serve fresh questions
 - Casa pills: proposições link to both Câmara and Senado pages via `urls_por_casa()` (direct URL or search fallback)
 - Vote endpoints mounted at `/api/vote/` (router in `questionario.py`)
+- Chat endpoint at `/api/chat/proposicao/{id}` — SSE streaming, auth required, rate limited (30/hour)
+- Vote slider: 5 positions map to voto (sim/nao) + peso (0.0–1.0 in 0.5 steps); Neutro = sim with peso=0
+- Score display: 5 dots (empty/half/full) using Bayesian confidence-adjusted score (K=5); raw score not shown
+- Matching: Neutro (peso=0) treated same as Pular — excluded from all calculations
+- Matching: partido scoring uses orientation (priority) → majority vote fallback (60% margin minimum, weighted by unanimity)
+- Matching: position expansion dilutes peso by number of propositions (peso/n)
+- Matching docs: `docs/matching.md` — exhaustive algorithm documentation
 
 ## Don't
 

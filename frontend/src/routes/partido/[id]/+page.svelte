@@ -7,6 +7,7 @@
 	import { respostasPosicoes, carregarRespostasPosicoes, posicaoItems, overridesPosicoes } from '$lib/stores/posicoes';
 	import { get } from 'svelte/store';
 	import { UF_SIGLAS, getTema, fmtPct, POSICAO_CATEGORIAS } from '$lib/constants';
+	import ScoreDots from '$lib/components/ScoreDots.svelte';
 	import { stanceLabel, stanceColor, userResponseToStance, expandPositions } from '$lib/utils/position';
 	import type { PosicaoInferida, RespostaPosicaoItem } from '$lib/types/posicao';
 
@@ -424,8 +425,10 @@
 			<div class="metricas">
 				<div class="metricas-grid">
 					{#if comparacao.score != null}
-						<div class="metrica-card" class:high={!scopeLoading && comparacao.score >= 70} class:mid={!scopeLoading && comparacao.score >= 40 && comparacao.score < 70} class:low={!scopeLoading && comparacao.score < 40} title="Quanto o partido votou parecido com você nas proposições em comum">
-							<span class="metrica-valor">{#if scopeLoading}<span class="spinner lg"></span>{:else}{fmtPct(comparacao.score)}{/if}</span>
+						<div class="metrica-card" title="Quanto o partido votou parecido com você nas proposições em comum">
+							<span class="metrica-valor">
+								<ScoreDots score={comparacao.score} votos_comparados={comparacao.total} loading={scopeLoading} size="lg" />
+							</span>
 							<span class="metrica-nome">Alinhamento</span>
 							<span class="metrica-detalhe">
 								{#if !scopeLoading}{comparacao.total} votações comparadas{/if}

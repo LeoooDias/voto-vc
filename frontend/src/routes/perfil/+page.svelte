@@ -9,7 +9,8 @@
 	import type { MatchResult, PartidoMatchResult, MatchResponse, RespostaItem } from '$lib/types';
 	import { goto } from '$app/navigation';
 	import { get } from 'svelte/store';
-	import { UF_SIGLAS, getTema, fmtPct } from '$lib/constants';
+	import { UF_SIGLAS, getTema } from '$lib/constants';
+	import ScoreDots from '$lib/components/ScoreDots.svelte';
 
 	let parlResults: MatchResult[] = $state([]);
 	let partidoResults: PartidoMatchResult[] = $state([]);
@@ -227,9 +228,8 @@
 								{result.partido ?? 'Sem partido'} · {result.uf} · {result.casa === 'camara' ? (result.sexo === 'F' ? 'Deputada' : 'Deputado') : (result.sexo === 'F' ? 'Senadora' : 'Senador')} · {result.concordou}/{result.votos_comparados} votos em comum
 							</div>
 						</div>
-						<div class="score" class:high={!scopeLoading && result.score >= 70} class:mid={!scopeLoading && result.score >= 40 && result.score < 70} class:low={!scopeLoading && result.score < 40}
-							title="Concordou em {result.concordou} de {result.votos_comparados} proposições comparadas">
-							{#if scopeLoading}<span class="spinner"></span>{:else}{fmtPct(result.score)}{/if}
+						<div class="score">
+							<ScoreDots score={result.score} votos_comparados={result.votos_comparados} loading={scopeLoading} />
 						</div>
 					</a>
 				{/each}
@@ -245,16 +245,9 @@
 							<div class="nome">{result.sigla}</div>
 							<div class="meta">{result.nome} · {result.concordou}/{result.votos_comparados} votos em comum</div>
 						</div>
-						{#if scopeLoading}
-							<div class="score"><span class="spinner"></span></div>
-						{:else if result.score != null}
-							<div class="score" class:high={result.score >= 70} class:mid={result.score >= 40 && result.score < 70} class:low={result.score < 40}
-								title="Concordou em {result.concordou} de {result.votos_comparados} proposições comparadas">
-								{fmtPct(result.score)}
-							</div>
-						{:else}
-							<div class="score score-na" title="Dados insuficientes">N/A</div>
-						{/if}
+						<div class="score">
+							<ScoreDots score={result.score} votos_comparados={result.votos_comparados} loading={scopeLoading} />
+						</div>
 					</a>
 				{/each}
 			</div>
@@ -483,21 +476,8 @@
 	}
 
 	.score {
-		font-family: var(--font-heading);
-		font-size: 1.75rem;
-		font-weight: 800;
-		letter-spacing: -0.02em;
-	}
-
-	.high { color: var(--color-favor); }
-	.mid { color: var(--color-warning); }
-	.low { color: var(--color-contra); }
-
-	.score-na {
-		color: var(--text-secondary) !important;
-		font-style: italic;
-		font-size: 0.875rem;
-		cursor: help;
+		display: flex;
+		align-items: center;
 	}
 
 	/* CTA */
@@ -629,17 +609,6 @@
 
 	.uf-cancel:hover {
 		color: var(--text-primary);
-	}
-
-	.spinner {
-		display: inline-block;
-		width: 1em;
-		height: 1em;
-		border: 2px solid var(--border);
-		border-top-color: var(--link);
-		border-radius: 50%;
-		animation: spin 0.6s linear infinite;
-		vertical-align: middle;
 	}
 
 	@keyframes spin {

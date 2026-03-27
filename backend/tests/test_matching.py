@@ -10,7 +10,13 @@ from app.models.parlamentar import Parlamentar
 from app.models.partido import Partido
 from app.models.proposicao import Proposicao
 from app.models.votacao import Votacao, VotoParlamentar
-from app.services.matching import _score_parlamentar, calcular_matching
+from app.services.matching import (
+    _confianca_label,
+    _count_opinionated,
+    _min_compared,
+    _score_parlamentar,
+    calcular_matching,
+)
 
 # ── Tests for _score_parlamentar (pure function, no DB) ──
 
@@ -182,6 +188,71 @@ class TestScoreParlamentar:
         assert result is not None
         score, _, _ = result
         assert score == 100.0
+
+    def test_neutro_not_counted(self):
+        """Neutro (peso=0) should not count toward props_compared or concordou."""
+        user_votes = {
+            1: (VotoUsuario.SIM, 0.0),  # Neutro
+            2: (VotoUsuario.SIM, 1.0),
+            3: (VotoUsuario.SIM, 1.0),
+            4: (VotoUsuario.SIM, 1.0),
+        }
+        prop_votes = {
+            1: [TipoVoto.SIM],
+            2: [TipoVoto.SIM],
+            3: [TipoVoto.SIM],
+            4: [TipoVoto.SIM],
+        }
+        result = _score_parlamentar(user_votes, prop_votes, min_compared=1)
+        assert result is not None
+        score, n_compared, concordou = result
+        assert score == 100.0
+        assert n_compared == 3  # Neutro not counted
+        assert concordou == 3  # Neutro not counted as concordância
+
+    def test_neutro_does_not_help_meet_threshold(self):
+        """Neutro votes should not help reach min_compared threshold."""
+        user_votes = {
+            1: (VotoUsuario.SIM, 0.0),  # Neutro
+            2: (VotoUsuario.SIM, 0.0),  # Neutro
+            3: (VotoUsuario.SIM, 1.0),  # Only real vote
+        }
+        prop_votes = {
+            1: [TipoVoto.SIM],
+            2: [TipoVoto.SIM],
+            3: [TipoVoto.SIM],
+        }
+        # min_compared=2 but only 1 real vote → should return None
+        result = _score_parlamentar(user_votes, prop_votes, min_compared=2)
+        assert result is None
+
+
+class TestHelpers:
+    """Tests for helper functions."""
+
+    def test_min_compared(self):
+        assert _min_compared(0) == 3
+        assert _min_compared(4) == 3
+        assert _min_compared(12) == 3
+        assert _min_compared(20) == 5
+        assert _min_compared(40) == 10
+
+    def test_confianca_label(self):
+        assert _confianca_label(0) == "baixa"
+        assert _confianca_label(3) == "baixa"
+        assert _confianca_label(4) == "media"
+        assert _confianca_label(7) == "media"
+        assert _confianca_label(8) == "alta"
+        assert _confianca_label(20) == "alta"
+
+    def test_count_opinionated(self):
+        votes = {
+            1: (VotoUsuario.SIM, 1.0),
+            2: (VotoUsuario.NAO, 0.5),
+            3: (VotoUsuario.SIM, 0.0),  # Neutro - not counted
+            4: (VotoUsuario.PULAR, 1.0),  # Pular - not counted
+        }
+        assert _count_opinionated(votes) == 2
 
 
 # ── Tests for calcular_matching (requires DB) ──
@@ -452,3 +523,44 @@ class TestCalcularMatching:
         parlamentares = result["parlamentares"]
         scores = [p["score"] for p in parlamentares]
         assert scores == sorted(scores, reverse=True)
+
+    async def test_presenca_and_confianca_fields(self, db: AsyncSession):
+        """Results should include presenca and confianca fields."""
+        props, parl1, parl2, partido1, _ = await self._create_test_data(db, n_props=4)
+
+        respostas = [MagicMock(proposicao_id=p.id, voto=VotoUsuario.SIM, peso=1.0) for p in props]
+
+        result = await calcular_matching(db, respostas=respostas)
+
+        parl1_result = next(p for p in result["parlamentares"] if p["parlamentar_id"] == parl1.id)
+        assert "presenca" in parl1_result
+        assert parl1_result["presenca"] == 1.0  # voted on all 4 of 4
+        assert "confianca" in parl1_result
+        assert parl1_result["confianca"] == "media"  # 4 comparisons
+
+        pt = next(p for p in result["partidos"] if p["partido_id"] == partido1.id)
+        assert "confianca" in pt
+
+    async def test_neutro_does_not_inflate_min_compared(self, db: AsyncSession):
+        """Neutro (peso=0) votes should not increase min_compared threshold."""
+        n_total = 20
+        props, parl1, parl2, _, _ = await self._create_test_data(
+            db,
+            n_props=n_total,
+            parl1_votes=[TipoVoto.SIM] * n_total,
+            parl2_votes=[TipoVoto.NAO] * n_total,
+        )
+
+        # 4 real votes + 16 neutro (peso=0)
+        respostas = []
+        for i, p in enumerate(props):
+            peso = 1.0 if i < 4 else 0.0
+            respostas.append(MagicMock(proposicao_id=p.id, voto=VotoUsuario.SIM, peso=peso))
+
+        result = await calcular_matching(db, respostas=respostas)
+        parlamentares = result["parlamentares"]
+
+        # n_opinionated=4, min_compared=max(3,1)=3, parl1 has 4 real overlaps → should appear
+        parl1_result = next((p for p in parlamentares if p["parlamentar_id"] == parl1.id), None)
+        assert parl1_result is not None
+        assert parl1_result["votos_comparados"] == 4  # only real votes counted

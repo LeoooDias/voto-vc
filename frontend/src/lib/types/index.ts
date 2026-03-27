@@ -31,6 +31,8 @@ export interface MatchResult {
 	score: number;
 	votos_comparados: number;
 	concordou: number;
+	presenca: number;
+	confianca: 'alta' | 'media' | 'baixa';
 }
 
 export interface PartidoMatchResult {
@@ -41,6 +43,7 @@ export interface PartidoMatchResult {
 	parlamentares_comparados: number;
 	votos_comparados: number;
 	concordou: number;
+	confianca: 'alta' | 'media' | 'baixa';
 }
 
 export interface MatchResponse {

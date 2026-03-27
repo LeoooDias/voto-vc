@@ -7,7 +7,8 @@
 	import type { PartidoMatchResult, MatchResponse } from '$lib/types';
 	import { goto } from '$app/navigation';
 	import { get } from 'svelte/store';
-	import { UF_SIGLAS, fmtPct } from '$lib/constants';
+	import { UF_SIGLAS } from '$lib/constants';
+	import ScoreDots from '$lib/components/ScoreDots.svelte';
 
 	let results: PartidoMatchResult[] = $state([]);
 	let isLoading = $state(true);
@@ -213,15 +214,7 @@
 							<td class="col-num">{#if scopeLoading}<span class="spinner"></span>{:else}{result.votos_comparados}{/if}</td>
 							<td class="col-num">{#if scopeLoading}<span class="spinner"></span>{:else}{result.concordou}{/if}</td>
 							<td class="col-score">
-								{#if scopeLoading}
-									<span class="spinner"></span>
-								{:else if result.score != null}
-									<span class="score" class:high={result.score >= 70} class:mid={result.score >= 40 && result.score < 70} class:low={result.score < 40}>
-										{fmtPct(result.score)}
-									</span>
-								{:else}
-									<span class="score-na" title="Dados insuficientes">N/A</span>
-								{/if}
+								<ScoreDots score={result.score} votos_comparados={result.votos_comparados} loading={scopeLoading} size="sm" />
 							</td>
 						</tr>
 					{/each}
@@ -369,18 +362,6 @@
 
 	.col-num { text-align: center; }
 	.col-score { text-align: right; }
-
-	.score { font-weight: 700; }
-	.high { color: var(--color-favor); }
-	.mid { color: var(--color-warning); }
-	.low { color: var(--color-contra); }
-
-	.score-na {
-		color: var(--text-secondary);
-		font-style: italic;
-		font-size: 0.813rem;
-		cursor: help;
-	}
 
 	.pagination {
 		display: flex;
