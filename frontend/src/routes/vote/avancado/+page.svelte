@@ -464,14 +464,14 @@
 	}
 
 	.meta-banner.ready {
-		background: #fef3c7;
-		color: #92400e;
-		border: 1px solid #f59e0b66;
+		background: var(--accent-bg);
+		color: #6b5300;
+		border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
 	}
 
 	:global([data-theme='escuro']) .meta-banner.ready {
-		background: #eab3081a;
-		color: #fbbf24;
+		background: color-mix(in srgb, var(--accent) 10%, transparent);
+		color: #ffd000;
 		border: 1px solid #eab30833;
 	}
 

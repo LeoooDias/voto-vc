@@ -108,7 +108,7 @@
 		align-items: center;
 		gap: 0.5rem;
 		background: var(--accent);
-		color: white;
+		color: var(--accent-text);
 		padding: 1rem 2.5rem;
 		border-radius: 10px;
 		text-decoration: none;

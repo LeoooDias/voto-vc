@@ -541,7 +541,7 @@
 	.cta {
 		display: inline-block;
 		background: var(--accent);
-		color: white;
+		color: var(--accent-text);
 		padding: 0.75rem 2rem;
 		border-radius: 10px;
 		text-decoration: none;
