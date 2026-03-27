@@ -36,6 +36,8 @@ class CalcularRequest(BaseModel):
     casa: str | None = None
     uf: str | None = None
     limit: int = 50
+    apenas_ativos: bool = False
+    ultima_decada: bool = False
 
 
 @router.post("/calcular")
@@ -110,4 +112,6 @@ async def calcular(
         casa=body.casa,
         uf=body.uf,
         limit=min(body.limit, 1000),
+        apenas_ativos=body.apenas_ativos,
+        ultima_decada=body.ultima_decada,
     )

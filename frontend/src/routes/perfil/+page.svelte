@@ -20,6 +20,8 @@
 	let tab: 'parlamentares' | 'partidos' = $state('partidos');
 	let searchQuery = $state('');
 	let casaFilter: 'todos' | 'camara' | 'senado' = $state('todos');
+	let apenasAtivos = $state(false);
+	let ultimaDecada = $state(false);
 
 	let parlFiltered = $derived.by(() => {
 		let list = casaFilter === 'todos' ? parlResults : parlResults.filter((r) => r.casa === casaFilter);
@@ -56,7 +58,9 @@
 		try {
 			const body: Record<string, unknown> = {
 				respostas: userRespostas,
-				uf: escopo === 'estado' && ufSelecionada ? ufSelecionada : undefined
+				uf: escopo === 'estado' && ufSelecionada ? ufSelecionada : undefined,
+				apenas_ativos: apenasAtivos || undefined,
+				ultima_decada: ultimaDecada || undefined
 			};
 			if (userPosicaoRespostas.length > 0) {
 				body.posicao_respostas = userPosicaoRespostas;
@@ -193,6 +197,17 @@
 					class:active={escopo === 'estado'}
 					onclick={() => setEscopo('estado')}
 				>Meu estado{ufSelecionada ? ` (${ufSelecionada})` : ''}</button>
+		</div>
+
+		<div class="filter-toggles">
+			<label class="filter-toggle">
+				<input type="checkbox" bind:checked={apenasAtivos} onchange={() => loadMatching()} />
+				<span class="toggle-label">Só ativos (legislatura atual)</span>
+			</label>
+			<label class="filter-toggle">
+				<input type="checkbox" bind:checked={ultimaDecada} onchange={() => loadMatching()} />
+				<span class="toggle-label">Última década (2016–hoje)</span>
+			</label>
 		</div>
 
 		<div class="search-row">
@@ -398,6 +413,34 @@
 		background: var(--link);
 		border-color: var(--link);
 		color: white;
+	}
+
+	/* Filter toggles */
+	.filter-toggles {
+		display: flex;
+		gap: 1rem;
+		margin-bottom: 1rem;
+		flex-wrap: wrap;
+	}
+
+	.filter-toggle {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		cursor: pointer;
+		font-size: 0.813rem;
+		color: var(--text-secondary);
+	}
+
+	.filter-toggle input[type="checkbox"] {
+		accent-color: var(--link);
+		width: 16px;
+		height: 16px;
+		cursor: pointer;
+	}
+
+	.toggle-label {
+		user-select: none;
 	}
 
 	/* Search */

@@ -1,4 +1,5 @@
 from collections import defaultdict
+from datetime import datetime
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -87,11 +88,14 @@ async def _load_votes(
     db: AsyncSession,
     proposicao_ids: list[int],
     valid_parl_ids: set[int],
+    data_minima: datetime | None = None,
 ) -> dict[int, dict[int, list[TipoVoto]]]:
     """Load votes grouped by parlamentar -> proposicao -> [TipoVoto]."""
     votacao_query = select(Votacao.id, Votacao.proposicao_id).where(
         Votacao.proposicao_id.in_(proposicao_ids)
     )
+    if data_minima:
+        votacao_query = votacao_query.where(Votacao.data >= data_minima)
     votacao_result = await db.execute(votacao_query)
     votacao_rows = votacao_result.all()
     if not votacao_rows:
@@ -127,6 +131,7 @@ async def _load_parlamentar_ids(
     db: AsyncSession,
     casa: str | None = None,
     uf: str | None = None,
+    apenas_ativos: bool = False,
 ) -> list[tuple[int, int | None]]:
     """Load parlamentar (id, partido_id) tuples with optional filters."""
     query = select(Parlamentar.id, Parlamentar.partido_id).select_from(Parlamentar)
@@ -134,6 +139,8 @@ async def _load_parlamentar_ids(
         query = query.where(Parlamentar.casa == Casa(casa))
     if uf:
         query = query.where(Parlamentar.uf == uf.upper())
+    if apenas_ativos:
+        query = query.where(Parlamentar.legislatura_atual.is_(True))
     result = await db.execute(query)
     return result.all()
 
@@ -445,6 +452,8 @@ async def calcular_matching(
     casa: str | None = None,
     uf: str | None = None,
     limit: int = 50,
+    apenas_ativos: bool = False,
+    ultima_decada: bool = False,
 ) -> dict:
     """Calculate both parlamentar and partido rankings with shared vote data."""
     user_votes = {r.proposicao_id: (r.voto, r.peso) for r in respostas}
@@ -453,8 +462,10 @@ async def calcular_matching(
     if not proposicao_ids:
         return {"parlamentares": [], "partidos": []}
 
+    data_minima = datetime(2016, 1, 1) if ultima_decada else None
+
     # Load parlamentar IDs once
-    parl_rows = await _load_parlamentar_ids(db, casa, uf)
+    parl_rows = await _load_parlamentar_ids(db, casa, uf, apenas_ativos)
     valid_parl_ids = {row[0] for row in parl_rows}
     parl_to_partido = {row[0]: row[1] for row in parl_rows if row[1]}
 
@@ -462,7 +473,7 @@ async def calcular_matching(
         return {"parlamentares": [], "partidos": []}
 
     # Load votes ONCE — shared between parlamentar and partido rankings
-    parlamentar_votos = await _load_votes(db, proposicao_ids, valid_parl_ids)
+    parlamentar_votos = await _load_votes(db, proposicao_ids, valid_parl_ids, data_minima)
     if not parlamentar_votos:
         return {"parlamentares": [], "partidos": []}
 
@@ -523,6 +534,8 @@ async def calcular_matching(
     votacao_query = select(Votacao.id, Votacao.id_externo, Votacao.proposicao_id).where(
         Votacao.proposicao_id.in_(proposicao_ids)
     )
+    if data_minima:
+        votacao_query = votacao_query.where(Votacao.data >= data_minima)
     votacao_result = await db.execute(votacao_query)
     votacao_rows = votacao_result.all()
 
