@@ -566,7 +566,7 @@
 
 	.btn-resultado {
 		background: var(--accent);
-		color: var(--accent-text);
+		color: white;
 		border: none;
 		padding: 0.75rem 2rem;
 		border-radius: 10px;
@@ -1084,7 +1084,7 @@
 		width: 100%;
 		padding: 0.75rem;
 		background: var(--accent);
-		color: var(--accent-text);
+		color: white;
 		border: none;
 		border-radius: 10px;
 		font-family: var(--font-heading);

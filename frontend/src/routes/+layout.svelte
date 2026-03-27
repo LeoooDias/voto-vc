@@ -127,10 +127,9 @@
 		--border-hover: #1d4ed8;
 		--link: #1d4ed8;
 		--link-hover: #1e40af;
-		--accent: #e5b800;
-		--accent-hover: #c9a200;
-		--accent-bg: #fdf8e1;
-		--accent-text: #1a1a2e;
+		--accent: #d97706;
+		--accent-hover: #b45309;
+		--accent-bg: #fef3c7;
 		--color-contra: #dc2626;
 		--color-contra-leve: #f87171;
 		--color-neutro: #a3a3a3;
@@ -155,10 +154,9 @@
 		--border-hover: #3b82f6;
 		--link: #3b82f6;
 		--link-hover: #60a5fa;
-		--accent: #ffd000;
-		--accent-hover: #e5b800;
-		--accent-bg: #3d3200;
-		--accent-text: #1a1a2e;
+		--accent: #f59e0b;
+		--accent-hover: #d97706;
+		--accent-bg: #78350f;
 		--color-contra: #ef4444;
 		--color-contra-leve: #f87171;
 		--color-neutro: #a3a3a3;
@@ -283,7 +281,7 @@
 
 	.nav-vote {
 		background: var(--accent);
-		color: var(--accent-text) !important;
+		color: white !important;
 		border-radius: 6px;
 		padding: 0.375rem 0.875rem;
 		font-weight: 700;
@@ -293,7 +291,7 @@
 
 	.nav-vote:hover {
 		background: var(--accent-hover);
-		color: var(--accent-text) !important;
+		color: white !important;
 	}
 
 	.nav-perfil {
