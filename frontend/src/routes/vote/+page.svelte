@@ -595,7 +595,7 @@
 	}
 
 	.cat-section {
-		scroll-margin-top: 150px;
+		scroll-margin-top: 170px;
 	}
 
 	.cat-card {
@@ -1278,7 +1278,7 @@
 		}
 
 		.cat-section {
-			scroll-margin-top: 130px;
+			scroll-margin-top: 150px;
 		}
 	}
 </style>
