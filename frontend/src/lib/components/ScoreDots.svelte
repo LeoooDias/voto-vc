@@ -26,6 +26,14 @@
 		return 'empty';
 	}
 
+	const dotColor = $derived.by(() => {
+		if (dots == null) return '';
+		const filledDots = Math.ceil(dots / 2);
+		if (filledDots <= 2) return 'var(--accent)';
+		if (filledDots <= 4) return 'var(--color-favor)';
+		return 'var(--link)';
+	});
+
 	const label = $derived.by(() => {
 		if (dots == null) return 'Sem dados';
 		const adjusted = confidenceScore(score!, votos_comparados);
@@ -33,7 +41,7 @@
 	});
 </script>
 
-<span class="score-dots {size}" title={label} aria-label={label}>
+<span class="score-dots {size}" title={label} aria-label={label} style:--dot-color={dotColor}>
 	{#if loading}
 		<span class="spinner"></span>
 	{:else if dots == null}
@@ -75,7 +83,7 @@
 	.score-dots.lg .dot { width: 22px; height: 22px; }
 
 	.filled {
-		fill: var(--color-favor);
+		fill: var(--dot-color, var(--color-favor));
 	}
 
 	.empty-bg {
