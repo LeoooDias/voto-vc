@@ -41,9 +41,8 @@
 <div class="app">
 	<header>
 		<nav>
-			<a href="/" class="logo">
-				<img src="/logo-claro-sm.png" alt="voto.vc" class="logo-img logo-claro" width="190" height="80" />
-				<img src="/logo-escuro-sm.png" alt="voto.vc" class="logo-img logo-escuro" width="190" height="80" />
+			<a href="/" class="logo" aria-label="voto.vc">
+				<span class="logo-text"><span class="logo-voto">voto</span><span class="logo-dot">.</span><span class="logo-vc">vc</span></span>
 			</a>
 
 			<button class="hamburger" onclick={() => menuOpen = !menuOpen} aria-label="Menu">
@@ -230,16 +229,29 @@
 		align-items: center;
 	}
 
-	.logo-img {
-		display: block;
-		height: 80px;
-		width: auto;
+	.logo-text {
+		font-family: var(--font-heading);
+		font-size: 2rem;
+		font-weight: 800;
+		letter-spacing: -0.03em;
+		line-height: 1;
 	}
 
-	.logo-escuro { display: none; }
+	.logo-voto {
+		color: var(--text-primary);
+	}
 
-	:global([data-theme='escuro']) .logo-claro { display: none; }
-	:global([data-theme='escuro']) .logo-escuro { display: block; }
+	.logo-dot {
+		color: #a3a3a3;
+	}
+
+	.logo-vc {
+		color: #d97706;
+	}
+
+	:global([data-theme='escuro']) .logo-vc {
+		color: #f59e0b;
+	}
 
 	/* Hamburger button — hidden on desktop */
 	.hamburger {
@@ -434,8 +446,8 @@
 			height: 70px;
 		}
 
-		.logo-img {
-			height: 64px;
+		.logo-text {
+			font-size: 1.625rem;
 		}
 
 		.hamburger {
