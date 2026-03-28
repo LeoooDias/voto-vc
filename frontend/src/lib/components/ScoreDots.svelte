@@ -29,9 +29,9 @@
 	const dotColor = $derived.by(() => {
 		if (dots == null) return '';
 		const filledDots = Math.ceil(dots / 2);
-		if (filledDots <= 2) return 'var(--accent)';
-		if (filledDots <= 4) return 'var(--color-favor)';
-		return 'var(--link)';
+		if (filledDots <= 2) return '#ca8a04';
+		if (filledDots <= 4) return '#16a34a';
+		return '#1d68a7';
 	});
 
 	const label = $derived.by(() => {
@@ -101,7 +101,7 @@
 		width: 16px;
 		height: 16px;
 		border: 2px solid var(--border);
-		border-top-color: var(--link);
+		border-top-color: var(--accent);
 		border-radius: 50%;
 		animation: spin 0.6s linear infinite;
 	}

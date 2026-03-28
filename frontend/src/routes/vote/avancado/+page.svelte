@@ -577,9 +577,9 @@
 	}
 
 	.casa-pill.camara {
-		background: #dbeafe;
-		color: #1d4ed8;
-		border-color: #93c5fd;
+		background: color-mix(in srgb, var(--link) 12%, transparent);
+		color: var(--link);
+		border-color: color-mix(in srgb, var(--link) 30%, transparent);
 	}
 
 	.casa-pill.senado {
@@ -589,9 +589,9 @@
 	}
 
 	:global([data-theme='escuro']) .casa-pill.camara {
-		background: #1e3a5f;
-		color: #93c5fd;
-		border-color: #2563eb44;
+		background: color-mix(in srgb, var(--link) 20%, transparent);
+		color: var(--link-hover);
+		border-color: color-mix(in srgb, var(--link) 25%, transparent);
 	}
 
 	:global([data-theme='escuro']) .casa-pill.senado {

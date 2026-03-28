@@ -116,9 +116,9 @@
 		--text-footer: #9ca3af;
 		--text-footer-hover: #d1d5db;
 		--border: #e2e0d8;
-		--border-hover: #1d4ed8;
-		--link: #1d4ed8;
-		--link-hover: #1e40af;
+		--border-hover: #d97706;
+		--link: #b45309;
+		--link-hover: #92400e;
 		--accent: #d97706;
 		--accent-hover: #b45309;
 		--accent-bg: #fef3c7;
@@ -143,9 +143,9 @@
 		--text-footer: #6b7280;
 		--text-footer-hover: #e5e7eb;
 		--border: #2a2f42;
-		--border-hover: #3b82f6;
-		--link: #3b82f6;
-		--link-hover: #60a5fa;
+		--border-hover: #f59e0b;
+		--link: #f59e0b;
+		--link-hover: #fbbf24;
 		--accent: #f59e0b;
 		--accent-hover: #d97706;
 		--accent-bg: #78350f;
