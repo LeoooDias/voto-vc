@@ -231,8 +231,8 @@
 
 	.logo-text {
 		font-family: var(--font-heading);
-		font-size: 2rem;
-		font-weight: 800;
+		font-size: 3rem;
+		font-weight: 900;
 		letter-spacing: -0.03em;
 		line-height: 1;
 	}
@@ -447,7 +447,7 @@
 		}
 
 		.logo-text {
-			font-size: 1.625rem;
+			font-size: 2.4rem;
 		}
 
 		.hamburger {
