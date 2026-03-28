@@ -77,7 +77,7 @@
 
 	.eyebrow {
 		font-family: var(--font-heading);
-		font-size: 0.8rem;
+		font-size: 1.6rem;
 		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.15em;
@@ -88,7 +88,7 @@
 	h1 {
 		font-family: var(--font-heading);
 		font-size: 3.5rem;
-		font-weight: 800;
+		font-weight: 900;
 		color: var(--text-primary);
 		margin: 0 0 1.25rem;
 		line-height: 1.1;

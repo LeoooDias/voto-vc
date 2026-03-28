@@ -96,13 +96,6 @@
 	</main>
 
 	<footer>
-		<div class="footer-links">
-			<a href="/sobre">Sobre</a>
-			<span class="footer-sep">·</span>
-			<a href="/proposicoes">Proposições</a>
-			<span class="footer-sep">·</span>
-			<a href="/vote">Vote</a>
-		</div>
 		<p>voto.vc — seja representado</p>
 		<p class="footer-company"><a href="https://clearworks.ca" target="_blank" rel="noopener noreferrer">© 2026 ClearWorks Foundry Inc.</a></p>
 	</footer>
@@ -218,9 +211,9 @@
 		max-width: 1200px;
 		margin: 0 auto;
 		display: flex;
-		align-items: center;
+		align-items: baseline;
 		justify-content: space-between;
-		height: 90px;
+		padding: 1.25rem 0;
 	}
 
 	.logo {
@@ -271,7 +264,7 @@
 
 	.nav-right {
 		display: flex;
-		align-items: center;
+		align-items: baseline;
 		gap: 2rem;
 	}
 
@@ -401,31 +394,7 @@
 		font-size: 0.875rem;
 	}
 
-	.footer-links {
-		display: flex;
-		justify-content: center;
-		gap: 0.5rem;
-		margin-bottom: 0.5rem;
-	}
-
-	.footer-links a {
-		color: var(--text-footer);
-		text-decoration: none;
-		font-size: 0.813rem;
-	}
-
-	.footer-links a:hover {
-		color: var(--text-footer-hover);
-		text-decoration: underline;
-	}
-
-	.footer-sep {
-		color: var(--text-footer);
-		opacity: 0.5;
-		font-size: 0.813rem;
-	}
-
-	.footer-company {
+.footer-company {
 		margin: 0.25rem 0 0;
 		font-size: 0.75rem;
 	}
@@ -443,7 +412,7 @@
 	/* ---- Mobile ---- */
 	@media (max-width: 768px) {
 		nav {
-			height: 70px;
+			padding: 1rem 0;
 		}
 
 		.logo-text {
