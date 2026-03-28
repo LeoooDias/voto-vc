@@ -213,7 +213,7 @@
 		display: flex;
 		align-items: baseline;
 		justify-content: space-between;
-		padding: 1.25rem 0;
+		padding: 0.5rem 0;
 	}
 
 	.logo {
@@ -412,7 +412,7 @@
 	/* ---- Mobile ---- */
 	@media (max-width: 768px) {
 		nav {
-			padding: 1rem 0;
+			padding: 0.375rem 0;
 		}
 
 		.logo-text {
