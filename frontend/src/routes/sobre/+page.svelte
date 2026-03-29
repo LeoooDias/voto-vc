@@ -58,8 +58,8 @@
 		<h3>Ajuste de confiança</h3>
 		<p>
 			Para evitar que parlamentares com poucos votos em comum dominem o ranking,
-			aplicamos um ajuste estatícstico ajusta resultados com poucas comparações
-			em direção ao neutro (50). Na prática, isso significa que um parlamentar
+			aplicamos um ajuste estatístico para direcionar resultados com poucas
+			comparações à posição neutra. Na prática, isso significa que um parlamentar
 			precisa de várias votações em comum com você para alcançar alinhamento alto
 			ou baixo. Quanto mais votos em comum, mais confiável o alinhamento.
 		</p>
