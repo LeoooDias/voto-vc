@@ -196,10 +196,10 @@
 
 	/* Canarinho — special accents: nav-vote uses yellow+blue */
 	:global([data-color-theme='canarinho']) :global(.nav-vote) {
-		background: #002776 !important;
+		background: #1a4fc9 !important;
 	}
 	:global([data-color-theme='canarinho']) :global(.nav-vote:hover) {
-		background: #001d5e !important;
+		background: #153da0 !important;
 	}
 	:global([data-color-theme='canarinho']) :global(.nav-btn-login) {
 		background: #009c3b !important;
