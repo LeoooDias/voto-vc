@@ -320,6 +320,10 @@
 		--color-code-bg: rgba(255, 255, 255, 0.15);
 	}
 
+	:global(html) {
+		background: var(--bg-footer);
+	}
+
 	:global(body) {
 		margin: 0;
 		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
