@@ -902,7 +902,7 @@
 
 	.posicao-filtro-btn.active {
 		background: var(--text-primary);
-		color: var(--bg);
+		color: var(--bg-card);
 		border-color: var(--text-primary);
 	}
 
