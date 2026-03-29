@@ -320,15 +320,11 @@
 		--color-code-bg: rgba(255, 255, 255, 0.15);
 	}
 
-	:global(html) {
-		background: var(--bg-footer);
-	}
-
 	:global(body) {
 		margin: 0;
 		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 		color: var(--text-primary);
-		background: var(--bg-page);
+		background: var(--bg-footer);
 	}
 
 	:global(h1), :global(h2), :global(h3) {
@@ -360,6 +356,7 @@
 		min-height: 100vh;
 		display: flex;
 		flex-direction: column;
+		background: var(--bg-page);
 	}
 
 	header {
