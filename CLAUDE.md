@@ -120,3 +120,17 @@ pnpm check        # svelte-check
 - Don't commit `terraform.tfvars` or `.env` (contain secrets)
 - Don't push force to main
 - Don't run `uv run` inside docker exec (hangs) — use `/app/.venv/bin/python` directly
+
+## Design Context
+
+- **Brand**: Accessible, civic, neutral. Non-partisan by design.
+- **Emotion**: Empowerment — "Now I know who represents me."
+- **References**: The Pudding, FiveThirtyEight (data journalism, editorial confidence)
+- **Anti-references**: Generic gov portals, gamified quizzes, partisan aesthetics
+- **Style**: Bold minimalism — typography-driven, generous whitespace, border-radius: 0 everywhere
+- **Typography**: Plus Jakarta Sans (400–900), extreme scale contrast (4.5rem h1 vs 0.688rem labels), letter-spacing -0.05em to +0.25em
+- **Color**: Semantic voting spectrum (red→green) is sacred. Accent colors are theme-customizable. Backgrounds are muted.
+- **Accessibility**: WCAG AAA target, high-contrast theme, reduced motion, ARIA labels, 44px touch targets
+- **Geometry**: Sharp edges only (border-radius: 0). Exception: semantic dots (vote colors, progress indicators)
+- **Principles**: (1) Typography is the interface (2) Whitespace communicates confidence (3) Sharp geometry, zero softness (4) Color serves data, not decoration (5) Neutrality is a design choice
+- **Full context**: See `.impeccable.md` in project root

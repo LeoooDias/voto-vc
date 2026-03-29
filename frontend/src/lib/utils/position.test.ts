@@ -57,18 +57,18 @@ describe('expandPositions', () => {
 		}
 	];
 
-	it('expands position into per-prop respostas with full peso', () => {
+	it('expands position into per-prop respostas with diluted peso', () => {
 		const result = expandPositions(
 			[{ posicao_id: 1, voto: 'sim', peso: 1.0 }],
 			posicoes,
 			[]
 		);
 		expect(result).toHaveLength(2);
-		expect(result[0]).toEqual({ proposicao_id: 10, voto: 'sim', peso: 1.0 });
-		expect(result[1]).toEqual({ proposicao_id: 20, voto: 'nao', peso: 1.0 });
+		expect(result[0]).toEqual({ proposicao_id: 10, voto: 'sim', peso: 0.5 });
+		expect(result[1]).toEqual({ proposicao_id: 20, voto: 'nao', peso: 0.5 });
 	});
 
-	it('overrides take precedence', () => {
+	it('overrides take precedence with diluted peso', () => {
 		const result = expandPositions(
 			[{ posicao_id: 1, voto: 'sim', peso: 1.0 }],
 			posicoes,
@@ -76,6 +76,6 @@ describe('expandPositions', () => {
 		);
 		const r10 = result.find((r) => r.proposicao_id === 10)!;
 		expect(r10.voto).toBe('nao');
-		expect(r10.peso).toBe(1.0);
+		expect(r10.peso).toBe(0.5); // 1.0 / 2 props (diluted)
 	});
 });

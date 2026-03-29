@@ -67,7 +67,7 @@ export function expandPositions(
 
 		const n = pos.proposicoes.length;
 		if (n === 0) continue;
-		const pesoPorProp = pr.peso;
+		const pesoPorProp = pr.peso / n;
 
 		for (const pp of pos.proposicoes) {
 			const propId = pp.proposicao_id;
@@ -75,7 +75,8 @@ export function expandPositions(
 			if (overrideMap.has(propId)) {
 				if (!seen.has(propId)) {
 					seen.add(propId);
-					result.push(overrideMap.get(propId)!);
+					const ov = overrideMap.get(propId)!;
+					result.push({ ...ov, peso: ov.peso / n });
 				}
 				continue;
 			}

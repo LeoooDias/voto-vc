@@ -98,11 +98,13 @@ def expandir_posicoes_para_respostas(
             prop_id = pp["proposicao_id"]
             direcao = pp["direcao"]
 
-            # Override takes precedence
+            # Override takes precedence, but use diluted peso
             if prop_id in overrides:
                 if prop_id not in seen_props:
                     seen_props.add(prop_id)
-                    result.append(overrides[prop_id])
+                    ov = overrides[prop_id].copy()
+                    ov["peso"] = ov["peso"] / n
+                    result.append(ov)
                 continue
 
             if prop_id in seen_props:

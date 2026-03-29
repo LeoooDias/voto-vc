@@ -46,7 +46,7 @@ def test_expansion_nao_with_direcao_nao():
 
 
 def test_expansion_override():
-    """Override substitui voto virtual por voto direto."""
+    """Override substitui voto mas aplica diluição de peso."""
     posicao_respostas = [{"posicao_id": 1, "voto": "sim", "peso": 1.0}]
     posicoes_map = {
         1: [
@@ -59,7 +59,7 @@ def test_expansion_override():
     assert len(result) == 2
     r10 = next(r for r in result if r["proposicao_id"] == 10)
     assert r10["voto"] == "nao"
-    assert r10["peso"] == 1.0  # override peso, not diluted
+    assert abs(r10["peso"] - 0.5) < 0.001  # 1.0 / 2 props (diluted)
     r20 = next(r for r in result if r["proposicao_id"] == 20)
     assert abs(r20["peso"] - 0.5) < 0.001  # 1.0 / 2 props
 

@@ -432,7 +432,7 @@
 							</span>
 							<span class="metrica-nome">Alinhamento</span>
 							<span class="metrica-detalhe">
-								{#if !scopeLoading}{comparacao.total} votações comparadas{/if}
+								{#if !scopeLoading}{comparacao.concordou}/{comparacao.total} proposições em comum{/if}
 							</span>
 						</div>
 					{/if}
