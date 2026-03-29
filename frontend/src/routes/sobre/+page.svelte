@@ -38,11 +38,11 @@
 	<section id="metodologia">
 		<h2>Metodologia</h2>
 		<p>
-			O score de alinhamento mede o quanto um parlamentar ou partido vota de forma
+			A métrica de alinhamento mede o quanto um parlamentar ou partido vota de forma
 			parecida com você. Veja como funciona em detalhes:
 		</p>
 
-		<h3>Score de parlamentar</h3>
+		<h3>alinhamento de parlamentar</h3>
 		<p>
 			Para cada proposição que você e o parlamentar votaram, comparamos os votos.
 			Concordância (ambos SIM ou ambos NÃO) soma pontos; discordância subtrai.
@@ -58,17 +58,17 @@
 		<h3>Ajuste de confiança</h3>
 		<p>
 			Para evitar que parlamentares com poucos votos em comum dominem o ranking,
-			aplicamos um ajuste bayesiano (K=5) que puxa scores com poucas comparações
+			aplicamos um ajuste estatícstico ajusta resultados com poucas comparações
 			em direção ao neutro (50). Na prática, isso significa que um parlamentar
-			precisa de várias votações em comum com você para alcançar um score alto ou
-			baixo. Quanto mais votos em comum, mais confiável o score.
+			precisa de várias votações em comum com você para alcançar alinhamento alto
+			ou baixo. Quanto mais votos em comum, mais confiável o alinhamento.
 		</p>
 		<p>
-			Os 5 pontos exibidos no resultado refletem esse score ajustado —
+			Os 5 pontos exibidos no resultado refletem esse resultado ajustado —
 			o mesmo valor usado para ordenar o ranking.
 		</p>
 
-		<h3>Score de partido</h3>
+		<h3>Alinhamento de partido</h3>
 		<p>
 			Partidos são avaliados com uma abordagem híbrida. Primeiro, verificamos
 			se o partido emitiu uma orientação oficial de bancada (SIM, NÃO ou

@@ -142,6 +142,29 @@ export function stanceLabel(stance: string): string {
 	return labels[stance] ?? stance;
 }
 
+/**
+ * Returns the "side" of a stance for concordance comparison.
+ * 'favor' | 'contra' | 'neutro' | null (sem_dados)
+ */
+function stanceSide(stance: string): 'favor' | 'contra' | 'neutro' | null {
+	if (stance === 'fortemente_favor' || stance === 'levemente_favor') return 'favor';
+	if (stance === 'fortemente_contra' || stance === 'levemente_contra') return 'contra';
+	if (stance === 'misto') return 'neutro';
+	return null;
+}
+
+/**
+ * Checks if entity stance concords with user stance.
+ * Same side = concordante, different sides = discordante.
+ * Returns null if either has no data.
+ */
+export function stanceConcorda(entityStance: string, userStance: string): boolean | null {
+	const a = stanceSide(entityStance);
+	const b = stanceSide(userStance);
+	if (a === null || b === null) return null;
+	return a === b;
+}
+
 export function stanceColor(stance: string): string {
 	const colors: Record<string, string> = {
 		fortemente_favor: '#16a34a',

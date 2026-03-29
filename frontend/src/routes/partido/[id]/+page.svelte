@@ -8,7 +8,7 @@
 	import { get } from 'svelte/store';
 	import { UF_SIGLAS, getTema, fmtPct, POSICAO_CATEGORIAS } from '$lib/constants';
 	import ScoreDots from '$lib/components/ScoreDots.svelte';
-	import { stanceLabel, stanceColor, userResponseToStance, expandPositions } from '$lib/utils/position';
+	import { stanceLabel, stanceColor, stanceConcorda, userResponseToStance, expandPositions } from '$lib/utils/position';
 	import type { PosicaoInferida, RespostaPosicaoItem } from '$lib/types/posicao';
 
 	interface VotoBreakdown {
@@ -83,6 +83,7 @@
 	let disciplina = $state<DisciplinaResult | null>(null);
 	let posicoes = $state<PosicaoInferida[]>([]);
 	let posicionamentosOpen = $state(true);
+	let posicaoFiltro: 'todos' | 'concordantes' | 'discordantes' = $state('todos');
 	let openCatIds: Set<string> = $state(new Set());
 	let catsInitialized = $state(false);
 	let userPosRespostas: Map<number, RespostaPosicaoItem> = $state(new Map());
@@ -455,8 +456,23 @@
 					<svg class="section-chevron" class:open={posicionamentosOpen} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
 				</button>
 				{#if posicionamentosOpen}
+					{#if userPosRespostas.size > 0}
+						<div class="posicao-filtros">
+							<button class="posicao-filtro-btn" class:active={posicaoFiltro === 'todos'} onclick={() => posicaoFiltro = 'todos'}>Todos</button>
+							<button class="posicao-filtro-btn concordante" class:active={posicaoFiltro === 'concordantes'} onclick={() => posicaoFiltro = 'concordantes'}>Concordantes</button>
+							<button class="posicao-filtro-btn discordante" class:active={posicaoFiltro === 'discordantes'} onclick={() => posicaoFiltro = 'discordantes'}>Discordantes</button>
+						</div>
+					{/if}
 					{#each POSICAO_CATEGORIAS as cat}
-						{@const catPosicoes = posicoes.filter(p => p.stance !== 'sem_dados' && cat.ordens.includes(p.ordem))}
+						{@const catPosicoes = posicoes.filter(p => {
+							if (p.stance === 'sem_dados' || !cat.ordens.includes(p.ordem)) return false;
+							if (posicaoFiltro === 'todos') return true;
+							const us = getUserStance(p.posicao_id);
+							if (!us) return false;
+							const concorda = stanceConcorda(p.stance, us.stance);
+							if (concorda === null) return false;
+							return posicaoFiltro === 'concordantes' ? concorda : !concorda;
+						})}
 						{#if catPosicoes.length > 0}
 							<div class="posicao-cat">
 								<button class="posicao-cat-toggle" onclick={() => toggleCat(cat.id)}>
@@ -1131,6 +1147,45 @@
 
 	.posicionamentos {
 		margin-bottom: 2rem;
+	}
+
+	.posicao-filtros {
+		display: flex;
+		gap: 0.5rem;
+		margin-bottom: 1rem;
+	}
+
+	.posicao-filtro-btn {
+		padding: 0.3rem 0.75rem;
+		border-radius: 999px;
+		border: 1px solid var(--border);
+		background: transparent;
+		color: var(--text-secondary);
+		font-size: 0.8rem;
+		cursor: pointer;
+		transition: all 0.15s;
+	}
+
+	.posicao-filtro-btn:hover {
+		border-color: var(--text-secondary);
+	}
+
+	.posicao-filtro-btn.active {
+		background: var(--text-primary);
+		color: var(--bg);
+		border-color: var(--text-primary);
+	}
+
+	.posicao-filtro-btn.concordante.active {
+		background: #16a34a;
+		border-color: #16a34a;
+		color: #fff;
+	}
+
+	.posicao-filtro-btn.discordante.active {
+		background: #dc2626;
+		border-color: #dc2626;
+		color: #fff;
 	}
 
 	.section-toggle {
