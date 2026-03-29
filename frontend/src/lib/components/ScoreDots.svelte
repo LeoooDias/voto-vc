@@ -28,7 +28,7 @@
 
 	const dotColor = $derived.by(() => {
 		if (dots == null) return '';
-		const filledDots = Math.ceil(dots / 2);
+		const filledDots = Math.floor(dots / 2); // count only fully filled dots
 		if (filledDots <= 2) return '#ca8a04';
 		if (filledDots <= 4) return '#16a34a';
 		return '#1d68a7';
