@@ -561,7 +561,7 @@ async def calcular_matching(
 
     partido_results = []
     for partido_id, p in partidos.items():
-        if p.sigla == "S/Partido":
+        if p.nome == "Sem Partido":
             continue
         p_parl_ids = partido_parl_ids.get(partido_id, set())
         if not p_parl_ids:

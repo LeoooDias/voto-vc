@@ -38,7 +38,7 @@ SUBSTANTIVE_TYPES = {"PL", "PEC", "MPV", "PLP", "PDL", "MIP"}
 @router.get("/")
 async def listar_partidos(db: AsyncSession = Depends(get_db)):
     result = await db.execute(
-        select(Partido).where(Partido.sigla != "S/Partido").order_by(Partido.sigla)
+        select(Partido).where(Partido.nome != "Sem Partido").order_by(Partido.sigla)
     )
     return result.scalars().all()
 
