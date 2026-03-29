@@ -42,7 +42,7 @@
 			parecida com você. Veja como funciona em detalhes:
 		</p>
 
-		<h3>alinhamento de parlamentar</h3>
+		<h3>Alinhamento de parlamentar</h3>
 		<p>
 			Para cada proposição que você e o parlamentar votaram, comparamos os votos.
 			Concordância (ambos SIM ou ambos NÃO) soma pontos; discordância subtrai.
