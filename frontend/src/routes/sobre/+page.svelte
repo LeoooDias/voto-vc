@@ -77,7 +77,7 @@
 		</p>
 		<p>
 			Quando não há orientação oficial, usamos o voto majoritário dos
-			parlamentares do partido como fallback — mas somente se pelo menos 60%
+			parlamentares do partido como alternativa — mas somente se pelo menos 60%
 			dos membros votaram na mesma direção. O peso desse voto majoritário é
 			ponderado pela unanimidade (quanto mais unânime, mais peso).
 		</p>
@@ -85,7 +85,7 @@
 		<h3>Classificação por tema</h3>
 		<p>
 			As proposições são classificadas em temas por inteligência artificial
-			(Claude), com base na ementa e no resumo de cada proposição. O questionário
+			com base na ementa e no resumo de cada proposição. O questionário
 			seleciona proposições de forma diversa entre os temas para cobrir o maior
 			espectro de pautas possível.
 		</p>
@@ -96,7 +96,7 @@
 		<p>
 			O voto.vc não tem filiação partidária. A seleção de proposições para o
 			questionário busca diversidade temática e relevância, não favorecimento de
-			qualquer posição. Toda a lógica é transparente e auditável.
+			qualquer posição.
 		</p>
 	</section>
 </div>
