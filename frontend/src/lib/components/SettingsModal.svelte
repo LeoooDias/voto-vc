@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { authUser, checkAuth } from '$lib/stores/auth';
 	import { theme, setTheme, type Theme } from '$lib/stores/theme';
+	import { colorTheme, setColorTheme, COLOR_THEMES, type ColorTheme } from '$lib/stores/colorTheme';
 	import { selectedUf as selectedUfStore } from '$lib/stores/questionario';
 	import { UF_SIGLAS } from '$lib/constants';
 	import { get } from 'svelte/store';
@@ -8,6 +9,7 @@
 	let { open = $bindable(false) } = $props();
 	let selectedUf = $state(get(authUser)?.uf ?? '');
 	let currentTheme: Theme = $state(get(theme));
+	let currentColorTheme: ColorTheme = $state(get(colorTheme));
 	let saving = $state(false);
 
 	$effect(() => {
@@ -21,9 +23,18 @@
 		currentTheme = $theme;
 	});
 
+	$effect(() => {
+		currentColorTheme = $colorTheme;
+	});
+
 	function handleTheme(t: Theme) {
 		currentTheme = t;
 		setTheme(t);
+	}
+
+	function handleColorTheme(t: ColorTheme) {
+		currentColorTheme = t;
+		setColorTheme(t);
 	}
 
 	async function saveUf() {
@@ -124,7 +135,7 @@
 		</div>
 
 		<div class="setting">
-			<span class="setting-label">Tema</span>
+			<span class="setting-label">Modo</span>
 			<div class="theme-options">
 				<button
 					class="theme-btn"
@@ -144,6 +155,28 @@
 					aria-pressed={currentTheme === 'auto'}
 					onclick={() => handleTheme('auto')}
 				>Auto</button>
+			</div>
+		</div>
+
+		<div class="setting">
+			<span class="setting-label">Tema</span>
+			<div class="color-theme-grid">
+				{#each COLOR_THEMES as ct}
+					<button
+						class="color-theme-btn"
+						class:active={currentColorTheme === ct.id}
+						aria-pressed={currentColorTheme === ct.id}
+						onclick={() => handleColorTheme(ct.id)}
+						title={ct.label}
+					>
+						<span class="color-swatches">
+							<span class="swatch" style="background:{ct.colors[0]}"></span>
+							<span class="swatch" style="background:{ct.colors[1]}"></span>
+							<span class="swatch" style="background:{ct.colors[2]}"></span>
+						</span>
+						<span class="color-theme-label">{ct.label}</span>
+					</button>
+				{/each}
 			</div>
 		</div>
 
@@ -266,6 +299,53 @@
 		background: var(--link);
 		color: white;
 		border-color: var(--link);
+	}
+
+	.color-theme-grid {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 0.5rem;
+	}
+
+	.color-theme-btn {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.375rem;
+		padding: 0.5rem 0.25rem;
+		border: 2px solid var(--border);
+		border-radius: 10px;
+		background: var(--bg-page);
+		cursor: pointer;
+		transition: border-color 0.15s, background 0.15s;
+	}
+
+	.color-theme-btn:hover {
+		border-color: var(--link);
+	}
+
+	.color-theme-btn.active {
+		border-color: var(--link);
+		background: var(--accent-bg);
+	}
+
+	.color-swatches {
+		display: flex;
+		gap: 3px;
+	}
+
+	.swatch {
+		width: 16px;
+		height: 16px;
+		border-radius: 50%;
+		border: 1px solid rgba(0, 0, 0, 0.15);
+	}
+
+	.color-theme-label {
+		font-size: 0.75rem;
+		font-weight: 500;
+		color: var(--text-primary);
+		line-height: 1.2;
 	}
 
 </style>

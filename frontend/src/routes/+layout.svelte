@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { authUser, authLoading, checkAuth, logout } from '$lib/stores/auth';
 	import { initTheme } from '$lib/stores/theme';
+	import { initColorTheme } from '$lib/stores/colorTheme';
 	import { respostas, carregarRespostas } from '$lib/stores/questionario';
 	import { respostasPosicoes, carregarRespostasPosicoes } from '$lib/stores/posicoes';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
@@ -24,6 +25,7 @@
 
 	onMount(async () => {
 		initTheme();
+		initColorTheme();
 		const user = await checkAuth();
 		if (user) {
 			const saved = await carregarRespostas();
@@ -160,6 +162,164 @@
 		--font-heading: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 	}
 
+	/* ---- Color Themes (accent overrides) ---- */
+
+	/* Canarinho — claro */
+	:global([data-color-theme='canarinho'][data-theme='claro']),
+	:global([data-color-theme='canarinho'] [data-theme='claro']) {
+		--accent: #009c3b;
+		--accent-hover: #007a2e;
+		--accent-bg: #d4edda;
+		--link: #006b27;
+		--link-hover: #004d1c;
+		--border-hover: #009c3b;
+	}
+	:global([data-color-theme='canarinho'][data-theme='claro']) .logo-vc,
+	:global([data-color-theme='canarinho'] [data-theme='claro']) .logo-vc {
+		color: #009c3b;
+	}
+
+	/* Canarinho — escuro */
+	:global([data-color-theme='canarinho'][data-theme='escuro']),
+	:global([data-color-theme='canarinho'] [data-theme='escuro']) {
+		--accent: #2dd665;
+		--accent-hover: #009c3b;
+		--accent-bg: #0a3d1a;
+		--link: #2dd665;
+		--link-hover: #5eed8a;
+		--border-hover: #2dd665;
+	}
+	:global([data-color-theme='canarinho'][data-theme='escuro']) .logo-vc,
+	:global([data-color-theme='canarinho'] [data-theme='escuro']) .logo-vc {
+		color: #2dd665;
+	}
+
+	/* Canarinho — special accents: nav-vote uses yellow+blue */
+	:global([data-color-theme='canarinho']) :global(.nav-vote) {
+		background: #002776 !important;
+	}
+	:global([data-color-theme='canarinho']) :global(.nav-vote:hover) {
+		background: #001d5e !important;
+	}
+	:global([data-color-theme='canarinho']) :global(.nav-btn-login) {
+		background: #009c3b !important;
+	}
+	:global([data-color-theme='canarinho']) :global(.nav-btn-login:hover) {
+		background: #007a2e !important;
+	}
+
+	/* Oceano — claro */
+	:global([data-color-theme='oceano'][data-theme='claro']),
+	:global([data-color-theme='oceano'] [data-theme='claro']) {
+		--accent: #0284c7;
+		--accent-hover: #0369a1;
+		--accent-bg: #e0f2fe;
+		--link: #0369a1;
+		--link-hover: #075985;
+		--border-hover: #0284c7;
+	}
+
+	/* Oceano — escuro */
+	:global([data-color-theme='oceano'][data-theme='escuro']),
+	:global([data-color-theme='oceano'] [data-theme='escuro']) {
+		--accent: #38bdf8;
+		--accent-hover: #0284c7;
+		--accent-bg: #0c4a6e;
+		--link: #38bdf8;
+		--link-hover: #7dd3fc;
+		--border-hover: #38bdf8;
+	}
+
+	/* Lavanda — claro */
+	:global([data-color-theme='lavanda'][data-theme='claro']),
+	:global([data-color-theme='lavanda'] [data-theme='claro']) {
+		--accent: #7c3aed;
+		--accent-hover: #6d28d9;
+		--accent-bg: #ede9fe;
+		--link: #6d28d9;
+		--link-hover: #5b21b6;
+		--border-hover: #7c3aed;
+	}
+
+	/* Lavanda — escuro */
+	:global([data-color-theme='lavanda'][data-theme='escuro']),
+	:global([data-color-theme='lavanda'] [data-theme='escuro']) {
+		--accent: #a78bfa;
+		--accent-hover: #7c3aed;
+		--accent-bg: #3b0764;
+		--link: #a78bfa;
+		--link-hover: #c4b5fd;
+		--border-hover: #a78bfa;
+	}
+
+	/* Rosa — claro */
+	:global([data-color-theme='rosa'][data-theme='claro']),
+	:global([data-color-theme='rosa'] [data-theme='claro']) {
+		--accent: #db2777;
+		--accent-hover: #be185d;
+		--accent-bg: #fce7f3;
+		--link: #be185d;
+		--link-hover: #9d174d;
+		--border-hover: #db2777;
+	}
+
+	/* Rosa — escuro */
+	:global([data-color-theme='rosa'][data-theme='escuro']),
+	:global([data-color-theme='rosa'] [data-theme='escuro']) {
+		--accent: #f472b6;
+		--accent-hover: #db2777;
+		--accent-bg: #831843;
+		--link: #f472b6;
+		--link-hover: #f9a8d4;
+		--border-hover: #f472b6;
+	}
+
+	/* Alto Contraste — claro */
+	:global([data-color-theme='alto-contraste'][data-theme='claro']),
+	:global([data-color-theme='alto-contraste'] [data-theme='claro']) {
+		--bg-page: #ffffff;
+		--bg-card: #ffffff;
+		--bg-header: #ffffff;
+		--text-primary: #000000;
+		--text-secondary: #1a1a1a;
+		--border: #000000;
+		--border-hover: #0000ff;
+		--accent: #0000cc;
+		--accent-hover: #000099;
+		--accent-bg: #ffffcc;
+		--link: #0000cc;
+		--link-hover: #000099;
+		--color-contra: #cc0000;
+		--color-contra-leve: #ee0000;
+		--color-favor: #006600;
+		--color-favor-leve: #009900;
+	}
+
+	/* Alto Contraste — escuro */
+	:global([data-color-theme='alto-contraste'][data-theme='escuro']),
+	:global([data-color-theme='alto-contraste'] [data-theme='escuro']) {
+		--bg-page: #000000;
+		--bg-card: #0a0a0a;
+		--bg-header: #000000;
+		--bg-footer: #000000;
+		--text-primary: #ffffff;
+		--text-secondary: #e0e0e0;
+		--text-footer: #cccccc;
+		--text-footer-hover: #ffffff;
+		--border: #ffffff;
+		--border-hover: #ffff00;
+		--accent: #ffff00;
+		--accent-hover: #cccc00;
+		--accent-bg: #333300;
+		--link: #ffff00;
+		--link-hover: #ffff66;
+		--color-contra: #ff4444;
+		--color-contra-leve: #ff6666;
+		--color-favor: #44ff44;
+		--color-favor-leve: #66ff66;
+		--color-code-bg: rgba(255, 255, 255, 0.15);
+	}
+
 	:global(body) {
 		margin: 0;
 		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -245,6 +405,16 @@
 	:global([data-theme='escuro']) .logo-vc {
 		color: #f59e0b;
 	}
+
+	/* Logo color per color theme */
+	:global([data-color-theme='oceano'][data-theme='claro']) .logo-vc { color: #0284c7; }
+	:global([data-color-theme='oceano'][data-theme='escuro']) .logo-vc { color: #38bdf8; }
+	:global([data-color-theme='lavanda'][data-theme='claro']) .logo-vc { color: #7c3aed; }
+	:global([data-color-theme='lavanda'][data-theme='escuro']) .logo-vc { color: #a78bfa; }
+	:global([data-color-theme='rosa'][data-theme='claro']) .logo-vc { color: #db2777; }
+	:global([data-color-theme='rosa'][data-theme='escuro']) .logo-vc { color: #f472b6; }
+	:global([data-color-theme='alto-contraste'][data-theme='claro']) .logo-vc { color: #0000cc; }
+	:global([data-color-theme='alto-contraste'][data-theme='escuro']) .logo-vc { color: #ffff00; }
 
 	/* Hamburger button — hidden on desktop */
 	.hamburger {
