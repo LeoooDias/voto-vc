@@ -444,14 +444,14 @@
 		font-size: 0.75rem;
 		font-weight: 600;
 		padding: 0.125rem 0.5rem;
-		border-radius: 10px;
+		border-radius: 0;
 		background: var(--link);
 		color: white;
 		margin-left: 0.25rem;
 	}
 
 	.meta-banner {
-		border-radius: 12px;
+		border-radius: 0;
 		padding: 1rem 1.25rem;
 		margin-bottom: 1rem;
 		font-size: 0.9rem;
@@ -506,7 +506,7 @@
 	.card {
 		background: var(--bg-card);
 		border: 1px solid var(--border);
-		border-radius: 16px;
+		border-radius: 0;
 		padding: 2rem;
 		min-height: 200px;
 		display: flex;
@@ -566,7 +566,7 @@
 		font-size: 0.7rem;
 		font-weight: 600;
 		padding: 0.15rem 0.5rem;
-		border-radius: 10px;
+		border-radius: 0;
 		border: 1px solid;
 		text-decoration: none;
 		transition: opacity 0.2s;
@@ -616,7 +616,7 @@
 		padding: 0.6rem 1.5rem;
 		background: var(--bg-card);
 		border: 1px solid var(--border);
-		border-radius: 12px;
+		border-radius: 0;
 		font-size: 0.9rem;
 		font-weight: 600;
 		color: var(--text-secondary);
@@ -633,7 +633,7 @@
 		padding: 0.6rem 2rem;
 		background: var(--border);
 		border: none;
-		border-radius: 12px;
+		border-radius: 0;
 		font-size: 0.9rem;
 		font-weight: 700;
 		color: var(--text-secondary);
@@ -657,7 +657,7 @@
 		height: 44px;
 		flex-shrink: 0;
 		border: 1px solid var(--border);
-		border-radius: 12px;
+		border-radius: 0;
 		background: var(--bg-card);
 		color: var(--text-secondary);
 		font-size: 1.25rem;
@@ -715,7 +715,7 @@
 		padding: 0.75rem 1rem;
 		background: var(--bg-card);
 		border: 1px solid var(--border);
-		border-radius: 10px;
+		border-radius: 0;
 		cursor: pointer;
 		transition: border-color 0.2s, background 0.2s;
 		text-align: left;

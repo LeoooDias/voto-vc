@@ -204,11 +204,11 @@
 		transform: translate(-50%, -50%);
 		z-index: 101;
 		background: var(--bg-card);
-		border-radius: 16px;
-		padding: 2rem;
+		border-radius: 0;
+		padding: 2.5rem;
 		width: 90%;
 		max-width: 420px;
-		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+		box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
 	}
 
 	.modal-header {
@@ -281,24 +281,24 @@
 	.theme-btn {
 		flex: 1;
 		padding: 0.5rem;
-		border: 1px solid var(--border);
-		border-radius: 8px;
-		background: var(--bg-page);
+		border: 1.5px solid var(--border);
+		border-radius: 0;
+		background: transparent;
 		color: var(--text-primary);
-		font-weight: 500;
+		font-weight: 600;
 		cursor: pointer;
-		font-size: 0.875rem;
+		font-size: 0.813rem;
 		transition: border-color 0.15s, background 0.15s;
 	}
 
 	.theme-btn:hover {
-		border-color: var(--link);
+		border-color: var(--text-primary);
 	}
 
 	.theme-btn.active {
-		background: var(--link);
-		color: white;
-		border-color: var(--link);
+		background: var(--text-primary);
+		color: var(--bg-page);
+		border-color: var(--text-primary);
 	}
 
 	.color-theme-grid {
@@ -313,19 +313,19 @@
 		align-items: center;
 		gap: 0.375rem;
 		padding: 0.5rem 0.25rem;
-		border: 2px solid var(--border);
-		border-radius: 10px;
-		background: var(--bg-page);
+		border: 1.5px solid var(--border);
+		border-radius: 0;
+		background: transparent;
 		cursor: pointer;
 		transition: border-color 0.15s, background 0.15s;
 	}
 
 	.color-theme-btn:hover {
-		border-color: var(--link);
+		border-color: var(--text-primary);
 	}
 
 	.color-theme-btn.active {
-		border-color: var(--link);
+		border-color: var(--text-primary);
 		background: var(--accent-bg);
 	}
 

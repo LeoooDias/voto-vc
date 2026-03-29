@@ -194,18 +194,14 @@
 		color: #2dd665;
 	}
 
-	/* Canarinho — special accents: nav-vote uses yellow+blue */
+	/* Canarinho — special accents: nav-vote uses blue */
 	:global([data-color-theme='canarinho']) :global(.nav-vote) {
 		background: #1a4fc9 !important;
+		color: white !important;
 	}
 	:global([data-color-theme='canarinho']) :global(.nav-vote:hover) {
-		background: #153da0 !important;
-	}
-	:global([data-color-theme='canarinho']) :global(.nav-btn-login) {
-		background: #009c3b !important;
-	}
-	:global([data-color-theme='canarinho']) :global(.nav-btn-login:hover) {
-		background: #007a2e !important;
+		background: #1a4fc9 !important;
+		opacity: 0.8;
 	}
 
 	/* Oceano — claro */
@@ -322,13 +318,20 @@
 
 	:global(body) {
 		margin: 0;
-		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+		font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 		color: var(--text-primary);
 		background: var(--bg-footer);
+		font-weight: 400;
+		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
 	}
 
 	:global(h1), :global(h2), :global(h3) {
 		font-family: var(--font-heading);
+	}
+
+	:global(h1) {
+		letter-spacing: -0.04em;
 	}
 
 	@media (prefers-reduced-motion: reduce) {
@@ -362,7 +365,7 @@
 	header {
 		background: var(--bg-header);
 		border-bottom: 1px solid var(--border);
-		padding: 0 1.5rem;
+		padding: 0 2rem;
 		position: sticky;
 		top: 0;
 		z-index: 50;
@@ -374,7 +377,7 @@
 		display: flex;
 		align-items: baseline;
 		justify-content: space-between;
-		padding: 0.5rem 0;
+		padding: 0.75rem 0;
 	}
 
 	.logo {
@@ -385,9 +388,9 @@
 
 	.logo-text {
 		font-family: var(--font-heading);
-		font-size: 3.825rem;
+		font-size: 2.25rem;
 		font-weight: 900;
-		letter-spacing: -0.03em;
+		letter-spacing: -0.05em;
 		line-height: 1;
 	}
 
@@ -449,30 +452,37 @@
 		color: var(--text-secondary);
 		text-decoration: none;
 		font-weight: 500;
+		font-size: 0.875rem;
+		letter-spacing: -0.01em;
+		transition: color 0.15s;
 	}
 
 	.nav-links a:hover {
-		color: var(--link);
+		color: var(--text-primary);
 	}
 
 	.nav-vote {
-		background: var(--accent);
-		color: white !important;
-		border-radius: 6px;
-		padding: 0.375rem 0.875rem;
-		font-weight: 700;
+		background: var(--text-primary);
+		color: var(--bg-page) !important;
+		border-radius: 0;
+		padding: 0.5rem 1.25rem;
+		font-weight: 800;
 		font-family: var(--font-heading);
-		letter-spacing: -0.01em;
+		letter-spacing: -0.02em;
+		font-size: 0.813rem;
+		text-transform: uppercase;
+		transition: opacity 0.15s;
 	}
 
 	.nav-vote:hover {
-		background: var(--accent-hover);
-		color: white !important;
+		background: var(--text-primary);
+		color: var(--bg-page) !important;
+		opacity: 0.8;
 	}
 
 	.nav-perfil {
-		color: var(--link) !important;
-		font-weight: 600 !important;
+		color: var(--text-primary) !important;
+		font-weight: 700 !important;
 	}
 
 	.nav-sep {
@@ -530,17 +540,21 @@
 	}
 
 	.nav-btn-login {
-		background: var(--link);
-		color: white !important;
+		background: none;
+		color: var(--text-primary) !important;
 		text-decoration: none;
-		border-radius: 6px;
-		padding: 0.375rem 0.75rem;
-		font-weight: 500;
+		border-radius: 0;
+		padding: 0.375rem 0;
+		font-weight: 600;
+		font-size: 0.875rem;
+		border-bottom: 1.5px solid var(--text-primary);
+		transition: opacity 0.15s;
 	}
 
 	.nav-btn-login:hover {
-		background: var(--link-hover);
-		color: white !important;
+		background: none;
+		color: var(--text-primary) !important;
+		opacity: 0.6;
 	}
 
 	/* Menu overlay — only visible on mobile when menu is open */
@@ -552,7 +566,7 @@
 		flex: 1;
 		max-width: 1200px;
 		margin: 0 auto;
-		padding: 2rem 1.5rem;
+		padding: 3rem 2rem;
 		width: 100%;
 		box-sizing: border-box;
 	}
@@ -561,13 +575,21 @@
 		background: var(--bg-footer);
 		color: var(--text-footer);
 		text-align: center;
-		padding: 1.5rem;
-		font-size: 0.875rem;
+		padding: 3rem 2rem;
+		font-size: 0.75rem;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		font-weight: 500;
+	}
+
+	footer p {
+		margin: 0;
 	}
 
 .footer-company {
-		margin: 0.25rem 0 0;
-		font-size: 0.75rem;
+		margin: 0.5rem 0 0;
+		font-size: 0.688rem;
+		letter-spacing: 0.08em;
 	}
 
 	.footer-company a {
@@ -587,7 +609,7 @@
 		}
 
 		.logo-text {
-			font-size: 3.06rem;
+			font-size: 1.875rem;
 		}
 
 		.hamburger {

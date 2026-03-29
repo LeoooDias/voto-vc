@@ -31,7 +31,7 @@
 		justify-content: space-between;
 		gap: 0.75rem;
 		padding: 0.75rem 1rem;
-		border-radius: 10px;
+		border-radius: 0;
 		font-size: 0.875rem;
 		line-height: 1.4;
 		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);

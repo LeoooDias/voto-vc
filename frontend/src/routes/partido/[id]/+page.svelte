@@ -695,32 +695,34 @@
 
 	.escopo-toggle {
 		display: flex;
-		gap: 0;
+		gap: 0.5rem;
 		margin-bottom: 1.5rem;
-		border-bottom: 2px solid var(--border);
 	}
 
 	.escopo-btn {
-		flex: 1;
-		padding: 0.625rem 1rem;
+		flex: none;
+		padding: 0.5rem 1rem;
 		background: none;
-		border: none;
-		border-bottom: 2px solid transparent;
-		margin-bottom: -2px;
-		font-size: 0.938rem;
-		font-weight: 600;
+		border: 1.5px solid var(--border);
+		border-radius: 0;
+		font-size: 0.688rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
 		color: var(--text-secondary);
 		cursor: pointer;
-		transition: color 0.2s, border-color 0.2s;
+		transition: all 0.15s;
 	}
 
 	.escopo-btn:hover {
 		color: var(--text-primary);
+		border-color: var(--text-primary);
 	}
 
 	.escopo-btn.active {
-		color: var(--link);
-		border-bottom-color: var(--link);
+		color: var(--bg-page);
+		background: var(--text-primary);
+		border-color: var(--text-primary);
 	}
 
 	h2 {
@@ -744,10 +746,10 @@
 	}
 
 	.stat-item {
-		background: var(--bg-card);
+		background: transparent;
 		border: 1px solid var(--border);
-		border-radius: 12px;
-		padding: 0.75rem 1rem;
+		border-radius: 0;
+		padding: 1rem 1.25rem;
 		text-align: center;
 		min-width: 70px;
 	}
@@ -812,7 +814,7 @@
 		font: inherit;
 		background: var(--bg-card);
 		border: 1px solid var(--border);
-		border-radius: 12px;
+		border-radius: 0;
 		padding: 1rem;
 		margin-bottom: 0.5rem;
 		transition: border-color 0.2s;
@@ -973,7 +975,7 @@
 		font-size: 0.7rem;
 		font-weight: 600;
 		padding: 0.15rem 0.5rem;
-		border-radius: 10px;
+		border-radius: 0;
 		border: 1px solid;
 		text-decoration: none;
 		transition: opacity 0.2s;
@@ -1019,19 +1021,22 @@
 	.btn-more {
 		display: block;
 		width: 100%;
-		padding: 0.75rem;
-		background: var(--bg-card);
-		border: 1px dashed var(--border);
-		border-radius: 12px;
-		color: var(--link);
-		font-weight: 600;
-		font-size: 0.875rem;
+		padding: 0.875rem;
+		background: transparent;
+		border: 1.5px solid var(--border);
+		border-radius: 0;
+		color: var(--text-secondary);
+		font-weight: 700;
+		font-size: 0.75rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
 		cursor: pointer;
-		transition: border-color 0.2s;
+		transition: border-color 0.15s, color 0.15s;
 	}
 
 	.btn-more:hover {
-		border-color: var(--link);
+		border-color: var(--text-primary);
+		color: var(--text-primary);
 	}
 
 	/* Métricas (alinhamento + disciplina) */
@@ -1046,9 +1051,9 @@
 	}
 
 	.metrica-card {
-		background: var(--bg-card);
+		background: transparent;
 		border: 1px solid var(--border);
-		border-radius: 12px;
+		border-radius: 0;
 		padding: 1.25rem 1rem;
 		text-align: center;
 	}
@@ -1279,7 +1284,7 @@
 	.posicao-card {
 		background: var(--bg-card);
 		border: 1px solid var(--border);
-		border-radius: 10px;
+		border-radius: 0;
 		padding: 0.75rem;
 	}
 
@@ -1381,18 +1386,18 @@
 
 	.uf-btn {
 		padding: 0.625rem;
-		background: var(--bg-card);
-		border: 1px solid var(--border);
-		border-radius: 8px;
+		background: transparent;
+		border: 1.5px solid var(--border);
+		border-radius: 0;
 		cursor: pointer;
-		font-weight: 700;
-		color: var(--link);
+		font-weight: 900;
+		color: var(--text-primary);
 		font-size: 0.938rem;
-		transition: border-color 0.2s;
+		transition: border-color 0.15s;
 	}
 
 	.uf-btn:hover {
-		border-color: var(--link);
+		border-color: var(--text-primary);
 	}
 
 	.uf-cancel {

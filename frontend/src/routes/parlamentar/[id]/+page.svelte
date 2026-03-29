@@ -497,9 +497,9 @@
 	.foto {
 		width: 100px;
 		height: 100px;
-		border-radius: 50%;
+		border-radius: 0;
 		object-fit: cover;
-		border: 3px solid var(--border);
+		border: 2px solid var(--border);
 	}
 
 	h1 {
@@ -539,9 +539,9 @@
 	}
 
 	.stat-item {
-		background: var(--bg-card);
+		background: transparent;
 		border: 1px solid var(--border);
-		border-radius: 12px;
+		border-radius: 0;
 		padding: 1rem 1.25rem;
 		text-align: center;
 		min-width: 80px;
@@ -607,7 +607,7 @@
 		font: inherit;
 		background: var(--bg-card);
 		border: 1px solid var(--border);
-		border-radius: 12px;
+		border-radius: 0;
 		padding: 1rem;
 		margin-bottom: 0.5rem;
 		transition: border-color 0.2s;
@@ -724,7 +724,7 @@
 		font-size: 0.7rem;
 		font-weight: 600;
 		padding: 0.15rem 0.5rem;
-		border-radius: 10px;
+		border-radius: 0;
 		border: 1px solid;
 		text-decoration: none;
 		transition: opacity 0.2s;
@@ -770,19 +770,22 @@
 	.btn-more {
 		display: block;
 		width: 100%;
-		padding: 0.75rem;
-		background: var(--bg-card);
-		border: 1px dashed var(--border);
-		border-radius: 12px;
-		color: var(--link);
-		font-weight: 600;
-		font-size: 0.875rem;
+		padding: 0.875rem;
+		background: transparent;
+		border: 1.5px solid var(--border);
+		border-radius: 0;
+		color: var(--text-secondary);
+		font-weight: 700;
+		font-size: 0.75rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
 		cursor: pointer;
-		transition: border-color 0.2s;
+		transition: border-color 0.15s, color 0.15s;
 	}
 
 	.btn-more:hover {
-		border-color: var(--link);
+		border-color: var(--text-primary);
+		color: var(--text-primary);
 	}
 
 	/* Comparação */
@@ -803,7 +806,7 @@
 	.comp-item {
 		background: var(--bg-card);
 		border: 1px solid var(--border);
-		border-radius: 12px;
+		border-radius: 0;
 		padding: 1rem 1.25rem;
 		text-align: center;
 		min-width: 80px;
@@ -1009,7 +1012,7 @@
 	.posicao-card {
 		background: var(--bg-card);
 		border: 1px solid var(--border);
-		border-radius: 10px;
+		border-radius: 0;
 		padding: 0.75rem;
 	}
 

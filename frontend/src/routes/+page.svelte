@@ -64,146 +64,156 @@
 <style>
 	.hero {
 		text-align: center;
-		padding: 5rem 0 3rem;
-		max-width: 720px;
+		padding: 8rem 0 4rem;
+		max-width: 800px;
 		margin: 0 auto;
-		animation: heroEntrance 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+		animation: heroEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 	}
 
 	@keyframes heroEntrance {
-		from { opacity: 0; transform: translateY(16px); }
+		from { opacity: 0; transform: translateY(24px); }
 		to { opacity: 1; transform: translateY(0); }
 	}
 
 	.eyebrow {
 		font-family: var(--font-heading);
-		font-size: 1.6rem;
+		font-size: 0.688rem;
 		font-weight: 700;
 		text-transform: uppercase;
-		letter-spacing: 0.15em;
-		color: var(--accent);
-		margin: 0 0 1rem;
+		letter-spacing: 0.25em;
+		color: var(--text-secondary);
+		margin: 0 0 1.5rem;
 	}
 
 	h1 {
 		font-family: var(--font-heading);
-		font-size: 3.5rem;
+		font-size: 4.5rem;
 		font-weight: 900;
 		color: var(--text-primary);
-		margin: 0 0 1.25rem;
-		line-height: 1.1;
-		letter-spacing: -0.03em;
+		margin: 0 0 2rem;
+		line-height: 1.0;
+		letter-spacing: -0.05em;
 	}
 
 	.subtitle {
-		font-size: 1.2rem;
+		font-size: 1.125rem;
 		color: var(--text-secondary);
-		max-width: 520px;
-		margin: 0 auto 2.5rem;
-		line-height: 1.6;
+		max-width: 440px;
+		margin: 0 auto 3.5rem;
+		line-height: 1.7;
+		font-weight: 400;
 	}
 
 	.cta {
 		display: inline-flex;
 		align-items: center;
-		gap: 0.5rem;
-		background: var(--accent);
-		color: white;
-		padding: 1rem 2.5rem;
-		border-radius: 10px;
+		gap: 0.625rem;
+		background: var(--text-primary);
+		color: var(--bg-page);
+		padding: 1.125rem 3rem;
+		border-radius: 0;
 		text-decoration: none;
 		font-family: var(--font-heading);
-		font-size: 1.125rem;
-		font-weight: 700;
-		transition: background 0.2s, transform 0.15s;
-		box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 35%, transparent);
+		font-size: 0.875rem;
+		font-weight: 800;
+		letter-spacing: -0.01em;
+		text-transform: uppercase;
+		transition: opacity 0.2s;
 	}
 
 	.cta:hover {
-		background: var(--accent-hover);
-		transform: translateY(-1px);
+		background: var(--text-primary);
+		opacity: 0.85;
 	}
 
 	.cta:active {
-		transform: translateY(0);
+		opacity: 0.7;
 	}
 
 	.cta-sub {
-		font-size: 0.8rem;
+		font-size: 0.688rem;
 		color: var(--text-secondary);
-		margin: 1rem 0 0;
-		letter-spacing: 0.02em;
+		margin: 1.5rem 0 0;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		font-weight: 500;
 	}
 
 	/* Features */
 	.features {
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-		gap: 1.5rem;
-		margin-top: 4rem;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 0;
+		margin-top: 6rem;
 		text-align: left;
+		border-top: 1px solid var(--border);
 	}
 
 	.feature {
-		background: var(--bg-card);
-		padding: 1.75rem;
-		border-radius: 14px;
-		border: 1px solid var(--border);
-		transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+		background: transparent;
+		padding: 2.5rem 2rem;
+		border-radius: 0;
+		border: none;
+		border-right: 1px solid var(--border);
+		transition: background 0.2s;
+	}
+
+	.feature:last-child {
+		border-right: none;
 	}
 
 	.feature:hover {
-		border-color: var(--border-hover);
-		transform: translateY(-2px);
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+		background: var(--bg-card);
 	}
 
 	.feature-icon {
-		width: 44px;
-		height: 44px;
-		border-radius: 10px;
-		background: color-mix(in srgb, var(--link) 10%, transparent);
-		color: var(--link);
+		width: 40px;
+		height: 40px;
+		border-radius: 0;
+		background: none;
+		color: var(--text-primary);
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		margin-bottom: 1rem;
+		margin-bottom: 1.5rem;
 	}
 
 	.feature h3 {
 		font-family: var(--font-heading);
 		color: var(--text-primary);
-		margin: 0 0 0.5rem;
-		font-size: 1.05rem;
-		font-weight: 700;
+		margin: 0 0 0.75rem;
+		font-size: 0.938rem;
+		font-weight: 800;
+		letter-spacing: -0.02em;
 	}
 
 	.feature p {
 		color: var(--text-secondary);
 		margin: 0;
 		line-height: 1.6;
-		font-size: 0.9rem;
+		font-size: 0.813rem;
 	}
 
 	/* How it works */
 	.como-funciona {
-		margin-top: 5rem;
+		margin-top: 8rem;
 		text-align: center;
 	}
 
 	.como-funciona h2 {
 		font-family: var(--font-heading);
 		color: var(--text-primary);
-		font-size: 1.75rem;
-		font-weight: 800;
-		letter-spacing: -0.02em;
-		margin-bottom: 2.5rem;
+		font-size: 0.688rem;
+		font-weight: 700;
+		letter-spacing: 0.25em;
+		text-transform: uppercase;
+		margin-bottom: 4rem;
 	}
 
 	.steps {
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-		gap: 2rem;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 4rem;
 		text-align: center;
 		position: relative;
 	}
@@ -212,50 +222,74 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 0.5rem;
+		gap: 0.75rem;
 	}
 
 	.step-number {
-		width: 48px;
-		height: 48px;
-		border-radius: 50%;
-		background: var(--text-primary);
-		color: var(--bg-page);
+		width: 56px;
+		height: 56px;
+		border-radius: 0;
+		background: none;
+		color: var(--text-primary);
+		border: 2px solid var(--text-primary);
 		font-family: var(--font-heading);
-		font-weight: 800;
-		font-size: 1.25rem;
+		font-weight: 900;
+		font-size: 1.5rem;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		margin-bottom: 0.5rem;
+		margin-bottom: 0.75rem;
 	}
 
 	.step h3 {
 		font-family: var(--font-heading);
 		color: var(--text-primary);
 		margin: 0;
-		font-size: 1.05rem;
-		font-weight: 700;
+		font-size: 1rem;
+		font-weight: 800;
+		letter-spacing: -0.02em;
 	}
 
 	.step p {
 		color: var(--text-secondary);
 		margin: 0;
 		line-height: 1.5;
-		font-size: 0.9rem;
+		font-size: 0.813rem;
+	}
+
+	@media (max-width: 768px) {
+		.features {
+			grid-template-columns: 1fr;
+			border-top: none;
+		}
+
+		.feature {
+			border-right: none;
+			border-bottom: 1px solid var(--border);
+			padding: 2rem 0;
+		}
+
+		.feature:last-child {
+			border-bottom: none;
+		}
+
+		.steps {
+			grid-template-columns: 1fr;
+			gap: 2.5rem;
+		}
 	}
 
 	@media (max-width: 600px) {
 		h1 {
-			font-size: 2.5rem;
+			font-size: 3rem;
 		}
 
 		.hero {
-			padding: 3rem 0 2rem;
+			padding: 5rem 0 3rem;
 		}
 
 		.subtitle {
-			font-size: 1.05rem;
+			font-size: 1rem;
 		}
 	}
 </style>

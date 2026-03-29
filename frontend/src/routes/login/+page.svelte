@@ -36,8 +36,8 @@
 	.login-card {
 		background: var(--bg-card);
 		border: 1px solid var(--border);
-		border-radius: 12px;
-		padding: 2.5rem;
+		border-radius: 0;
+		padding: 3rem;
 		text-align: center;
 		max-width: 400px;
 		width: 100%;
@@ -60,17 +60,17 @@
 		align-items: center;
 		gap: 0.75rem;
 		background: var(--bg-card);
-		border: 1px solid var(--border);
-		border-radius: 8px;
-		padding: 0.75rem 1.5rem;
-		font-size: 1rem;
-		font-weight: 500;
+		border: 1.5px solid var(--border);
+		border-radius: 0;
+		padding: 0.875rem 2rem;
+		font-size: 0.875rem;
+		font-weight: 600;
 		color: var(--text-primary);
 		text-decoration: none;
-		transition: background 0.15s;
+		transition: border-color 0.15s;
 	}
 
 	.google-btn:hover {
-		background: var(--bg-page);
+		border-color: var(--text-primary);
 	}
 </style>

@@ -497,7 +497,7 @@
 		tr {
 			background: var(--bg-card);
 			border: 1px solid var(--border);
-			border-radius: 12px;
+			border-radius: 0;
 			padding: 1rem;
 			margin-bottom: 0.75rem;
 		}

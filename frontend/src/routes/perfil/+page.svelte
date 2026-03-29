@@ -287,28 +287,29 @@
 	.result-eyebrow {
 		text-align: center;
 		font-family: var(--font-heading);
-		font-size: 0.75rem;
+		font-size: 0.625rem;
 		font-weight: 700;
 		text-transform: uppercase;
-		letter-spacing: 0.15em;
-		color: var(--accent);
-		margin: 0 0 0.5rem;
+		letter-spacing: 0.25em;
+		color: var(--text-secondary);
+		margin: 0 0 0.75rem;
 	}
 
 	h1 {
 		text-align: center;
 		color: var(--text-primary);
 		font-family: var(--font-heading);
-		font-size: 2rem;
-		font-weight: 800;
-		letter-spacing: -0.02em;
-		margin: 0 0 0.5rem;
+		font-size: 2.5rem;
+		font-weight: 900;
+		letter-spacing: -0.04em;
+		margin: 0 0 0.75rem;
 	}
 
 	.subtitle {
 		text-align: center;
 		color: var(--text-secondary);
-		margin-bottom: 1.5rem;
+		margin-bottom: 2.5rem;
+		font-size: 0.875rem;
 	}
 
 	.methodology-link {
@@ -324,53 +325,57 @@
 	/* Escopo toggle */
 	.escopo-toggle {
 		display: flex;
-		gap: 0;
-		margin-bottom: 1rem;
-		border-bottom: 2px solid var(--border);
+		gap: 0.5rem;
+		margin-bottom: 1.5rem;
 	}
 
 	.escopo-btn {
-		flex: 1;
-		padding: 0.625rem 1rem;
+		flex: none;
+		padding: 0.5rem 1rem;
 		background: none;
-		border: none;
-		border-bottom: 2px solid transparent;
-		margin-bottom: -2px;
+		border: 1.5px solid var(--border);
+		border-radius: 0;
 		font-family: var(--font-heading);
-		font-size: 0.938rem;
+		font-size: 0.688rem;
 		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
 		color: var(--text-secondary);
 		cursor: pointer;
-		transition: color 0.2s, border-color 0.2s;
+		transition: all 0.15s;
 	}
 
 	.escopo-btn:hover {
 		color: var(--text-primary);
+		border-color: var(--text-primary);
 	}
 
 	.escopo-btn.active {
-		color: var(--link);
-		border-bottom-color: var(--link);
+		color: var(--bg-page);
+		background: var(--text-primary);
+		border-color: var(--text-primary);
 	}
 
 	/* Tabs */
 	.tabs {
 		display: flex;
 		gap: 0;
-		margin-bottom: 1.5rem;
-		border-bottom: 2px solid var(--border);
+		margin-bottom: 2rem;
+		border-bottom: 1px solid var(--border);
 	}
 
 	.tab {
 		flex: 1;
-		padding: 0.75rem 1rem;
+		padding: 1rem 1rem;
 		background: none;
 		border: none;
-		border-bottom: 3px solid transparent;
-		margin-bottom: -2px;
+		border-bottom: 2px solid transparent;
+		margin-bottom: -1px;
 		font-family: var(--font-heading);
-		font-size: 1rem;
-		font-weight: 700;
+		font-size: 0.75rem;
+		font-weight: 800;
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
 		color: var(--text-secondary);
 		cursor: pointer;
 		transition: color 0.2s, border-color 0.2s;
@@ -381,8 +386,8 @@
 	}
 
 	.tab.active {
-		color: var(--link);
-		border-bottom-color: var(--link);
+		color: var(--text-primary);
+		border-bottom-color: var(--text-primary);
 	}
 
 	/* Casa filter */
@@ -393,26 +398,28 @@
 	}
 
 	.casa-btn {
-		padding: 0.4rem 0.875rem;
-		border: 1px solid var(--border);
-		border-radius: 20px;
-		background: var(--bg-card);
-		font-size: 0.813rem;
-		font-weight: 600;
+		padding: 0.375rem 0.75rem;
+		border: 1.5px solid var(--border);
+		border-radius: 0;
+		background: transparent;
+		font-size: 0.688rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
 		color: var(--text-secondary);
 		cursor: pointer;
-		transition: all 0.2s;
+		transition: all 0.15s;
 	}
 
 	.casa-btn:hover {
-		border-color: var(--link);
+		border-color: var(--text-primary);
 		color: var(--text-primary);
 	}
 
 	.casa-btn.active {
-		background: var(--link);
-		border-color: var(--link);
-		color: white;
+		background: var(--text-primary);
+		border-color: var(--text-primary);
+		color: var(--bg-page);
 	}
 
 	/* Filter toggles */
@@ -450,56 +457,65 @@
 
 	.search-input {
 		width: 100%;
-		padding: 0.6rem 0.875rem;
-		border: 1px solid var(--border);
-		border-radius: 8px;
-		background: var(--bg-card);
+		padding: 0.75rem 0;
+		border: none;
+		border-bottom: 1.5px solid var(--border);
+		border-radius: 0;
+		background: transparent;
 		color: var(--text-primary);
 		font-size: 0.875rem;
+		font-family: var(--font-heading);
+		font-weight: 500;
 		outline: none;
 		transition: border-color 0.2s;
 		box-sizing: border-box;
 	}
 
 	.search-input:focus {
-		border-color: var(--link);
+		border-color: var(--text-primary);
+	}
+
+	.search-input::placeholder {
+		color: var(--text-secondary);
+		font-weight: 400;
 	}
 
 	/* Result cards */
 	.result-card {
 		display: flex;
 		align-items: center;
-		gap: 1rem;
-		background: var(--bg-card);
-		border: 1px solid var(--border);
-		border-radius: 12px;
-		padding: 1rem 1.5rem;
-		margin-bottom: 0.75rem;
+		gap: 1.25rem;
+		background: transparent;
+		border: none;
+		border-bottom: 1px solid var(--border);
+		border-radius: 0;
+		padding: 1.25rem 0;
+		margin-bottom: 0;
 		text-decoration: none;
 		color: inherit;
-		transition: border-color 0.2s, box-shadow 0.2s;
+		transition: padding-left 0.2s;
 	}
 
 	.result-card:first-child {
-		border-color: color-mix(in srgb, var(--accent) 40%, transparent);
-		box-shadow: 0 2px 12px color-mix(in srgb, var(--accent) 10%, transparent);
+		border-top: none;
 	}
 
 	.result-card:hover {
-		border-color: var(--border-hover);
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+		padding-left: 0.5rem;
 	}
 
 	.rank {
 		color: var(--text-secondary);
 		font-family: var(--font-heading);
-		font-weight: 800;
-		font-size: 1.125rem;
-		min-width: 2.5rem;
+		font-weight: 900;
+		font-size: 0.75rem;
+		min-width: 2rem;
+		letter-spacing: -0.02em;
 	}
 
 	.result-card:first-child .rank {
-		color: var(--accent);
+		color: var(--text-primary);
+		font-size: 1.125rem;
 	}
 
 	.info {
@@ -508,12 +524,13 @@
 
 	.nome {
 		font-family: var(--font-heading);
-		font-weight: 700;
+		font-weight: 800;
 		color: var(--text-primary);
+		letter-spacing: -0.02em;
 	}
 
 	.meta {
-		font-size: 0.875rem;
+		font-size: 0.75rem;
 		color: var(--text-secondary);
 		margin-top: 0.25rem;
 	}
@@ -526,32 +543,38 @@
 	/* CTA */
 	.cta-section {
 		text-align: center;
-		margin-top: 3rem;
-		padding: 2rem;
-		background: var(--bg-card);
-		border: 1px solid var(--border);
-		border-radius: 16px;
+		margin-top: 4rem;
+		padding: 3rem 2rem;
+		background: transparent;
+		border: none;
+		border-top: 1px solid var(--border);
+		border-radius: 0;
 	}
 
 	.cta-section p {
 		color: var(--text-secondary);
-		margin-bottom: 1rem;
+		margin-bottom: 1.5rem;
+		font-size: 0.875rem;
 	}
 
 	.cta {
 		display: inline-block;
-		background: var(--accent);
-		color: white;
-		padding: 0.75rem 2rem;
-		border-radius: 10px;
+		background: var(--text-primary);
+		color: var(--bg-page);
+		padding: 0.875rem 2.5rem;
+		border-radius: 0;
 		text-decoration: none;
 		font-family: var(--font-heading);
-		font-weight: 700;
-		transition: background 0.2s;
+		font-weight: 800;
+		font-size: 0.75rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		transition: opacity 0.2s;
 	}
 
 	.cta:hover {
-		background: var(--accent-hover);
+		background: var(--text-primary);
+		opacity: 0.85;
 	}
 
 	.loading, .empty {

@@ -403,7 +403,7 @@
 		max-height: 550px;
 		background: var(--bg-card);
 		border: 1px solid var(--border);
-		border-radius: 16px;
+		border-radius: 0;
 		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
 		display: flex;
 		flex-direction: column;
@@ -586,7 +586,7 @@
 
 	.msg-content {
 		padding: 0.6rem 0.9rem;
-		border-radius: 12px;
+		border-radius: 0;
 		font-size: 0.85rem;
 		line-height: 1.5;
 		word-break: break-word;
@@ -708,7 +708,7 @@
 		padding: 0.75rem 1rem;
 		background: var(--bg-page);
 		border: 1px solid var(--border);
-		border-radius: 12px;
+		border-radius: 0;
 		border-bottom-left-radius: 4px;
 	}
 

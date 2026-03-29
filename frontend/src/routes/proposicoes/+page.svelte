@@ -315,7 +315,7 @@
 		font: inherit;
 		background: var(--bg-card);
 		border: 1px solid var(--border);
-		border-radius: 12px;
+		border-radius: 0;
 		padding: 1rem;
 		margin-bottom: 0.5rem;
 		transition: border-color 0.2s;
@@ -375,7 +375,7 @@
 		background: color-mix(in srgb, var(--color-favor) 10%, transparent);
 		border: 1px solid color-mix(in srgb, var(--color-favor) 20%, transparent);
 		padding: 0.1rem 0.4rem;
-		border-radius: 10px;
+		border-radius: 0;
 	}
 
 	.prop-text {
@@ -415,7 +415,7 @@
 		font-size: 0.7rem;
 		font-weight: 700;
 		padding: 0.15rem 0.5rem;
-		border-radius: 10px;
+		border-radius: 0;
 		text-decoration: none;
 		line-height: 1.4;
 	}
