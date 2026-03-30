@@ -541,7 +541,7 @@
 		position: sticky;
 		z-index: 40;
 		background: var(--bg-page);
-		padding: 0 0 0.75rem;
+		padding: 0.5rem 0 0.75rem;
 		margin: 0 0 0.5rem;
 		border-bottom: 1px solid var(--border);
 	}
