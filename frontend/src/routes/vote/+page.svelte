@@ -169,7 +169,7 @@
 		}
 	}
 
-	let headerHeight = $state(0);
+	let headerHeight = $state(60);
 
 	onMount(() => {
 		const header = document.querySelector('header');
