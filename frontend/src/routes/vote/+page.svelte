@@ -524,7 +524,7 @@
 
 <style>
 	:global(main:has(.posicoes-page)) {
-		padding-top: 1rem;
+		padding-top: 0;
 	}
 
 	.posicoes-page {
@@ -537,8 +537,8 @@
 		top: 90px;
 		z-index: 40;
 		background: var(--bg-page);
-		padding: 1rem 0 0.75rem;
-		margin: -0.5rem 0 0.5rem;
+		padding: 0 0 0.75rem;
+		margin: 0 0 0.5rem;
 		border-bottom: 1px solid var(--border);
 	}
 
