@@ -14,6 +14,7 @@
 	 * In compact mode (perfil re-vote), clicking a dot fires onvote directly.
 	 */
 
+	import { _ } from 'svelte-i18n';
 	import { colorForPos } from '$lib/constants';
 
 	interface Props {
@@ -27,23 +28,22 @@
 		pos: number;
 		voto: 'sim' | 'nao';
 		peso: number;
-		label?: string;
 	}
 
 	const POSITIONS: Position[] = [
-		{ pos: 1, voto: 'nao', peso: 1.0, label: 'Contra' },
-		{ pos: 2, voto: 'nao', peso: 0.5, label: 'Contra leve' },
-		{ pos: 3, voto: 'sim', peso: 0.0, label: 'Neutro' },
-		{ pos: 4, voto: 'sim', peso: 0.5, label: 'A favor leve' },
-		{ pos: 5, voto: 'sim', peso: 1.0, label: 'A favor' },
+		{ pos: 1, voto: 'nao', peso: 1.0 },
+		{ pos: 2, voto: 'nao', peso: 0.5 },
+		{ pos: 3, voto: 'sim', peso: 0.0 },
+		{ pos: 4, voto: 'sim', peso: 0.5 },
+		{ pos: 5, voto: 'sim', peso: 1.0 },
 	];
 
-	const TOOLTIP: Record<number, string> = {
-		1: 'Contra',
-		2: 'Contra (leve)',
-		3: 'Neutro',
-		4: 'A favor (leve)',
-		5: 'A favor',
+	const TOOLTIP_KEYS: Record<number, string> = {
+		1: 'slider.contraTooltip',
+		2: 'slider.contraLeveTooltip',
+		3: 'slider.neutroTooltip',
+		4: 'slider.aFavorLeveTooltip',
+		5: 'slider.aFavorTooltip',
 	};
 
 	let { value = null, onselect, onvote, compact = false }: Props = $props();
@@ -78,9 +78,9 @@
 
 <div class="vote-slider" class:compact>
 	<div class="labels-row">
-		<span class="end-label left">Contra</span>
-		<span class="end-label center">Neutro</span>
-		<span class="end-label right">A favor</span>
+		<span class="end-label left">{$_('slider.contra')}</span>
+		<span class="end-label center">{$_('slider.neutro')}</span>
+		<span class="end-label right">{$_('slider.aFavor')}</span>
 	</div>
 	<div class="slider-row">
 		<div class="track-bg">
@@ -93,8 +93,8 @@
 				class:endpoint={p.pos === 1 || p.pos === 3 || p.pos === 5}
 				onclick={() => handleClick(p)}
 				onkeydown={(e) => handleKeydown(e, p)}
-				title={TOOLTIP[p.pos]}
-				aria-label={TOOLTIP[p.pos]}
+				title={$_(TOOLTIP_KEYS[p.pos])}
+				aria-label={$_(TOOLTIP_KEYS[p.pos])}
 				style:--dot-color={colorForPos(p.pos)}
 			>
 				<span class="dot"></span>

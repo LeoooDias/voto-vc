@@ -57,6 +57,7 @@ class ChatMessage(BaseModel):
 class ChatRequest(BaseModel):
     message: str = Field(..., max_length=2000)
     history: list[ChatMessage] = Field(default_factory=list, max_length=20)
+    lang: str = Field(default="pt-BR", pattern=r"^(pt-BR|en)$")
 
 
 @router.post("/proposicao/{proposicao_id}")
@@ -80,7 +81,7 @@ async def chat_proposicao(
 
     async def generate():
         try:
-            async for chunk in stream_chat(prop, body.message, history):
+            async for chunk in stream_chat(prop, body.message, history, lang=body.lang):
                 yield f"data: {json.dumps({'text': chunk})}\n\n"
             yield f"data: {json.dumps({'done': True})}\n\n"
         except Exception as e:
@@ -145,7 +146,9 @@ async def chat_posicao(
 
     async def generate():
         try:
-            async for chunk in stream_posicao_chat(posicao, proposicoes, body.message, history):
+            async for chunk in stream_posicao_chat(
+                posicao, proposicoes, body.message, history, lang=body.lang
+            ):
                 yield f"data: {json.dumps({'text': chunk})}\n\n"
             yield f"data: {json.dumps({'done': True})}\n\n"
         except Exception as e:

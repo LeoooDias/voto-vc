@@ -10,6 +10,7 @@
 	import ScoreDots from '$lib/components/ScoreDots.svelte';
 	import { stanceLabel, stanceColor, stanceConcorda, userResponseToStance, expandPositions } from '$lib/utils/position';
 	import type { PosicaoInferida, RespostaPosicaoItem } from '$lib/types/posicao';
+	import { _ } from 'svelte-i18n';
 
 	interface VotoBreakdown {
 		sim?: number;
@@ -270,12 +271,12 @@
 
 	function breakdownLabel(key: string): string {
 		const map: Record<string, string> = {
-			sim: 'A favor',
-			nao: 'Contra',
-			abstencao: 'Abstenção',
-			obstrucao: 'Obstrução',
-			ausente: 'Ausente',
-			presente_sem_voto: 'Presente s/ voto'
+			sim: $_('partido.favor'),
+			nao: $_('partido.contra'),
+			abstencao: $_('partido.abstencao'),
+			obstrucao: $_('partido.obstrucao'),
+			ausente: $_('partido.ausente'),
+			presente_sem_voto: $_('partido.presenteSemVoto')
 		};
 		return map[key] || key;
 	}
@@ -305,14 +306,14 @@
 	function posicaoLabel(voto: PartidoVoto): string {
 		const p = posicaoPartido(voto);
 		if (voto.orientacao && voto.orientacao !== 'liberado') {
-			if (p === 'sim') return 'A favor';
-			if (p === 'nao') return 'Contra';
-			return 'Abstenção';
+			if (p === 'sim') return $_('partido.favor');
+			if (p === 'nao') return $_('partido.contra');
+			return $_('partido.abstencao');
 		}
-		if (p === 'liberado') return 'Liberado';
-		if (p === 'sim') return 'A favor';
-		if (p === 'nao') return 'Contra';
-		return 'Dividido';
+		if (p === 'liberado') return $_('partido.liberado');
+		if (p === 'sim') return $_('partido.favor');
+		if (p === 'nao') return $_('partido.contra');
+		return $_('partido.dividido');
 	}
 
 	function posicaoClass(voto: PartidoVoto): string {
@@ -335,12 +336,12 @@
 
 	function votoLabel(voto: string): string {
 		const map: Record<string, string> = {
-			sim: 'A favor',
-			nao: 'Contra',
-			abstencao: 'Abstenção',
-			obstrucao: 'Obstrução',
-			ausente: 'Ausente',
-			presente_sem_voto: 'Presente s/ voto'
+			sim: $_('partido.favor'),
+			nao: $_('partido.contra'),
+			abstencao: $_('partido.abstencao'),
+			obstrucao: $_('partido.obstrucao'),
+			ausente: $_('partido.ausente'),
+			presente_sem_voto: $_('partido.presenteSemVoto')
 		};
 		return map[voto] || voto;
 	}
@@ -353,12 +354,12 @@
 
 	function statTooltip(voto: string): string {
 		const map: Record<string, string> = {
-			sim: 'Vezes que parlamentares do partido votaram a favor da proposta',
-			nao: 'Vezes que parlamentares do partido votaram contra a proposta',
-			abstencao: 'Vezes que parlamentares do partido se abstiveram de votar',
-			obstrucao: 'Vezes que parlamentares do partido obstruíram a votação como estratégia política',
-			ausente: 'Vezes que parlamentares do partido não compareceram à votação',
-			presente_sem_voto: 'Parlamentares presentes na sessão mas que não registraram voto'
+			sim: $_('partido.tooltipSim'),
+			nao: $_('partido.tooltipNao'),
+			abstencao: $_('partido.tooltipAbstencao'),
+			obstrucao: $_('partido.tooltipObstrucao'),
+			ausente: $_('partido.tooltipAusente'),
+			presente_sem_voto: $_('partido.tooltipPresenteSemVoto')
 		};
 		return map[voto] || '';
 	}
@@ -366,13 +367,13 @@
 </script>
 
 <svelte:head>
-	<title>{partido?.nome ?? 'Partido'} — voto.vc</title>
+	<title>{partido?.nome ? $_('partido.title', { values: { nome: partido.nome } }) : 'Partido — voto.vc'}</title>
 </svelte:head>
 
 {#if showUfPicker}
 	<div class="uf-selector">
-		<h1>De qual estado?</h1>
-		<p class="uf-subtitle">Filtrar parlamentares do partido por estado</p>
+		<h1>{$_('partido.deQualEstado')}</h1>
+		<p class="uf-subtitle">{$_('partido.filtrarPorEstado')}</p>
 		<div class="uf-grid">
 			{#each UF_SIGLAS as sigla}
 				<button class="uf-btn" onclick={() => escolherUf(sigla)}>
@@ -380,12 +381,12 @@
 				</button>
 			{/each}
 		</div>
-		<button class="uf-cancel" onclick={() => showUfPicker = false}>Cancelar</button>
+		<button class="uf-cancel" onclick={() => showUfPicker = false}>{$_('partido.cancelar')}</button>
 	</div>
 {:else if error}
-	<div class="empty">Partido não encontrado.</div>
+	<div class="empty">{$_('partido.semDados')}</div>
 {:else if !partido}
-	<div class="loading">Carregando...</div>
+	<div class="loading">{$_('partido.carregando')}</div>
 {:else}
 	<div class="perfil">
 		<div class="header">
@@ -395,15 +396,15 @@
 				<p class="meta-count">
 					{#if scopeLoading}<span class="spinner"></span>{:else}
 						{#if partido.deputados > 0 && partido.senadores > 0}
-							{partido.deputados} deputado{partido.deputados !== 1 ? 's' : ''} e {partido.senadores} senador{partido.senadores !== 1 ? 'es' : ''}
+							{partido.deputados !== 1 ? $_('partido.deputadosCountPlural', { values: { count: partido.deputados } }) : $_('partido.deputadosCount', { values: { count: partido.deputados } })} {$_('partido.eConj')} {partido.senadores !== 1 ? $_('partido.senadoresCountPlural', { values: { count: partido.senadores } }) : $_('partido.senadoresCount', { values: { count: partido.senadores } })}
 						{:else if partido.senadores > 0}
-							{partido.senadores} senador{partido.senadores !== 1 ? 'es' : ''}
+							{partido.senadores !== 1 ? $_('partido.senadoresCountPlural', { values: { count: partido.senadores } }) : $_('partido.senadoresCount', { values: { count: partido.senadores } })}
 						{:else}
-							{partido.deputados} deputado{partido.deputados !== 1 ? 's' : ''}
+							{partido.deputados !== 1 ? $_('partido.deputadosCountPlural', { values: { count: partido.deputados } }) : $_('partido.deputadosCount', { values: { count: partido.deputados } })}
 						{/if}
 					{/if}
 					{#if escopo === 'estado' && ufSelecionada}
-						em {ufSelecionada}
+						{$_('partido.em')} {ufSelecionada}
 					{/if}
 				</p>
 			</div>
@@ -414,34 +415,34 @@
 				class="escopo-btn"
 				class:active={escopo === 'brasil'}
 				onclick={() => setEscopo('brasil')}
-			>Brasil</button>
+			>{$_('partido.brasil')}</button>
 			<button
 				class="escopo-btn"
 				class:active={escopo === 'estado'}
 				onclick={() => setEscopo('estado')}
-			>Meu estado{ufSelecionada ? ` (${ufSelecionada})` : ''}</button>
+			>{$_('partido.meuEstado')}{ufSelecionada ? ` (${ufSelecionada})` : ''}</button>
 		</div>
 
 		{#if comparacao.score != null || disciplina?.disciplina != null}
 			<div class="metricas">
 				<div class="metricas-grid">
 					{#if comparacao.score != null}
-						<div class="metrica-card" title="Quanto o partido votou parecido com você nas proposições em comum">
+						<div class="metrica-card" title={$_('partido.tooltipAlinhamento')}>
 							<span class="metrica-valor">
 								<ScoreDots score={comparacao.score} votos_comparados={comparacao.total} loading={scopeLoading} size="lg" />
 							</span>
-							<span class="metrica-nome">Alinhamento</span>
+							<span class="metrica-nome">{$_('partido.alinhamento')}</span>
 							<span class="metrica-detalhe">
-								{#if !scopeLoading}{comparacao.concordou}/{comparacao.total} proposições em comum{/if}
+								{#if !scopeLoading}{$_('partido.proposicoesEmComum', { values: { concordou: comparacao.concordou, total: comparacao.total } })}{/if}
 							</span>
 						</div>
 					{/if}
 					{#if disciplina?.disciplina != null}
-						<div class="metrica-card" class:high={!scopeLoading && disciplina.disciplina >= 80} class:mid={!scopeLoading && disciplina.disciplina >= 60 && disciplina.disciplina < 80} class:low={!scopeLoading && disciplina.disciplina < 60} title="Com que frequência os parlamentares seguem a orientação oficial do partido">
+						<div class="metrica-card" class:high={!scopeLoading && disciplina.disciplina >= 80} class:mid={!scopeLoading && disciplina.disciplina >= 60 && disciplina.disciplina < 80} class:low={!scopeLoading && disciplina.disciplina < 60} title={$_('partido.tooltipDisciplina')}>
 							<span class="metrica-valor">{#if scopeLoading}<span class="spinner lg"></span>{:else}{fmtPct(disciplina.disciplina)}{/if}</span>
-							<span class="metrica-nome">Disciplina</span>
-							<span class="metrica-detalhe" title="Percentual de vezes que os parlamentares votaram de acordo com a orientação oficial da bancada">
-								{#if !scopeLoading}{disciplina.votacoes_analisadas} votações analisadas{/if}
+							<span class="metrica-nome">{$_('partido.disciplina')}</span>
+							<span class="metrica-detalhe" title={$_('partido.tooltipDisciplinaDetalhe')}>
+								{#if !scopeLoading}{$_('partido.votacoesAnalisadas', { values: { count: disciplina.votacoes_analisadas } })}{/if}
 							</span>
 						</div>
 					{/if}
@@ -452,15 +453,15 @@
 		{#if posicoes.length > 0}
 			<div class="posicionamentos">
 				<button class="section-toggle" onclick={() => posicionamentosOpen = !posicionamentosOpen}>
-					<h2>Posicionamentos</h2>
+					<h2>{$_('partido.posicionamentos')}</h2>
 					<svg class="section-chevron" class:open={posicionamentosOpen} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
 				</button>
 				{#if posicionamentosOpen}
 					{#if userPosRespostas.size > 0}
 						<div class="posicao-filtros">
-							<button class="posicao-filtro-btn" class:active={posicaoFiltro === 'todos'} onclick={() => posicaoFiltro = 'todos'}>Todos</button>
-							<button class="posicao-filtro-btn concordante" class:active={posicaoFiltro === 'concordantes'} onclick={() => posicaoFiltro = 'concordantes'}>Concordantes</button>
-							<button class="posicao-filtro-btn discordante" class:active={posicaoFiltro === 'discordantes'} onclick={() => posicaoFiltro = 'discordantes'}>Discordantes</button>
+							<button class="posicao-filtro-btn" class:active={posicaoFiltro === 'todos'} onclick={() => posicaoFiltro = 'todos'}>{$_('partido.todos')}</button>
+							<button class="posicao-filtro-btn concordante" class:active={posicaoFiltro === 'concordantes'} onclick={() => posicaoFiltro = 'concordantes'}>{$_('partido.concordantes')}</button>
+							<button class="posicao-filtro-btn discordante" class:active={posicaoFiltro === 'discordantes'} onclick={() => posicaoFiltro = 'discordantes'}>{$_('partido.discordantes')}</button>
 						</div>
 					{/if}
 					{#each POSICAO_CATEGORIAS as cat}
@@ -498,7 +499,7 @@
 												{/if}
 												{#if userStance}
 													<div class="posicao-user">
-														<span class="posicao-user-label">Você</span>
+														<span class="posicao-user-label">{$_('partido.voce')}</span>
 														<span class="posicao-user-stance" style="color: {stanceColor(userStance.stance)}">{stanceLabel(userStance.stance)}</span>
 													</div>
 													<div class="posicao-bar user">
@@ -518,7 +519,7 @@
 
 		{#if Object.keys(partido.stats).length > 0}
 			<div class="stats">
-				<h2>Como votaram os parlamentares</h2>
+				<h2>{$_('partido.comoVotaram')}</h2>
 				<div class="stats-grid">
 					{#each Object.entries(partido.stats) as [voto, count]}
 						<div class="stat-item {votoClass(voto)}" title={statTooltip(voto)}>
@@ -532,11 +533,11 @@
 						{#if scopeLoading}
 							<span class="spinner"></span>
 						{:else}
-							<span class="comparacao-concordou" title="Proposições em que o partido votou igual a você">{comparacao.concordou} concordaram</span>
+							<span class="comparacao-concordou" title={$_('partido.tooltipConcordou')}>{$_('partido.concordaram', { values: { count: comparacao.concordou } })}</span>
 							<span class="comparacao-sep">·</span>
-							<span class="comparacao-discordou" title="Proposições em que o partido votou diferente de você">{comparacao.discordou} discordaram</span>
+							<span class="comparacao-discordou" title={$_('partido.tooltipDiscordou')}>{$_('partido.discordaram', { values: { count: comparacao.discordou } })}</span>
 							<span class="comparacao-sep">·</span>
-							<span class="comparacao-total" title="Total de proposições em que ambos votaram">{comparacao.total} comparados</span>
+							<span class="comparacao-total" title={$_('partido.tooltipTotal')}>{$_('partido.comparados', { values: { count: comparacao.total } })}</span>
 						{/if}
 					</div>
 				{/if}
@@ -546,19 +547,19 @@
 		{#if partido.votos.length > 0}
 			<div class="historico">
 				<div class="historico-header">
-					<h2>Histórico de votações</h2>
+					<h2>{$_('partido.historicoVotacoes')}</h2>
 					<div class="filter-toggles">
 						{#if countSubstantivas > 0 && countSubstantivas < partido.votos.length}
 							<label class="filter-toggle">
 								<input type="checkbox" bind:checked={soSubstantivas} />
-								Só substantivas ({countSubstantivas})
-								<span class="filter-hint" title="Proposições com impacto legislativo direto: PL, PEC, MPV, PLP, PDL">?</span>
+								{$_('partido.soSubstantivas')} ({countSubstantivas})
+								<span class="filter-hint" title={$_('partido.tooltipSubstantivas')}>?</span>
 							</label>
 						{/if}
 						{#if userVotoMap.size > 0}
 							<label class="filter-toggle">
 								<input type="checkbox" bind:checked={soMeusVotos} />
-								Só proposições que votei
+								{$_('partido.soProposicoesQueVotei')}
 							</label>
 						{/if}
 					</div>
@@ -594,7 +595,7 @@
 									{/if}
 								</div>
 								<p class="voto-ementa">
-									{voto.proposicao_ementa ?? voto.descricao_votacao ?? 'Sem descrição'}
+									{voto.proposicao_ementa ?? voto.descricao_votacao ?? $_('partido.semDescricao')}
 								</p>
 								<div class="breakdown-bar">
 									{#each Object.entries(voto.breakdown) as [tipo, n]}
@@ -611,15 +612,15 @@
 										{/if}
 									{/each}
 								{#if divergiu}
-									<span class="legend-divergencia" title="A maioria dos parlamentares votou diferente da orientação oficial">Bancada divergiu</span>
+									<span class="legend-divergencia" title={$_('partido.tooltipBancadaDivergiu')}>{$_('partido.bancadaDivergiu')}</span>
 								{/if}
 								</div>
 								{#if meuVoto}
 									<div class="meu-voto-row">
-										<span class="meu-voto-label">Seu voto: {meuVoto === 'sim' ? 'A favor' : 'Contra'}</span>
+										<span class="meu-voto-label">{$_('partido.seuVoto', { values: { voto: meuVoto === 'sim' ? $_('partido.favor') : $_('partido.contra') } })}</span>
 										{#if comparavel}
 											<span class="match-badge {concordou ? 'match-concordou' : 'match-discordou'}">
-												{concordou ? 'Concordou' : 'Discordou'}
+												{concordou ? $_('partido.concordou') : $_('partido.discordou')}
 											</span>
 										{/if}
 									</div>
@@ -644,7 +645,7 @@
 								{#if voto.casas.length > 0}
 									<div class="casa-pills">
 										{#each voto.casas as info}
-											<a href={info.url} target="_blank" rel="noopener" class="casa-pill" class:camara={info.casa === 'camara'} class:senado={info.casa === 'senado'} onclick={(e) => e.stopPropagation()}>{info.casa === 'camara' ? 'Câmara' : 'Senado'}</a>
+											<a href={info.url} target="_blank" rel="noopener" class="casa-pill" class:camara={info.casa === 'camara'} class:senado={info.casa === 'senado'} onclick={(e) => e.stopPropagation()}>{info.casa === 'camara' ? $_('partido.camara') : $_('partido.senado')}</a>
 										{/each}
 									</div>
 								{/if}
@@ -654,15 +655,15 @@
 				{/each}
 				{#if hasMore}
 					<button class="btn-more" onclick={() => showLimit += 100}>
-						Mostrar mais ({votosFiltrados.length - showLimit} restantes)
+						{$_('partido.mostrarMais', { values: { count: votosFiltrados.length - showLimit } })}
 					</button>
 				{/if}
 			</div>
 		{:else}
-			<p class="empty-votos">Nenhum voto registrado{escopo === 'estado' && ufSelecionada ? ` para ${ufSelecionada}` : ''}.</p>
+			<p class="empty-votos">{escopo === 'estado' && ufSelecionada ? $_('partido.nenhumVotoPara', { values: { uf: ufSelecionada } }) : $_('partido.nenhumVoto') + '.'}</p>
 		{/if}
 
-		<a href="/perfil" class="back">Voltar ao perfil</a>
+		<a href="/perfil" class="back">{$_('partido.voltarPerfil')}</a>
 	</div>
 {/if}
 

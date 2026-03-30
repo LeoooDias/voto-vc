@@ -1,103 +1,60 @@
+<script lang="ts">
+	import { _ } from 'svelte-i18n';
+</script>
+
 <svelte:head>
-	<title>Sobre — voto.vc</title>
+	<title>{$_('sobre.title')}</title>
 </svelte:head>
 
 <div class="sobre">
-	<h1>Sobre o voto.vc</h1>
+	<h1>{$_('sobre.h1')}</h1>
 
 	<section>
-		<h2>O que é</h2>
-		<p>
-			O voto.vc ajuda eleitores brasileiros a encontrar os políticos e partidos
-			que mais se alinham com seus pontos de vista, baseando-se exclusivamente
-			em dados públicos de votações nominais da Câmara dos Deputados e do Senado Federal.
-		</p>
+		<h2>{$_('sobre.oQueE')}</h2>
+		<p>{$_('sobre.oQueEDesc')}</p>
 	</section>
 
 	<section>
-		<h2>Como funciona</h2>
+		<h2>{$_('sobre.comoFunciona')}</h2>
 		<ol>
-			<li>Você responde a proposições reais que foram votadas no Congresso</li>
-			<li>Comparamos suas respostas com os votos reais de cada parlamentar</li>
-			<li>Mostramos quem mais vota como você votaria</li>
+			<li>{$_('sobre.comoFunciona1')}</li>
+			<li>{$_('sobre.comoFunciona2')}</li>
+			<li>{$_('sobre.comoFunciona3')}</li>
 		</ol>
 	</section>
 
 	<section>
-		<h2>Fontes de dados</h2>
+		<h2>{$_('sobre.fontes')}</h2>
 		<ul>
-			<li>Câmara dos Deputados — Dados Abertos (dadosabertos.camara.leg.br)</li>
-			<li>Senado Federal — Dados Abertos (legis.senado.leg.br/dadosabertos)</li>
+			<li>{$_('sobre.fonteCamara')}</li>
+			<li>{$_('sobre.fonteSenado')}</li>
 		</ul>
-		<p>
-			O voto.vc cobre votações nominais da Câmara dos Deputados e do Senado Federal,
-			incluindo dados históricos desde 2003.
-		</p>
+		<p>{$_('sobre.fontesDesc')}</p>
 	</section>
 
 	<section id="metodologia">
-		<h2>Metodologia</h2>
-		<p>
-			A métrica de alinhamento mede o quanto um parlamentar ou partido vota de forma
-			parecida com você. Veja como funciona em detalhes:
-		</p>
+		<h2>{$_('sobre.metodologia')}</h2>
+		<p>{$_('sobre.metodologiaDesc')}</p>
 
-		<h3>Alinhamento de parlamentar</h3>
-		<p>
-			Para cada proposição que você e o parlamentar votaram, comparamos os votos.
-			Concordância (ambos SIM ou ambos NÃO) soma pontos; discordância subtrai.
-			A importância que você atribui a cada voto (peso) é levada em conta —
-			votos que você marcou como mais importantes pesam mais no cálculo.
-		</p>
-		<p>
-			O resultado é normalizado em uma escala de 0 a 100, onde 100 = concordância
-			total, 50 = neutro, e 0 = discordância total. Abstenções, ausências e votos
-			marcados como "Neutro" ou "Pular" são ignorados.
-		</p>
+		<h3>{$_('sobre.alinhamentoParlamentar')}</h3>
+		<p>{$_('sobre.alinhamentoParlamentarDesc1')}</p>
+		<p>{$_('sobre.alinhamentoParlamentarDesc2')}</p>
 
-		<h3>Ajuste de confiança</h3>
-		<p>
-			Para evitar que parlamentares com poucos votos em comum dominem o ranking,
-			aplicamos um ajuste estatístico para direcionar resultados com poucas
-			comparações à posição neutra. Na prática, isso significa que um parlamentar
-			precisa de várias votações em comum com você para alcançar alinhamento alto
-			ou baixo. Quanto mais votos em comum, mais confiável o alinhamento.
-		</p>
-		<p>
-			Os 5 pontos exibidos no seu perfil refletem esse resultado ajustado —
-			o mesmo valor usado para ordenar o ranking.
-		</p>
+		<h3>{$_('sobre.ajusteConfianca')}</h3>
+		<p>{$_('sobre.ajusteConfiancaDesc1')}</p>
+		<p>{$_('sobre.ajusteConfiancaDesc2')}</p>
 
-		<h3>Alinhamento de partido</h3>
-		<p>
-			Partidos são avaliados com uma abordagem híbrida. Primeiro, verificamos
-			se o partido emitiu uma orientação oficial de bancada (SIM, NÃO ou
-			LIBERADO) para a votação. Se a orientação é LIBERADO, a proposição é
-			ignorada para aquele partido.
-		</p>
-		<p>
-			Quando não há orientação oficial, usamos o voto majoritário dos
-			parlamentares do partido como alternativa — mas somente se pelo menos 60%
-			dos membros votaram na mesma direção. O peso desse voto majoritário é
-			ponderado pela unanimidade (quanto mais unânime, mais peso).
-		</p>
+		<h3>{$_('sobre.alinhamentoPartido')}</h3>
+		<p>{$_('sobre.alinhamentoPartidoDesc1')}</p>
+		<p>{$_('sobre.alinhamentoPartidoDesc2')}</p>
 
-		<h3>Classificação por tema</h3>
-		<p>
-			As proposições são classificadas em temas por inteligência artificial
-			com base na ementa e no resumo de cada proposição. O questionário
-			seleciona proposições de forma diversa entre os temas para cobrir o maior
-			espectro de pautas possível.
-		</p>
+		<h3>{$_('sobre.classificacaoTema')}</h3>
+		<p>{$_('sobre.classificacaoTemaDesc')}</p>
 	</section>
 
 	<section>
-		<h2>Compromisso com neutralidade</h2>
-		<p>
-			O voto.vc não tem filiação partidária. A seleção de proposições para o
-			questionário busca diversidade temática e relevância, não favorecimento de
-			qualquer posição.
-		</p>
+		<h2>{$_('sobre.compromisso')}</h2>
+		<p>{$_('sobre.compromissoDesc')}</p>
 	</section>
 </div>
 

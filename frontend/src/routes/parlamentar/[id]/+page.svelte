@@ -10,6 +10,7 @@
 	import { respostas, carregarRespostas } from '$lib/stores/questionario';
 	import { respostasPosicoes, carregarRespostasPosicoes, posicaoItems, overridesPosicoes } from '$lib/stores/posicoes';
 	import { authUser, authLoading } from '$lib/stores/auth';
+	import { _ } from 'svelte-i18n';
 
 	interface ParlamentarDetail {
 		id: number;
@@ -202,12 +203,12 @@
 
 	function votoLabel(voto: string): string {
 		const map: Record<string, string> = {
-			sim: 'A favor',
-			nao: 'Contra',
-			abstencao: 'Abstenção',
-			obstrucao: 'Obstrução',
-			ausente: 'Ausente',
-			presente_sem_voto: 'Presente s/ voto'
+			sim: $_('parlamentar.favor'),
+			nao: $_('parlamentar.contra'),
+			abstencao: $_('parlamentar.abstencao'),
+			obstrucao: $_('parlamentar.obstrucao'),
+			ausente: $_('parlamentar.ausente'),
+			presente_sem_voto: $_('parlamentar.presenteSemVoto')
 		};
 		return map[voto] || voto;
 	}
@@ -220,12 +221,12 @@
 
 	function statTooltip(voto: string): string {
 		const map: Record<string, string> = {
-			sim: 'Vezes que votou a favor da proposta',
-			nao: 'Vezes que votou contra a proposta',
-			abstencao: 'Vezes que se absteve de votar',
-			obstrucao: 'Vezes que obstruiu a votação como estratégia política',
-			ausente: 'Vezes que não compareceu à votação',
-			presente_sem_voto: 'Esteve presente na sessão mas não registrou voto'
+			sim: $_('parlamentar.tooltipFavor'),
+			nao: $_('parlamentar.tooltipContra'),
+			abstencao: $_('parlamentar.tooltipAbstencao'),
+			obstrucao: $_('parlamentar.tooltipObstrucao'),
+			ausente: $_('parlamentar.tooltipAusente'),
+			presente_sem_voto: $_('parlamentar.tooltipPresenteSemVoto')
 		};
 		return map[voto] || '';
 	}
@@ -242,13 +243,13 @@
 </script>
 
 <svelte:head>
-	<title>{parlamentar?.nome_parlamentar ?? 'Parlamentar'} — voto.vc</title>
+	<title>{parlamentar ? $_('parlamentar.title', { values: { nome: parlamentar.nome_parlamentar } }) : $_('parlamentar.carregando')}</title>
 </svelte:head>
 
 {#if error}
-	<div class="empty">Parlamentar não encontrado.</div>
+	<div class="empty">{$_('parlamentar.semDados')}</div>
 {:else if !parlamentar}
-	<div class="loading">Carregando...</div>
+	<div class="loading">{$_('parlamentar.carregando')}</div>
 {:else}
 	<div class="perfil">
 		<div class="header">
@@ -258,8 +259,8 @@
 			<div class="header-info">
 				<h1>{parlamentar.nome_parlamentar}</h1>
 				<p class="meta">
-					{parlamentar.partido?.sigla ?? 'Sem partido'} · {parlamentar.uf} ·
-					{parlamentar.casa === 'camara' ? (parlamentar.sexo === 'F' ? 'Deputada Federal' : 'Deputado Federal') : (parlamentar.sexo === 'F' ? 'Senadora' : 'Senador')}
+					{parlamentar.partido?.sigla ?? $_('parlamentar.semPartido')} · {parlamentar.uf} ·
+					{parlamentar.casa === 'camara' ? (parlamentar.sexo === 'F' ? $_('parlamentar.deputadaFederal') : $_('parlamentar.deputadoFederal')) : (parlamentar.sexo === 'F' ? $_('parlamentar.senadora') : $_('parlamentar.senador'))}
 				</p>
 				{#if parlamentar.nome_civil !== parlamentar.nome_parlamentar}
 					<p class="nome-civil">{parlamentar.nome_civil}</p>
@@ -269,7 +270,7 @@
 
 		{#if Object.keys(parlamentar.stats).length > 0}
 			<div class="stats">
-				<h2>Resumo de votações</h2>
+				<h2>{$_('parlamentar.resumoVotacoes')}</h2>
 				<div class="stats-grid">
 					{#each Object.entries(parlamentar.stats) as [voto, count]}
 						<div class="stat-item {votoClass(voto)}" title={statTooltip(voto)}>
@@ -283,25 +284,25 @@
 
 		{#if comparacao.total > 0}
 			<div class="comparacao">
-				<h2>Comparação com seus votos</h2>
+				<h2>{$_('parlamentar.comparacaoSeus')}</h2>
 				<div class="comparacao-stats">
 					{#if comparacao.score != null}
-						<div class="comp-item alinhamento" title="Quanto esse parlamentar votou parecido com você nas proposições em comum">
+						<div class="comp-item alinhamento" title={$_('parlamentar.tooltipAlinhamento')}>
 							<span class="comp-count"><ScoreDots score={comparacao.score} votos_comparados={comparacao.total} size="lg" /></span>
-							<span class="comp-label">Alinhamento</span>
+							<span class="comp-label">{$_('parlamentar.alinhamento')}</span>
 						</div>
 					{/if}
-					<div class="comp-item concordou" title="Proposições em que vocês dois votaram igual">
+					<div class="comp-item concordou" title={$_('parlamentar.tooltipConcordou')}>
 						<span class="comp-count">{comparacao.concordou}</span>
-						<span class="comp-label">Concordaram</span>
+						<span class="comp-label">{$_('parlamentar.concordaram')}</span>
 					</div>
-					<div class="comp-item discordou" title="Proposições em que vocês dois votaram diferente">
+					<div class="comp-item discordou" title={$_('parlamentar.tooltipDiscordou')}>
 						<span class="comp-count">{comparacao.discordou}</span>
-						<span class="comp-label">Discordaram</span>
+						<span class="comp-label">{$_('parlamentar.discordaram')}</span>
 					</div>
-					<div class="comp-item total" title="Total de proposições em que ambos votaram">
+					<div class="comp-item total" title={$_('parlamentar.tooltipComparados')}>
 						<span class="comp-count">{comparacao.total}</span>
-						<span class="comp-label">Comparados</span>
+						<span class="comp-label">{$_('parlamentar.comparados')}</span>
 					</div>
 				</div>
 			</div>
@@ -310,15 +311,15 @@
 		{#if posicoes.length > 0}
 			<div class="posicionamentos">
 				<button class="section-toggle" onclick={() => posicionamentosOpen = !posicionamentosOpen}>
-					<h2>Posicionamentos</h2>
+					<h2>{$_('parlamentar.posicionamentos')}</h2>
 					<svg class="section-chevron" class:open={posicionamentosOpen} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
 				</button>
 				{#if posicionamentosOpen}
 					{#if userPosRespostas.size > 0}
 						<div class="posicao-filtros">
-							<button class="posicao-filtro-btn" class:active={posicaoFiltro === 'todos'} onclick={() => posicaoFiltro = 'todos'}>Todos</button>
-							<button class="posicao-filtro-btn concordante" class:active={posicaoFiltro === 'concordantes'} onclick={() => posicaoFiltro = 'concordantes'}>Concordantes</button>
-							<button class="posicao-filtro-btn discordante" class:active={posicaoFiltro === 'discordantes'} onclick={() => posicaoFiltro = 'discordantes'}>Discordantes</button>
+							<button class="posicao-filtro-btn" class:active={posicaoFiltro === 'todos'} onclick={() => posicaoFiltro = 'todos'}>{$_('parlamentar.todos')}</button>
+							<button class="posicao-filtro-btn concordante" class:active={posicaoFiltro === 'concordantes'} onclick={() => posicaoFiltro = 'concordantes'}>{$_('parlamentar.concordantes')}</button>
+							<button class="posicao-filtro-btn discordante" class:active={posicaoFiltro === 'discordantes'} onclick={() => posicaoFiltro = 'discordantes'}>{$_('parlamentar.discordantes')}</button>
 						</div>
 					{/if}
 					{#each POSICAO_CATEGORIAS as cat}
@@ -356,7 +357,7 @@
 												{/if}
 												{#if userStance}
 													<div class="posicao-user">
-														<span class="posicao-user-label">Você</span>
+														<span class="posicao-user-label">{$_('parlamentar.voce')}</span>
 														<span class="posicao-user-stance" style="color: {stanceColor(userStance.stance)}">{stanceLabel(userStance.stance)}</span>
 													</div>
 													<div class="posicao-bar user">
@@ -377,19 +378,19 @@
 		{#if parlamentar.votos.length > 0}
 			<div class="historico">
 				<div class="historico-header">
-					<h2>Histórico de votações</h2>
+					<h2>{$_('parlamentar.historicoVotacoes')}</h2>
 					<div class="filter-toggles">
 						{#if countSubstantivas > 0 && countSubstantivas < parlamentar.votos.length}
 							<label class="filter-toggle">
 								<input type="checkbox" bind:checked={soSubstantivas} />
-								Só substantivas ({countSubstantivas})
-								<span class="filter-hint" title="Proposições com impacto legislativo direto: PL, PEC, MPV, PLP, PDL">?</span>
+								{$_('parlamentar.soSubstantivas')} ({countSubstantivas})
+								<span class="filter-hint" title={$_('parlamentar.hintSubstantivas')}>?</span>
 							</label>
 						{/if}
 						{#if userVotoMap.size > 0}
 							<label class="filter-toggle">
 								<input type="checkbox" bind:checked={soMeusVotos} />
-								Só proposições que votei
+								{$_('parlamentar.soProposicoesQueVotei')}
 							</label>
 						{/if}
 					</div>
@@ -425,17 +426,17 @@
 									{/if}
 								</div>
 								<p class="voto-ementa">
-									{voto.proposicao_ementa ?? voto.descricao_votacao ?? 'Sem descrição'}
+									{voto.proposicao_ementa ?? voto.descricao_votacao ?? $_('parlamentar.semDescricao')}
 								</p>
 								{#if meuVoto}
 									<div class="meu-voto-row">
-										<span class="meu-voto-label">Seu voto: {meuVoto === 'sim' ? 'A favor' : 'Contra'}</span>
+										<span class="meu-voto-label">{$_('parlamentar.seuVoto', { values: { voto: meuVoto === 'sim' ? $_('parlamentar.favor') : $_('parlamentar.contra') } })}</span>
 										{#if comparavel}
 											<span class="match-badge {concordou ? 'match-concordou' : 'match-discordou'}">
-												{concordou ? 'Concordou' : 'Discordou'}
+												{concordou ? $_('parlamentar.concordou') : $_('parlamentar.discordou')}
 											</span>
 										{:else if naoVotou}
-											<span class="match-badge match-naovotou">Não votou</span>
+											<span class="match-badge match-naovotou">{$_('parlamentar.naoVotou')}</span>
 										{/if}
 									</div>
 								{/if}
@@ -459,7 +460,7 @@
 								{#if voto.casas.length > 0}
 									<div class="casa-pills">
 										{#each voto.casas as info}
-											<a href={info.url} target="_blank" rel="noopener" class="casa-pill" class:camara={info.casa === 'camara'} class:senado={info.casa === 'senado'} onclick={(e) => e.stopPropagation()}>{info.casa === 'camara' ? 'Câmara' : 'Senado'}</a>
+											<a href={info.url} target="_blank" rel="noopener" class="casa-pill" class:camara={info.casa === 'camara'} class:senado={info.casa === 'senado'} onclick={(e) => e.stopPropagation()}>{info.casa === 'camara' ? $_('common.camara') : $_('common.senado')}</a>
 										{/each}
 									</div>
 								{/if}
@@ -469,15 +470,15 @@
 				{/each}
 				{#if hasMore}
 					<button class="btn-more" onclick={() => showLimit += 100}>
-						Mostrar mais ({votosFiltrados.length - showLimit} restantes)
+						{$_('parlamentar.mostrarMais', { values: { remaining: votosFiltrados.length - showLimit } })}
 					</button>
 				{/if}
 			</div>
 		{:else}
-			<p class="empty-votos">Nenhum voto registrado.</p>
+			<p class="empty-votos">{$_('parlamentar.nenhumVoto')}</p>
 		{/if}
 
-		<a href="/perfil" class="back">Voltar ao perfil</a>
+		<a href="/perfil" class="back">{$_('parlamentar.voltarPerfil')}</a>
 	</div>
 {/if}
 

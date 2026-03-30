@@ -1,17 +1,18 @@
 <script lang="ts">
+	import { _ } from 'svelte-i18n';
 	import { page } from '$app/state';
 </script>
 
 <svelte:head>
-	<title>Página não encontrada — voto.vc</title>
+	<title>{$_('error.title')}</title>
 </svelte:head>
 
 <div class="error-page">
 	<h1>{page.status}</h1>
-	<p class="error-message">{page.error?.message ?? 'Página não encontrada'}</p>
+	<p class="error-message">{page.error?.message ?? $_('error.paginaNaoEncontrada')}</p>
 	<div class="error-actions">
-		<a href="/" class="error-link">Página inicial</a>
-		<a href="/vote" class="error-cta">Comece a votar</a>
+		<a href="/" class="error-link">{$_('error.paginaInicial')}</a>
+		<a href="/vote" class="error-cta">{$_('error.comeceAVotar')}</a>
 	</div>
 </div>
 

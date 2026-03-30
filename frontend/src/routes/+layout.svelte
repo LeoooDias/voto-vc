@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { _, isLoading as i18nLoading } from 'svelte-i18n';
+	import { initI18n } from '$lib/i18n';
 	import { authUser, authLoading, checkAuth, logout } from '$lib/stores/auth';
 	import { initTheme } from '$lib/stores/theme';
 	import { initColorTheme } from '$lib/stores/colorTheme';
@@ -7,6 +9,8 @@
 	import { respostasPosicoes, carregarRespostasPosicoes } from '$lib/stores/posicoes';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
 	import Toast from '$lib/components/Toast.svelte';
+
+	initI18n();
 
 	let { children } = $props();
 	let settingsOpen = $state(false);
@@ -47,7 +51,7 @@
 				<span class="logo-text"><span class="logo-voto">voto</span><span class="logo-dot">.</span><span class="logo-vc">vc</span></span>
 			</a>
 
-			<button class="hamburger" onclick={() => menuOpen = !menuOpen} aria-label="Menu">
+			<button class="hamburger" onclick={() => menuOpen = !menuOpen} aria-label={$_('nav.menu')}>
 				{#if menuOpen}
 					<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 				{:else}
@@ -58,29 +62,29 @@
 			<div class="nav-right" class:nav-open={menuOpen}>
 				<div class="nav-links">
 					{#if perfilEnabled}
-						<a href="/parlamentares" onclick={closeMenu}>Parlamentares</a>
-						<a href="/partidos" onclick={closeMenu}>Partidos</a>
+						<a href="/parlamentares" onclick={closeMenu}>{$_('nav.parlamentares')}</a>
+						<a href="/partidos" onclick={closeMenu}>{$_('nav.partidos')}</a>
 					{:else}
-						<span class="nav-disabled" title="Responda ao menos 10 proposições para desbloquear" aria-disabled="true" role="link">Parlamentares</span>
-						<span class="nav-disabled" title="Responda ao menos 10 proposições para desbloquear" aria-disabled="true" role="link">Partidos</span>
+						<span class="nav-disabled" title={$_('nav.desbloquear')} aria-disabled="true" role="link">{$_('nav.parlamentares')}</span>
+						<span class="nav-disabled" title={$_('nav.desbloquear')} aria-disabled="true" role="link">{$_('nav.partidos')}</span>
 					{/if}
 					<span class="nav-sep">|</span>
-					<a href="/sobre" onclick={closeMenu}>Sobre</a>
+					<a href="/sobre" onclick={closeMenu}>{$_('nav.sobre')}</a>
 					{#if perfilEnabled}
-						<a href="/perfil" class="nav-perfil" onclick={closeMenu}>Meu Perfil</a>
+						<a href="/perfil" class="nav-perfil" onclick={closeMenu}>{$_('nav.meuPerfil')}</a>
 					{:else}
-						<span class="nav-disabled" title="Responda ao menos 10 proposições para desbloquear" aria-disabled="true" role="link">Meu Perfil</span>
+						<span class="nav-disabled" title={$_('nav.desbloquear')} aria-disabled="true" role="link">{$_('nav.meuPerfil')}</span>
 					{/if}
-					<a href="/vote" class="nav-vote" onclick={closeMenu}>Vote</a>
+					<a href="/vote" class="nav-vote" onclick={closeMenu}>{$_('nav.vote')}</a>
 				</div>
 				{#if !$authLoading}
 					<div class="nav-auth">
 						{#if $authUser}
-							<button class="nav-btn" onclick={() => { logout(); closeMenu(); }}>Sair</button>
+							<button class="nav-btn" onclick={() => { logout(); closeMenu(); }}>{$_('nav.sair')}</button>
 						{:else}
-							<a href="/login" class="nav-btn-login" onclick={closeMenu}>Entrar</a>
+							<a href="/login" class="nav-btn-login" onclick={closeMenu}>{$_('nav.entrar')}</a>
 						{/if}
-						<button class="nav-btn-icon" onclick={() => { settingsOpen = true; closeMenu(); }} title="Configurações" aria-label="Abrir configurações">
+						<button class="nav-btn-icon" onclick={() => { settingsOpen = true; closeMenu(); }} title={$_('nav.configuracoes')} aria-label={$_('nav.abrirConfiguracoes')}>
 							<svg width="27" height="27" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
 						</button>
 					</div>
@@ -90,7 +94,7 @@
 	</header>
 
 	{#if menuOpen}
-		<button class="menu-overlay" onclick={closeMenu} aria-label="Fechar menu"></button>
+		<button class="menu-overlay" onclick={closeMenu} aria-label={$_('nav.fecharMenu')}></button>
 	{/if}
 
 	<main>
@@ -98,7 +102,7 @@
 	</main>
 
 	<footer>
-		<p>voto.vc — seja representado</p>
+		<p>{$_('footer.slogan')}</p>
 		<p class="footer-company"><a href="https://clearworks.ca" target="_blank" rel="noopener noreferrer">© 2026 ClearWorks Foundry Inc.</a></p>
 	</footer>
 </div>

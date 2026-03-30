@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { _ } from 'svelte-i18n';
 	import { api } from '$lib/api';
 	import { respostas, selectedUf, carregarRespostas } from '$lib/stores/questionario';
 	import { respostasPosicoes, carregarRespostasPosicoes } from '$lib/stores/posicoes';
@@ -144,35 +145,35 @@
 </script>
 
 <svelte:head>
-	<title>Partidos — voto.vc</title>
+	<title>{$_('partidos.title')}</title>
 </svelte:head>
 
 {#if showUfPicker}
 	<div class="uf-selector">
-		<h1>De qual estado?</h1>
-		<p class="uf-subtitle">Filtrar partidos por estado</p>
+		<h1>{$_('partidos.deQualEstado')}</h1>
+		<p class="uf-subtitle">{$_('partidos.filtrarPorEstado')}</p>
 		<div class="uf-grid">
 			{#each UF_SIGLAS as sigla}
-				<button class="uf-btn" aria-label="Selecionar estado {sigla}" onclick={() => escolherUf(sigla)}>{sigla}</button>
+				<button class="uf-btn" aria-label={$_('partidos.selecionarEstado', { values: { sigla } })} onclick={() => escolherUf(sigla)}>{sigla}</button>
 			{/each}
 		</div>
-		<button class="uf-cancel" onclick={() => showUfPicker = false}>Cancelar</button>
+		<button class="uf-cancel" onclick={() => showUfPicker = false}>{$_('partidos.cancelar')}</button>
 	</div>
 {:else if isLoading}
-	<div class="loading">Calculando alinhamento...</div>
+	<div class="loading">{$_('partidos.carregando')}</div>
 {:else}
 	<div class="page">
 		<div class="page-header">
-			<h1>Partidos</h1>
+			<h1>{$_('partidos.h1')}</h1>
 			<div class="controls">
 				<label class="per-page-label">
 					<select bind:value={perPage}>
 						<option value={10}>10</option>
 						<option value={25}>25</option>
 						<option value={50}>50</option>
-						<option value={1000}>Todos</option>
+						<option value={1000}>{$_('common.todos')}</option>
 					</select>
-					partidos por página
+					{$_('partidos.porPagina')}
 				</label>
 			</div>
 		</div>
@@ -182,12 +183,12 @@
 				class="escopo-btn"
 				class:active={escopo === 'brasil'}
 				onclick={() => setEscopo('brasil')}
-			>Brasil</button>
+			>{$_('partidos.brasil')}</button>
 			<button
 				class="escopo-btn"
 				class:active={escopo === 'estado'}
 				onclick={() => setEscopo('estado')}
-			>Meu estado{ufSelecionada ? ` (${ufSelecionada})` : ''}</button>
+			>{$_('partidos.meuEstado')}{ufSelecionada ? ` (${ufSelecionada})` : ''}</button>
 		</div>
 
 		<div class="table-wrap">
@@ -195,11 +196,11 @@
 				<thead>
 					<tr>
 						<th class="col-rank">#</th>
-						<th class="col-name sortable" aria-sort={sortKey === 'sigla' ? (sortAsc ? 'ascending' : 'descending') : 'none'}><button type="button" class="sort-btn" onclick={() => toggleSort('sigla')}>Partido{sortIndicator('sigla')}</button></th>
-						<th class="col-num sortable" aria-sort={sortKey === 'parlamentares_comparados' ? (sortAsc ? 'ascending' : 'descending') : 'none'}><button type="button" class="sort-btn" onclick={() => toggleSort('parlamentares_comparados')}>Parlamentares{sortIndicator('parlamentares_comparados')}</button></th>
-						<th class="col-num sortable" aria-sort={sortKey === 'votos_comparados' ? (sortAsc ? 'ascending' : 'descending') : 'none'}><button type="button" class="sort-btn" onclick={() => toggleSort('votos_comparados')}>Posições Comparadas{sortIndicator('votos_comparados')}</button></th>
-						<th class="col-num sortable" aria-sort={sortKey === 'concordou' ? (sortAsc ? 'ascending' : 'descending') : 'none'}><button type="button" class="sort-btn" onclick={() => toggleSort('concordou')}>Posições Em Comum{sortIndicator('concordou')}</button></th>
-						<th class="col-score sortable" aria-sort={sortKey === 'score' ? (sortAsc ? 'ascending' : 'descending') : 'none'}><button type="button" class="sort-btn" onclick={() => toggleSort('score')}>Alinhamento{sortIndicator('score')}</button></th>
+						<th class="col-name sortable" aria-sort={sortKey === 'sigla' ? (sortAsc ? 'ascending' : 'descending') : 'none'}><button type="button" class="sort-btn" onclick={() => toggleSort('sigla')}>{$_('partidos.partido')}{sortIndicator('sigla')}</button></th>
+						<th class="col-num sortable" aria-sort={sortKey === 'parlamentares_comparados' ? (sortAsc ? 'ascending' : 'descending') : 'none'}><button type="button" class="sort-btn" onclick={() => toggleSort('parlamentares_comparados')}>{$_('partidos.parlamentares')}{sortIndicator('parlamentares_comparados')}</button></th>
+						<th class="col-num sortable" aria-sort={sortKey === 'votos_comparados' ? (sortAsc ? 'ascending' : 'descending') : 'none'}><button type="button" class="sort-btn" onclick={() => toggleSort('votos_comparados')}>{$_('partidos.posicoesComparadas')}{sortIndicator('votos_comparados')}</button></th>
+						<th class="col-num sortable" aria-sort={sortKey === 'concordou' ? (sortAsc ? 'ascending' : 'descending') : 'none'}><button type="button" class="sort-btn" onclick={() => toggleSort('concordou')}>{$_('partidos.posicoesEmComum')}{sortIndicator('concordou')}</button></th>
+						<th class="col-score sortable" aria-sort={sortKey === 'score' ? (sortAsc ? 'ascending' : 'descending') : 'none'}><button type="button" class="sort-btn" onclick={() => toggleSort('score')}>{$_('partidos.alinhamento')}{sortIndicator('score')}</button></th>
 					</tr>
 				</thead>
 				<tbody>
@@ -224,9 +225,9 @@
 
 		{#if totalPages > 1}
 			<div class="pagination">
-				<button onclick={() => currentPage--} disabled={currentPage <= 1}>Anterior</button>
-				<span>Página {currentPage} de {totalPages}</span>
-				<button onclick={() => currentPage++} disabled={currentPage >= totalPages}>Próxima</button>
+				<button onclick={() => currentPage--} disabled={currentPage <= 1}>{$_('pagination.anterior')}</button>
+				<span>{$_('pagination.pagina', { values: { current: currentPage, total: totalPages } })}</span>
+				<button onclick={() => currentPage++} disabled={currentPage >= totalPages}>{$_('pagination.proxima')}</button>
 			</div>
 		{/if}
 	</div>

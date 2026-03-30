@@ -1,37 +1,40 @@
+<script lang="ts">
+	import { _ } from 'svelte-i18n';
+</script>
+
 <svelte:head>
-	<title>voto.vc — seja representado</title>
+	<title>{$_('home.title')}</title>
 </svelte:head>
 
 <div class="hero">
-	<p class="eyebrow">Eleições 2026</p>
-	<h1>Descubra quem<br />vota como você.</h1>
+	<p class="eyebrow">{$_('home.eyebrow')}</p>
+	<h1>{@html $_('home.h1')}</h1>
 	<p class="subtitle">
-		Vote em proposições reais do Congresso Nacional e descubra
-		quais parlamentares e partidos mais se alinham com seus valores.
+		{$_('home.subtitle')}
 	</p>
 	<a href="/vote" class="cta">
-		Comece a votar
+		{$_('home.cta')}
 		<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
 	</a>
-	<p class="cta-sub">10 perguntas · 5 minutos · sem criar conta</p>
+	<p class="cta-sub">{$_('home.ctaSub')}</p>
 
 	<section class="como-funciona">
-		<h2>Como funciona</h2>
+		<h2>{$_('home.comoFunciona')}</h2>
 		<div class="steps">
 			<div class="step">
 				<span class="step-number">1</span>
-				<h3>Escolha seu estado</h3>
-				<p>Selecione sua UF para ver parlamentares da sua região</p>
+				<h3>{$_('home.step1Title')}</h3>
+				<p>{$_('home.step1Desc')}</p>
 			</div>
 			<div class="step step-center">
 				<span class="step-number">2</span>
-				<h3>Vote nas proposições</h3>
-				<p>Diga se é a favor ou contra propostas reais votadas no Congresso</p>
+				<h3>{$_('home.step2Title')}</h3>
+				<p>{$_('home.step2Desc')}</p>
 			</div>
 			<div class="step">
 				<span class="step-number">3</span>
-				<h3>Veja seu alinhamento</h3>
-				<p>Descubra quais políticos e partidos votam como você votaria</p>
+				<h3>{$_('home.step3Title')}</h3>
+				<p>{$_('home.step3Desc')}</p>
 			</div>
 		</div>
 	</section>
@@ -41,22 +44,22 @@
 			<div class="feature-icon">
 				<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
 			</div>
-			<h3>Dados reais</h3>
-			<p>Baseado em votações nominais da Câmara dos Deputados e do Senado Federal</p>
+			<h3>{$_('home.dadosReais')}</h3>
+			<p>{$_('home.dadosReaisDesc')}</p>
 		</div>
 		<div class="feature">
 			<div class="feature-icon">
 				<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
 			</div>
-			<h3>Neutro e transparente</h3>
-			<p>Sem viés partidário. Metodologia aberta e código-fonte público</p>
+			<h3>{$_('home.neutro')}</h3>
+			<p>{$_('home.neutroDesc')}</p>
 		</div>
 		<div class="feature">
 			<div class="feature-icon">
 				<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
 			</div>
-			<h3>Rápido e anônimo</h3>
-			<p>Responda em minutos. Não precisa criar conta para ver resultados</p>
+			<h3>{$_('home.rapido')}</h3>
+			<p>{$_('home.rapidoDesc')}</p>
 		</div>
 	</section>
 </div>

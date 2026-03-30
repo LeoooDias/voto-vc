@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { _ } from 'svelte-i18n';
 	import { api } from '$lib/api';
 	import { respostas, selectedUf, carregarRespostas } from '$lib/stores/questionario';
 	import { respostasPosicoes, carregarRespostasPosicoes } from '$lib/stores/posicoes';
@@ -59,8 +60,8 @@
 	}
 
 	function casaLabel(casa: string, sexo: string | null): string {
-		if (casa === 'camara') return sexo === 'F' ? 'Deputada' : 'Deputado';
-		return sexo === 'F' ? 'Senadora' : 'Senador';
+		if (casa === 'camara') return sexo === 'F' ? $_('parlamentares.deputada') : $_('parlamentares.deputado');
+		return sexo === 'F' ? $_('parlamentares.senadora') : $_('parlamentares.senador');
 	}
 
 	$effect(() => {
@@ -159,35 +160,35 @@
 </script>
 
 <svelte:head>
-	<title>Parlamentares — voto.vc</title>
+	<title>{$_('parlamentares.title')}</title>
 </svelte:head>
 
 {#if showUfPicker}
 	<div class="uf-selector">
-		<h1>De qual estado?</h1>
-		<p class="uf-subtitle">Filtrar parlamentares por estado</p>
+		<h1>{$_('parlamentares.deQualEstado')}</h1>
+		<p class="uf-subtitle">{$_('parlamentares.filtrarPorEstado')}</p>
 		<div class="uf-grid">
 			{#each UF_SIGLAS as sigla}
-				<button class="uf-btn" aria-label="Selecionar estado {sigla}" onclick={() => escolherUf(sigla)}>{sigla}</button>
+				<button class="uf-btn" aria-label={$_('parlamentares.selecionarEstado', { values: { sigla } })} onclick={() => escolherUf(sigla)}>{sigla}</button>
 			{/each}
 		</div>
-		<button class="uf-cancel" onclick={() => showUfPicker = false}>Cancelar</button>
+		<button class="uf-cancel" onclick={() => showUfPicker = false}>{$_('parlamentares.cancelar')}</button>
 	</div>
 {:else if isLoading}
-	<div class="loading">Calculando alinhamento...</div>
+	<div class="loading">{$_('parlamentares.carregando')}</div>
 {:else}
 	<div class="page">
 		<div class="page-header">
-			<h1>Parlamentares</h1>
+			<h1>{$_('parlamentares.h1')}</h1>
 			<div class="controls">
 				<label class="per-page-label">
 					<select bind:value={perPage}>
 						<option value={10}>10</option>
 						<option value={25}>25</option>
 						<option value={50}>50</option>
-						<option value={1000}>Todos</option>
+						<option value={1000}>{$_('parlamentares.todos')}</option>
 					</select>
-					parlamentares por página
+					{$_('parlamentares.porPagina')}
 				</label>
 			</div>
 		</div>
@@ -197,23 +198,23 @@
 				class="escopo-btn"
 				class:active={escopo === 'brasil'}
 				onclick={() => setEscopo('brasil')}
-			>Brasil</button>
+			>{$_('parlamentares.brasil')}</button>
 			<button
 				class="escopo-btn"
 				class:active={escopo === 'estado'}
 				onclick={() => setEscopo('estado')}
-			>Meu estado{ufSelecionada ? ` (${ufSelecionada})` : ''}</button>
+			>{$_('parlamentares.meuEstado')}{ufSelecionada ? ` (${ufSelecionada})` : ''}</button>
 		</div>
 
 		<div class="casa-filter">
-			<button class="casa-btn" class:active={casaFilter === 'todos'} aria-label="Filtrar por todas as casas" onclick={() => setCasaFilter('todos')}>
-				Todos ({results.length})
+			<button class="casa-btn" class:active={casaFilter === 'todos'} onclick={() => setCasaFilter('todos')}>
+				{$_('parlamentares.todos')} ({results.length})
 			</button>
-			<button class="casa-btn" class:active={casaFilter === 'camara'} aria-label="Filtrar pela Câmara dos Deputados" onclick={() => setCasaFilter('camara')}>
-				Câmara ({countCamara})
+			<button class="casa-btn" class:active={casaFilter === 'camara'} onclick={() => setCasaFilter('camara')}>
+				{$_('parlamentares.camara')} ({countCamara})
 			</button>
-			<button class="casa-btn" class:active={casaFilter === 'senado'} aria-label="Filtrar pelo Senado Federal" onclick={() => setCasaFilter('senado')}>
-				Senado ({countSenado})
+			<button class="casa-btn" class:active={casaFilter === 'senado'} onclick={() => setCasaFilter('senado')}>
+				{$_('parlamentares.senado')} ({countSenado})
 			</button>
 		</div>
 
@@ -222,13 +223,13 @@
 				<thead>
 					<tr>
 						<th class="col-rank">#</th>
-						<th class="col-name sortable" aria-sort={sortKey === 'nome' ? (sortAsc ? 'ascending' : 'descending') : 'none'}><button type="button" class="sort-btn" onclick={() => toggleSort('nome')}>Nome{sortIndicator('nome')}</button></th>
-						<th class="col-partido sortable" aria-sort={sortKey === 'partido' ? (sortAsc ? 'ascending' : 'descending') : 'none'}><button type="button" class="sort-btn" onclick={() => toggleSort('partido')}>Partido{sortIndicator('partido')}</button></th>
-						<th class="col-uf sortable" aria-sort={sortKey === 'uf' ? (sortAsc ? 'ascending' : 'descending') : 'none'}><button type="button" class="sort-btn" onclick={() => toggleSort('uf')}>UF{sortIndicator('uf')}</button></th>
-						<th class="col-casa">Casa</th>
-						<th class="col-num sortable" aria-sort={sortKey === 'votos_comparados' ? (sortAsc ? 'ascending' : 'descending') : 'none'}><button type="button" class="sort-btn" onclick={() => toggleSort('votos_comparados')}>Votos Comparados{sortIndicator('votos_comparados')}</button></th>
-						<th class="col-num sortable" aria-sort={sortKey === 'concordou' ? (sortAsc ? 'ascending' : 'descending') : 'none'}><button type="button" class="sort-btn" onclick={() => toggleSort('concordou')}>Votos Em Comum{sortIndicator('concordou')}</button></th>
-						<th class="col-score sortable" aria-sort={sortKey === 'score' ? (sortAsc ? 'ascending' : 'descending') : 'none'}><button type="button" class="sort-btn" onclick={() => toggleSort('score')}>Alinhamento{sortIndicator('score')}</button></th>
+						<th class="col-name sortable" aria-sort={sortKey === 'nome' ? (sortAsc ? 'ascending' : 'descending') : 'none'}><button type="button" class="sort-btn" onclick={() => toggleSort('nome')}>{$_('parlamentares.nome')}{sortIndicator('nome')}</button></th>
+						<th class="col-partido sortable" aria-sort={sortKey === 'partido' ? (sortAsc ? 'ascending' : 'descending') : 'none'}><button type="button" class="sort-btn" onclick={() => toggleSort('partido')}>{$_('parlamentares.partido')}{sortIndicator('partido')}</button></th>
+						<th class="col-uf sortable" aria-sort={sortKey === 'uf' ? (sortAsc ? 'ascending' : 'descending') : 'none'}><button type="button" class="sort-btn" onclick={() => toggleSort('uf')}>{$_('parlamentares.uf')}{sortIndicator('uf')}</button></th>
+						<th class="col-casa">{$_('parlamentares.casa')}</th>
+						<th class="col-num sortable" aria-sort={sortKey === 'votos_comparados' ? (sortAsc ? 'ascending' : 'descending') : 'none'}><button type="button" class="sort-btn" onclick={() => toggleSort('votos_comparados')}>{$_('parlamentares.votosComparados')}{sortIndicator('votos_comparados')}</button></th>
+						<th class="col-num sortable" aria-sort={sortKey === 'concordou' ? (sortAsc ? 'ascending' : 'descending') : 'none'}><button type="button" class="sort-btn" onclick={() => toggleSort('concordou')}>{$_('parlamentares.votosEmComum')}{sortIndicator('concordou')}</button></th>
+						<th class="col-score sortable" aria-sort={sortKey === 'score' ? (sortAsc ? 'ascending' : 'descending') : 'none'}><button type="button" class="sort-btn" onclick={() => toggleSort('score')}>{$_('parlamentares.alinhamento')}{sortIndicator('score')}</button></th>
 					</tr>
 				</thead>
 				<tbody>
@@ -252,9 +253,9 @@
 
 		{#if totalPages > 1}
 			<div class="pagination">
-				<button onclick={() => currentPage--} disabled={currentPage <= 1}>Anterior</button>
-				<span>Página {currentPage} de {totalPages}</span>
-				<button onclick={() => currentPage++} disabled={currentPage >= totalPages}>Próxima</button>
+				<button onclick={() => currentPage--} disabled={currentPage <= 1}>{$_('pagination.anterior')}</button>
+				<span>{$_('pagination.pagina', { values: { current: currentPage, total: totalPages } })}</span>
+				<button onclick={() => currentPage++} disabled={currentPage >= totalPages}>{$_('pagination.proxima')}</button>
 			</div>
 		{/if}
 	</div>

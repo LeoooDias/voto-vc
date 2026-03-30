@@ -22,14 +22,15 @@
 	import { UFS, getTema } from '$lib/constants';
 	import { addToast } from '$lib/stores/toast';
 	import { browser } from '$app/environment';
+	import { _ } from 'svelte-i18n';
 
-	const TIPOS_LEGENDA: Record<string, string> = {
-		PL: 'Projeto de Lei',
-		PEC: 'Proposta de Emenda à Constituição',
-		MPV: 'Medida Provisória',
-		PLP: 'Projeto de Lei Complementar',
-		PDL: 'Projeto de Decreto Legislativo',
-		MIP: 'Medida de Implementação Provisória'
+	const TIPOS_LEGENDA_KEYS: Record<string, string> = {
+		PL: 'vote.tipoPL',
+		PEC: 'vote.tipoPEC',
+		MPV: 'vote.tipoMPV',
+		PLP: 'vote.tipoPLP',
+		PDL: 'vote.tipoPDL',
+		MIP: 'vote.tipoMIP'
 	};
 
 	interface Categoria {
@@ -43,28 +44,28 @@
 	const CATEGORIAS: Categoria[] = [
 		{
 			id: 'economia',
-			label: 'Economia & Tributação',
+			label: 'vote.catEconomia',
 			cor: '#CA8A04',
 			corBg: '#CA8A041a',
 			ordens: [1, 2, 3, 4, 5]
 		},
 		{
 			id: 'seguranca',
-			label: 'Segurança & Direitos Humanos',
+			label: 'vote.catSeguranca',
 			cor: '#2563EB',
 			corBg: '#2563EB1a',
 			ordens: [6, 7, 11, 12, 13]
 		},
 		{
 			id: 'social',
-			label: 'Educação, Saúde & Meio Ambiente',
+			label: 'vote.catSocial',
 			cor: '#16A34A',
 			corBg: '#16A34A1a',
 			ordens: [9, 10, 17, 18, 19]
 		},
 		{
 			id: 'outros',
-			label: 'Outros temas',
+			label: 'vote.catOutros',
 			cor: '#6B7280',
 			corBg: '#6B72801a',
 			ordens: [8, 14, 15, 16, 20]
@@ -292,16 +293,16 @@
 </script>
 
 <svelte:head>
-	<title>Vote — voto.vc</title>
+	<title>{$_('vote.title')}</title>
 </svelte:head>
 
 {#if !uf}
 	<div class="uf-selector">
-		<h1>De qual estado você é?</h1>
-		<p class="uf-subtitle">Vamos mostrar parlamentares do seu estado</p>
+		<h1>{$_('vote.deQualEstado')}</h1>
+		<p class="uf-subtitle">{$_('vote.mostrarParlamentares')}</p>
 		<div class="uf-grid">
 			{#each UFS as estado}
-				<button class="uf-btn" aria-label="Selecionar {estado.sigla}" onclick={() => escolherUf(estado.sigla)}>
+				<button class="uf-btn" aria-label={$_('vote.selecionarEstado', { values: { uf: estado.sigla } })} onclick={() => escolherUf(estado.sigla)}>
 					<span class="uf-sigla">{estado.sigla}</span>
 					<span class="uf-nome">{estado.nome}</span>
 				</button>
@@ -309,40 +310,40 @@
 		</div>
 	</div>
 {:else if !loaded}
-	<div class="loading">Carregando posições...</div>
+	<div class="loading">{$_('vote.carregandoPosicoes')}</div>
 {:else if items.length === 0}
-	<div class="empty">Nenhuma posição disponível no momento.</div>
+	<div class="empty">{$_('vote.nenhumaPosicao')}</div>
 {:else}
 	{#if showOnboarding}
-		<div class="onboarding-overlay" role="dialog" aria-modal="true" aria-label="Como funciona">
+		<div class="onboarding-overlay" role="dialog" aria-modal="true" aria-label={$_('vote.comoFunciona')}>
 			<div class="onboarding-modal">
-				<h2>Como funciona</h2>
+				<h2>{$_('vote.comoFunciona')}</h2>
 				<div class="onboarding-steps">
 					<div class="onboarding-step">
 						<span class="onboarding-num">1</span>
-						<p>Escolha sua posição em cada tema: <strong>a favor</strong>, <strong>contra</strong> ou <strong>neutro</strong></p>
+						<p>{@html $_('vote.comoFuncionaDesc')}</p>
 					</div>
 					<div class="onboarding-step">
 						<span class="onboarding-num">2</span>
-						<p>Responda ao menos <strong>10 de 20 posições</strong> para ver seu perfil</p>
+						<p>{@html $_('vote.respondaAoMenosStep')}</p>
 					</div>
 					<div class="onboarding-step">
 						<span class="onboarding-num">3</span>
-						<p>Descubra quais parlamentares e partidos mais se alinham com você</p>
+						<p>{$_('vote.descubraAlinhamento')}</p>
 					</div>
 				</div>
-				<button class="onboarding-btn" onclick={dismissOnboarding}>Entendi, vamos lá</button>
+				<button class="onboarding-btn" onclick={dismissOnboarding}>{$_('vote.entendi')}</button>
 			</div>
 		</div>
 	{/if}
 
 	<div class="posicoes-page">
 		<div class="uf-badge-row">
-			<span class="uf-badge" title="Trocar estado">
+			<span class="uf-badge" title={$_('vote.trocarEstado')}>
 				<svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
 				{uf}
 			</span>
-			<button class="uf-change-btn" onclick={() => { uf = ''; selectedUf.set(''); }}>Trocar estado</button>
+			<button class="uf-change-btn" onclick={() => { uf = ''; selectedUf.set(''); }}>{$_('vote.trocarEstado')}</button>
 		</div>
 		<div class="progress-sticky" style="top: {headerHeight}px">
 			<div class="progress">
@@ -350,11 +351,11 @@
 			</div>
 			<div class="counter-row">
 				<p class="answered-text">
-					{answeredCount}/20 posições respondidas
+					{$_('vote.posicoesRespondidas', { values: { answered: answeredCount } })}
 					{#if remaining > 0}
-						<span class="remaining-hint"> · faltam {remaining} para ver seu perfil</span>
+						<span class="remaining-hint"> · {$_('vote.faltam', { values: { remaining } })}</span>
 					{:else}
-						<span class="ready-hint"> · {answeredCount >= 20 ? 'perfil completo!' : 'veja seu perfil!'}</span>
+						<span class="ready-hint"> · {answeredCount >= 20 ? $_('vote.perfilCompleto') : $_('vote.vejaSeuPerfil')}</span>
 				{/if}
 			</p>
 			</div>
@@ -376,7 +377,7 @@
 						<div class="cat-left">
 							<span class="cat-dot" style="background: {cat.cor}; box-shadow: 0 0 0 3px {cat.cor}1a"></span>
 							<div>
-								<span class="cat-label">{cat.label}</span>
+								<span class="cat-label">{$_(cat.label)}</span>
 								<span class="cat-count">{catAnswered}/{catItems.length}</span>
 							</div>
 						</div>
@@ -415,7 +416,7 @@
 										{#if savedFeedback === pos.id}
 											<span class="saved-indicator">
 												<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-												Salvo
+												{$_('vote.salvo')}
 											</span>
 										{/if}
 									</div>
@@ -428,7 +429,7 @@
 
 									{#if pos.proposicoes.length > 0}
 										<button class="drill-toggle" onclick={() => toggleExpand(pos.id)}>
-											<span class="drill-label">{pos.proposicoes.length} {pos.proposicoes.length === 1 ? 'proposição' : 'proposições'}</span>
+											<span class="drill-label">{pos.proposicoes.length === 1 ? $_('vote.proposicao', { values: { count: pos.proposicoes.length } }) : $_('vote.proposicoes', { values: { count: pos.proposicoes.length } })}</span>
 											<svg class="expand-icon" class:open={isExpanded} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
 										</button>
 									{/if}
@@ -442,15 +443,15 @@
 												<div class="drill-item">
 													<div class="drill-info">
 														<div class="drill-title-row">
-														<span class="drill-tipo" title={TIPOS_LEGENDA[prop.tipo] ?? prop.tipo}>{prop.tipo} {prop.numero}/{prop.ano}</span>
+														<span class="drill-tipo" title={TIPOS_LEGENDA_KEYS[prop.tipo] ? $_(TIPOS_LEGENDA_KEYS[prop.tipo]) : prop.tipo}>{prop.tipo} {prop.numero}/{prop.ano}</span>
 														<span class="casa-pill" class:camara={prop.casa_origem === 'camara'} class:senado={prop.casa_origem === 'senado'}>
-															{prop.casa_origem === 'camara' ? 'Câmara' : 'Senado'}
+															{prop.casa_origem === 'camara' ? $_('vote.camara') : $_('vote.senado')}
 														</span>
 														{#if overridePos != null}
-															<span class="override-badge">personalizado</span>
+															<span class="override-badge">{$_('vote.personalizado')}</span>
 														{/if}
 													</div>
-														<p class="drill-resumo">{prop.resumo ?? 'Sem descrição'}</p>
+														<p class="drill-resumo">{prop.resumo ?? $_('vote.semDescricao')}</p>
 													</div>
 													<div class="drill-slider">
 														<VoteSlider
@@ -476,34 +477,34 @@
 
 		{#if canFinish}
 			<div class="bottom-cta">
-				<button class="btn-resultado" onclick={verResultado}>Ver meu perfil</button>
+				<button class="btn-resultado" onclick={verResultado}>{$_('vote.verMeuPerfil')}</button>
 			</div>
 		{/if}
 
 		<div class="mode-link">
-			<button class="link-btn" onclick={() => showModeModal = true}>Modo avançado (proposições individuais)</button>
+			<button class="link-btn" onclick={() => showModeModal = true}>{$_('vote.modoAvancado')}</button>
 		</div>
 
 		{#if showModeModal}
 			<!-- svelte-ignore a11y_no_static_element_interactions -->
 			<div class="mode-overlay" onclick={() => showModeModal = false} onkeydown={(e) => { if (e.key === 'Escape') showModeModal = false; }}>
 				<!-- svelte-ignore a11y_click_events_have_key_events -->
-				<div class="mode-modal" role="dialog" aria-modal="true" aria-label="Escolha o modo de votação" tabindex="-1" onclick={(e) => e.stopPropagation()}>
-					<h2>Escolha o modo de votação</h2>
+				<div class="mode-modal" role="dialog" aria-modal="true" aria-label={$_('vote.escolhaModo')} tabindex="-1" onclick={(e) => e.stopPropagation()}>
+					<h2>{$_('vote.escolhaModo')}</h2>
 					<div class="mode-options">
 						<div class="mode-option current">
-							<h3>Por posições</h3>
-							<p>Vote em 20 temas agrupados por categoria. Mais rápido e intuitivo.</p>
-							<span class="mode-tag">Atual</span>
+							<h3>{$_('vote.porPosicoes')}</h3>
+							<p>{$_('vote.porPosicoesDesc')}</p>
+							<span class="mode-tag">{$_('vote.atual')}</span>
 						</div>
 						<a href="/vote/avancado" class="mode-option">
-							<h3>Avançado</h3>
-							<p>Vote em proposições individuais com mais detalhes. Maior precisão e controle.</p>
-							<span class="mode-tag go">Ir para modo avançado &#8594;</span>
+							<h3>{$_('vote.avancado')}</h3>
+							<p>{$_('vote.avancadoDesc')}</p>
+							<span class="mode-tag go">{$_('vote.irParaModoAvancado')} &#8594;</span>
 						</a>
 					</div>
-					<p class="mode-note">Seus votos são mantidos ao trocar de modo. Os dois modos contribuem para seu perfil.</p>
-					<button class="mode-close" onclick={() => showModeModal = false}>Fechar</button>
+					<p class="mode-note">{$_('vote.votosNota')}</p>
+					<button class="mode-close" onclick={() => showModeModal = false}>{$_('vote.fechar')}</button>
 				</div>
 			</div>
 		{/if}
@@ -512,14 +513,14 @@
 			<div class="mode-link">
 				{#if confirmingReset}
 					<span class="reset-confirm">
-						Apagar todos os votos?
+						{$_('vote.apagarTodosVotos')}
 						<button class="reset-confirm-btn yes" onclick={resetarVotos} disabled={resetting}>
-							{resetting ? 'Apagando...' : 'Sim'}
+							{resetting ? $_('vote.apagando') : $_('common.sim')}
 						</button>
-						<button class="reset-confirm-btn no" onclick={() => confirmingReset = false}>Não</button>
+						<button class="reset-confirm-btn no" onclick={() => confirmingReset = false}>{$_('common.nao')}</button>
 					</span>
 				{:else}
-					<button class="link-btn" onclick={() => confirmingReset = true}>Recomeçar (apagar votos)</button>
+					<button class="link-btn" onclick={() => confirmingReset = true}>{$_('vote.recomecar')}</button>
 				{/if}
 			</div>
 		{/if}

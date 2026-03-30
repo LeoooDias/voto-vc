@@ -1,7 +1,18 @@
 <script lang="ts">
+	import { _, locale } from 'svelte-i18n';
+	import { getStoredLocale, setStoredLocale, type Locale } from '$lib/i18n';
 	import { authUser, checkAuth } from '$lib/stores/auth';
 	import { theme, setTheme, type Theme } from '$lib/stores/theme';
 	import { colorTheme, setColorTheme, COLOR_THEMES, type ColorTheme } from '$lib/stores/colorTheme';
+
+	const COLOR_THEME_KEYS: Record<ColorTheme, string> = {
+		'padrao': 'colorTheme.padrao',
+		'canarinho': 'colorTheme.canarinho',
+		'oceano': 'colorTheme.oceano',
+		'lavanda': 'colorTheme.lavanda',
+		'rosa': 'colorTheme.rosa',
+		'alto-contraste': 'colorTheme.altoContraste',
+	};
 	import { selectedUf as selectedUfStore } from '$lib/stores/questionario';
 	import { UF_SIGLAS } from '$lib/constants';
 	import { get } from 'svelte/store';
@@ -11,6 +22,7 @@
 	let currentTheme: Theme = $state(get(theme));
 	let currentColorTheme: ColorTheme = $state(get(colorTheme));
 	let saving = $state(false);
+	let currentLocale: Locale = $state(getStoredLocale());
 
 	$effect(() => {
 		const user = $authUser;
@@ -35,6 +47,12 @@
 	function handleColorTheme(t: ColorTheme) {
 		currentColorTheme = t;
 		setColorTheme(t);
+	}
+
+	function handleLocale(l: Locale) {
+		currentLocale = l;
+		setStoredLocale(l);
+		locale.set(l);
 	}
 
 	async function saveUf() {
@@ -108,58 +126,58 @@
 <svelte:window onkeydown={handleKeydown} />
 
 {#if open}
-	<button class="backdrop" onclick={handleBackdropClick} aria-label="Fechar configurações"></button>
+	<button class="backdrop" onclick={handleBackdropClick} aria-label={$_('nav.fecharConfiguracoes')}></button>
 	<div class="modal" role="dialog" aria-modal="true" aria-labelledby="settings-title" bind:this={modalEl}>
 		<div class="modal-header">
-			<h2 id="settings-title">Configurações</h2>
-			<button class="close-btn" onclick={close} aria-label="Fechar configurações">&times;</button>
+			<h2 id="settings-title">{$_('settings.titulo')}</h2>
+			<button class="close-btn" onclick={close} aria-label={$_('nav.fecharConfiguracoes')}>&times;</button>
 		</div>
 
 		<div class="setting">
-			<span class="setting-label" id="settings-uf-label">Estado (UF)</span>
+			<span class="setting-label" id="settings-uf-label">{$_('settings.estado')}</span>
 			{#if $authUser}
 				<div class="uf-row">
 					<select bind:value={selectedUf} onchange={saveUf} aria-labelledby="settings-uf-label">
-						<option value="">Selecione...</option>
+						<option value="">{$_('settings.selecione')}</option>
 						{#each UF_SIGLAS as uf}
 							<option value={uf}>{uf}</option>
 						{/each}
 					</select>
 					{#if saving}
-						<span class="saving">Salvando...</span>
+						<span class="saving">{$_('settings.salvando')}</span>
 					{/if}
 				</div>
 			{:else}
-				<p class="hint">Entre com sua conta para salvar seu estado.</p>
+				<p class="hint">{$_('settings.entrarParaSalvar')}</p>
 			{/if}
 		</div>
 
 		<div class="setting">
-			<span class="setting-label">Modo</span>
+			<span class="setting-label">{$_('settings.modo')}</span>
 			<div class="theme-options">
 				<button
 					class="theme-btn"
 					class:active={currentTheme === 'claro'}
 					aria-pressed={currentTheme === 'claro'}
 					onclick={() => handleTheme('claro')}
-				>Claro</button>
+				>{$_('settings.claro')}</button>
 				<button
 					class="theme-btn"
 					class:active={currentTheme === 'escuro'}
 					aria-pressed={currentTheme === 'escuro'}
 					onclick={() => handleTheme('escuro')}
-				>Escuro</button>
+				>{$_('settings.escuro')}</button>
 				<button
 					class="theme-btn"
 					class:active={currentTheme === 'auto'}
 					aria-pressed={currentTheme === 'auto'}
 					onclick={() => handleTheme('auto')}
-				>Auto</button>
+				>{$_('settings.auto')}</button>
 			</div>
 		</div>
 
 		<div class="setting">
-			<span class="setting-label">Tema</span>
+			<span class="setting-label">{$_('settings.tema')}</span>
 			<div class="color-theme-grid">
 				{#each COLOR_THEMES as ct}
 					<button
@@ -167,16 +185,34 @@
 						class:active={currentColorTheme === ct.id}
 						aria-pressed={currentColorTheme === ct.id}
 						onclick={() => handleColorTheme(ct.id)}
-						title={ct.label}
+						title={$_(COLOR_THEME_KEYS[ct.id])}
 					>
 						<span class="color-swatches">
 							<span class="swatch" style="background:{ct.colors[0]}"></span>
 							<span class="swatch" style="background:{ct.colors[1]}"></span>
 							<span class="swatch" style="background:{ct.colors[2]}"></span>
 						</span>
-						<span class="color-theme-label">{ct.label}</span>
+						<span class="color-theme-label">{$_(COLOR_THEME_KEYS[ct.id])}</span>
 					</button>
 				{/each}
+			</div>
+		</div>
+
+		<div class="setting">
+			<span class="setting-label">{$_('settings.idioma')}</span>
+			<div class="theme-options">
+				<button
+					class="theme-btn"
+					class:active={currentLocale === 'pt-BR'}
+					aria-pressed={currentLocale === 'pt-BR'}
+					onclick={() => handleLocale('pt-BR')}
+				>{$_('settings.portugues')}</button>
+				<button
+					class="theme-btn"
+					class:active={currentLocale === 'en'}
+					aria-pressed={currentLocale === 'en'}
+					onclick={() => handleLocale('en')}
+				>{$_('settings.english')}</button>
 			</div>
 		</div>
 

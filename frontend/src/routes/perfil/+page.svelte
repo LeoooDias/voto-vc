@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { _ } from 'svelte-i18n';
 	import { onMount } from 'svelte';
 	import { api } from '$lib/api';
 	import { respostas, selectedUf, carregarRespostas } from '$lib/stores/questionario';
@@ -144,45 +145,45 @@
 </script>
 
 <svelte:head>
-	<title>Meu Perfil — voto.vc</title>
+	<title>{$_('perfil.title')}</title>
 </svelte:head>
 
 {#if showUfPicker}
 	<div class="uf-selector">
-		<h1>De qual estado?</h1>
-		<p class="uf-subtitle">Filtrar parlamentares e partidos por estado</p>
+		<h1>{$_('perfil.deQualEstado')}</h1>
+		<p class="uf-subtitle">{$_('perfil.filtrarPorEstado')}</p>
 		<div class="uf-grid">
 			{#each UF_SIGLAS as sigla}
-				<button class="uf-btn" aria-label="Selecionar estado {sigla}" onclick={() => escolherUf(sigla)}>
+				<button class="uf-btn" aria-label={$_('perfil.selecionarEstado', { values: { sigla } })} onclick={() => escolherUf(sigla)}>
 					{sigla}
 				</button>
 			{/each}
 		</div>
-		<button class="uf-cancel" onclick={() => showUfPicker = false}>Cancelar</button>
+		<button class="uf-cancel" onclick={() => showUfPicker = false}>{$_('perfil.cancelar')}</button>
 	</div>
 {:else if isLoading && parlResults.length === 0}
 	<div class="loading">
 		<div class="loading-spinner"></div>
-		<p>Calculando seu alinhamento...</p>
-		<p class="loading-sub">Comparando seus votos com os parlamentares</p>
+		<p>{$_('perfil.calculando')}</p>
+		<p class="loading-sub">{$_('perfil.comparandoSub')}</p>
 	</div>
 {:else if parlResults.length === 0 && partidoResults.length === 0}
 	<div class="empty">
-		<p>Não foi possível calcular o alinhamento.</p>
-		<a href="/vote">Tentar novamente</a>
+		<p>{$_('perfil.erroCalcular')}</p>
+		<a href="/vote">{$_('perfil.tentarNovamente')}</a>
 	</div>
 {:else}
 	<div class="perfil-page">
-		<p class="result-eyebrow">Resultado</p>
-		<h1>Seu alinhamento político</h1>
-		<p class="subtitle">Baseado nos seus {totalRespostas} votos · <a href="/sobre#metodologia" class="methodology-link">como é calculado?</a></p>
+		<p class="result-eyebrow">{$_('perfil.resultado')}</p>
+		<h1>{$_('perfil.seuAlinhamento')}</h1>
+		<p class="subtitle">{$_('perfil.baseadoNos', { values: { count: totalRespostas } })} · <a href="/sobre#metodologia" class="methodology-link">{$_('perfil.comoCalculado')}</a></p>
 
 		<div class="tabs" role="tablist">
 			<button class="tab" class:active={tab === 'partidos'} role="tab" aria-selected={tab === 'partidos'} onclick={() => tab = 'partidos'}>
-				Partidos
+				{$_('perfil.partidos')}
 			</button>
 			<button class="tab" class:active={tab === 'parlamentares'} role="tab" aria-selected={tab === 'parlamentares'} onclick={() => tab = 'parlamentares'}>
-				Parlamentares
+				{$_('perfil.parlamentares')}
 			</button>
 		</div>
 
@@ -191,22 +192,22 @@
 					class="escopo-btn"
 					class:active={escopo === 'brasil'}
 					onclick={() => setEscopo('brasil')}
-				>Brasil</button>
+				>{$_('perfil.brasil')}</button>
 				<button
 					class="escopo-btn"
 					class:active={escopo === 'estado'}
 					onclick={() => setEscopo('estado')}
-				>Meu estado{ufSelecionada ? ` (${ufSelecionada})` : ''}</button>
+				>{$_('perfil.meuEstado')}{ufSelecionada ? ` (${ufSelecionada})` : ''}</button>
 		</div>
 
 		<div class="filter-toggles">
 			<label class="filter-toggle">
 				<input type="checkbox" bind:checked={apenasAtivos} onchange={() => loadMatching()} />
-				<span class="toggle-label">Só ativos (legislatura atual)</span>
+				<span class="toggle-label">{$_('perfil.soAtivos')}</span>
 			</label>
 			<label class="filter-toggle">
 				<input type="checkbox" bind:checked={ultimaDecada} onchange={() => loadMatching()} />
-				<span class="toggle-label">Última década (2016–hoje)</span>
+				<span class="toggle-label">{$_('perfil.ultimaDecada')}</span>
 			</label>
 		</div>
 
@@ -214,8 +215,8 @@
 			<input
 				class="search-input"
 				type="text"
-				placeholder="Buscar por nome ou partido..."
-				aria-label="Buscar por nome ou partido"
+				placeholder={$_('perfil.buscar')}
+				aria-label={$_('perfil.buscar')}
 				bind:value={searchQuery}
 			/>
 		</div>
@@ -223,14 +224,14 @@
 		{#if tab === 'parlamentares'}
 			<div role="tabpanel">
 			<div class="casa-filter">
-				<button class="casa-btn" class:active={casaFilter === 'todos'} aria-label="Filtrar por todas as casas" onclick={() => casaFilter = 'todos'}>
-					Todos ({parlResults.length})
+				<button class="casa-btn" class:active={casaFilter === 'todos'} aria-label={$_('perfil.filtrarTodasCasas')} onclick={() => casaFilter = 'todos'}>
+					{$_('perfil.todos')} ({parlResults.length})
 				</button>
-				<button class="casa-btn" class:active={casaFilter === 'camara'} aria-label="Filtrar pela Câmara dos Deputados" onclick={() => casaFilter = 'camara'}>
-					Câmara ({countCamara})
+				<button class="casa-btn" class:active={casaFilter === 'camara'} aria-label={$_('perfil.filtrarCamara')} onclick={() => casaFilter = 'camara'}>
+					{$_('perfil.camara')} ({countCamara})
 				</button>
-				<button class="casa-btn" class:active={casaFilter === 'senado'} aria-label="Filtrar pelo Senado Federal" onclick={() => casaFilter = 'senado'}>
-					Senado ({countSenado})
+				<button class="casa-btn" class:active={casaFilter === 'senado'} aria-label={$_('perfil.filtrarSenado')} onclick={() => casaFilter = 'senado'}>
+					{$_('perfil.senado')} ({countSenado})
 				</button>
 			</div>
 			<div class="lista">
@@ -240,7 +241,7 @@
 						<div class="info">
 							<div class="nome">{result.nome}</div>
 							<div class="meta">
-								{result.partido ?? 'Sem partido'} · {result.uf} · {result.casa === 'camara' ? (result.sexo === 'F' ? 'Deputada' : 'Deputado') : (result.sexo === 'F' ? 'Senadora' : 'Senador')} · {result.concordou}/{result.votos_comparados} votos em comum
+								{result.partido ?? $_('perfil.semPartido')} · {result.uf} · {result.casa === 'camara' ? (result.sexo === 'F' ? $_('perfil.deputada') : $_('perfil.deputado')) : (result.sexo === 'F' ? $_('perfil.senadora') : $_('perfil.senador'))} · {$_('perfil.votosEmComum', { values: { concordou: result.concordou, total: result.votos_comparados } })}
 							</div>
 						</div>
 						<div class="score">
@@ -258,7 +259,7 @@
 						<span class="rank">#{i + 1}</span>
 						<div class="info">
 							<div class="nome">{result.sigla}</div>
-							<div class="meta">{result.nome} · {result.concordou}/{result.votos_comparados} votos em comum</div>
+							<div class="meta">{result.nome} · {$_('perfil.votosEmComum', { values: { concordou: result.concordou, total: result.votos_comparados } })}</div>
 						</div>
 						<div class="score">
 							<ScoreDots score={result.score} votos_comparados={result.votos_comparados} loading={scopeLoading} />
@@ -271,8 +272,8 @@
 
 		{#if !$authUser}
 			<div class="cta-section">
-				<p>Quer salvar suas respostas e acompanhar novas votações?</p>
-				<a href="/login" class="cta">Entrar com Google</a>
+				<p>{$_('perfil.salvarRespostas')}</p>
+				<a href="/login" class="cta">{$_('perfil.entrarComGoogle')}</a>
 			</div>
 		{/if}
 	</div>

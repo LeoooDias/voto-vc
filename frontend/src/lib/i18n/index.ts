@@ -1,0 +1,27 @@
+import { register, init, getLocaleFromNavigator } from 'svelte-i18n';
+
+const STORAGE_KEY = 'votovc-locale';
+
+register('pt-BR', () => import('./pt-BR.json'));
+register('en', () => import('./en.json'));
+
+export type Locale = 'pt-BR' | 'en';
+
+export function getStoredLocale(): Locale {
+	if (typeof localStorage === 'undefined') return 'pt-BR';
+	return (localStorage.getItem(STORAGE_KEY) as Locale) || 'pt-BR';
+}
+
+export function setStoredLocale(locale: Locale): void {
+	if (typeof localStorage !== 'undefined') {
+		localStorage.setItem(STORAGE_KEY, locale);
+	}
+}
+
+export function initI18n(): void {
+	const stored = getStoredLocale();
+	init({
+		fallbackLocale: 'pt-BR',
+		initialLocale: stored
+	});
+}

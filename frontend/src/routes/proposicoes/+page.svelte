@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { _ } from 'svelte-i18n';
 	import { api } from '$lib/api';
 	import { TEMAS, getTema } from '$lib/constants';
 
@@ -117,45 +118,45 @@
 </script>
 
 <svelte:head>
-	<title>Proposições — voto.vc</title>
+	<title>{$_('proposicoes.title')}</title>
 </svelte:head>
 
 <div class="page">
 	<div class="page-header">
-		<h1>Proposições</h1>
+		<h1>{$_('proposicoes.h1')}</h1>
 		<label class="filter-toggle">
 			<input type="checkbox" checked={soSubstantivas} onchange={toggleSubstantivas} />
-			Só substantivas
-			<span class="filter-hint" title="Proposições com impacto legislativo direto: PL, PEC, MPV, PLP, PDL">?</span>
+			{$_('proposicoes.soSubstantivas')}
+			<span class="filter-hint" title={$_('proposicoes.substantivaHint')}>?</span>
 		</label>
 	</div>
 
 	<div class="filters">
 		<input
 			type="text"
-			placeholder="Buscar por texto..."
-			aria-label="Buscar proposições por texto"
+			placeholder={$_('proposicoes.buscarPlaceholder')}
+			aria-label={$_('proposicoes.buscarAria')}
 			value={busca}
 			oninput={onBuscaInput}
 			class="search-input"
 		/>
 		<div class="filter-row">
 			{#if filtros}
-				<select bind:value={filtroTema} aria-label="Filtrar por tema" onchange={applyFilter}>
-					<option value="">Todos os temas</option>
+				<select bind:value={filtroTema} aria-label={$_('proposicoes.filtrarTema')} onchange={applyFilter}>
+					<option value="">{$_('proposicoes.todosTemas')}</option>
 					{#each filtros.temas.toSorted((a, b) => (TEMAS[a.valor]?.label ?? a.valor).localeCompare(TEMAS[b.valor]?.label ?? b.valor, 'pt-BR')) as t}
 						{@const info = getTema(t.valor)}
 						<option value={t.valor}>{info?.label ?? t.valor} ({t.count})</option>
 					{/each}
 				</select>
-				<select bind:value={filtroTipo} aria-label="Filtrar por tipo" onchange={applyFilter}>
-					<option value="">Todos os tipos</option>
+				<select bind:value={filtroTipo} aria-label={$_('proposicoes.filtrarTipo')} onchange={applyFilter}>
+					<option value="">{$_('proposicoes.todosTipos')}</option>
 					{#each filtros.tipos.toSorted((a, b) => a.valor.localeCompare(b.valor)) as t}
 						<option value={t.valor}>{t.valor} ({t.count})</option>
 					{/each}
 				</select>
-				<select bind:value={filtroAno} aria-label="Filtrar por ano" onchange={applyFilter}>
-					<option value="">Todos os anos</option>
+				<select bind:value={filtroAno} aria-label={$_('proposicoes.filtrarAno')} onchange={applyFilter}>
+					<option value="">{$_('proposicoes.todosAnos')}</option>
 					{#each filtros.anos as a}
 						<option value={a}>{a}</option>
 					{/each}
@@ -165,9 +166,9 @@
 	</div>
 
 	{#if loading}
-		<div class="status">Carregando...</div>
+		<div class="status">{$_('proposicoes.carregando')}</div>
 	{:else if proposicoes.length === 0}
-		<div class="status">Nenhuma proposição encontrada.</div>
+		<div class="status">{$_('proposicoes.nenhumaEncontrada')}</div>
 	{:else}
 		<div class="list">
 			{#each proposicoes as p}
@@ -186,9 +187,9 @@
 								<span class="prop-tipo">{p.tipo} {p.numero}/{p.ano}</span>
 								{#each p.casas as c}
 									{#if c.url}
-										<a href={c.url} target="_blank" rel="noopener" class="casa-pill {c.casa}" onclick={(e) => e.stopPropagation()}>{c.casa === 'camara' ? 'Câmara' : 'Senado'}</a>
+										<a href={c.url} target="_blank" rel="noopener" class="casa-pill {c.casa}" onclick={(e) => e.stopPropagation()}>{c.casa === 'camara' ? $_('proposicoes.camara') : $_('proposicoes.senado')}</a>
 									{:else}
-										<span class="casa-pill {c.casa}">{c.casa === 'camara' ? 'Câmara' : 'Senado'}</span>
+										<span class="casa-pill {c.casa}">{c.casa === 'camara' ? $_('proposicoes.camara') : $_('proposicoes.senado')}</span>
 									{/if}
 								{/each}
 								{#if p.tema}
@@ -196,10 +197,10 @@
 									<span class="tema-tag" style="background: {info.cor}1a; color: {info.cor}; border-color: {info.cor}33">{info.label}</span>
 								{/if}
 								{#if p.substantiva}
-									<span class="prop-badge">Substantiva</span>
+									<span class="prop-badge">{$_('proposicoes.substantiva')}</span>
 								{/if}
 							</div>
-							<p class="prop-text">{p.resumo_cidadao ?? p.ementa ?? 'Sem descrição'}</p>
+							<p class="prop-text">{p.resumo_cidadao ?? p.ementa ?? $_('proposicoes.semDescricao')}</p>
 						</div>
 						{#if hasDetails}
 							<span class="expand-icon" class:open={isExpanded}>▾</span>
@@ -216,9 +217,9 @@
 		</div>
 
 		<div class="pagination">
-			<button onclick={prevPage} disabled={pagina <= 1}>Anterior</button>
-			<span>Página {pagina} de {totalPaginas}</span>
-			<button onclick={nextPage} disabled={pagina >= totalPaginas}>Próxima</button>
+			<button onclick={prevPage} disabled={pagina <= 1}>{$_('pagination.anterior')}</button>
+			<span>{$_('pagination.pagina', { values: { current: pagina, total: totalPaginas } })}</span>
+			<button onclick={nextPage} disabled={pagina >= totalPaginas}>{$_('pagination.proxima')}</button>
 		</div>
 	{/if}
 </div>

@@ -33,8 +33,8 @@ MAX_HISTORY = 20
 MAX_TOOL_ROUNDS = 3
 
 
-def build_system_prompt(prop: Proposicao) -> str:
-    parts = [
+SYSTEM_PROMPT_RULES = {
+    "pt-BR": [
         "Você é um assistente especializado em legislação brasileira no site voto.vc.",
         "Seu papel é ajudar cidadãos a entender proposições legislativas "
         "de forma clara e acessível.",
@@ -49,6 +49,32 @@ def build_system_prompt(prop: Proposicao) -> str:
         "- Seja neutro e imparcial — apresente múltiplos lados.",
         "- Use markdown: **negrito**, listas, etc.",
         "- Respostas concisas mas completas. Máximo ~300 palavras.",
+        "- Responda em português.",
+    ],
+    "en": [
+        "You are an assistant specialized in Brazilian legislation on the site voto.vc.",
+        "Your role is to help citizens understand legislative propositions "
+        "in a clear and accessible way.",
+        "",
+        "RULES:",
+        "- ALWAYS answer based on the information provided below about the proposition.",
+        "- You have broad knowledge about Brazilian politics and legislation — USE IT.",
+        "- Analyze the proposition in depth: historical context, impacts, arguments.",
+        "- DO NOT say 'I don't have information' if the summary/description already has enough.",
+        "- Only use tools when you REALLY need data you don't have.",
+        "- Be direct. No 'let me search' or 'let me try'. Answer or use the tool.",
+        "- Be neutral and impartial — present multiple sides.",
+        "- Use markdown: **bold**, lists, etc.",
+        "- Concise but complete answers. Maximum ~300 words.",
+        "- Answer in English.",
+    ],
+}
+
+
+def build_system_prompt(prop: Proposicao, lang: str = "pt-BR") -> str:
+    rules = SYSTEM_PROMPT_RULES.get(lang, SYSTEM_PROMPT_RULES["pt-BR"])
+    parts = [
+        *rules,
         "",
         f"=== PROPOSIÇÃO: {prop.tipo} {prop.numero}/{prop.ano} ===",
         f"Ementa: {prop.ementa}",
@@ -192,12 +218,8 @@ async def _web_search(query: str) -> str:
         )
 
 
-def build_posicao_system_prompt(
-    posicao: object,
-    proposicoes: list[dict],
-) -> str:
-    """Build system prompt for position-level chat."""
-    parts = [
+POSICAO_PROMPT_RULES = {
+    "pt-BR": [
         "Você é um assistente especializado em legislação brasileira no site voto.vc.",
         "Seu papel é ajudar cidadãos a entender posições temáticas e as proposições "
         "legislativas relacionadas de forma clara e acessível.",
@@ -209,6 +231,34 @@ def build_posicao_system_prompt(
         "- Seja neutro e imparcial — apresente múltiplos lados.",
         "- Use markdown: **negrito**, listas, etc.",
         "- Respostas concisas mas completas. Máximo ~300 palavras.",
+        "- Responda em português.",
+    ],
+    "en": [
+        "You are an assistant specialized in Brazilian legislation on the site voto.vc.",
+        "Your role is to help citizens understand thematic positions and related "
+        "legislative propositions in a clear and accessible way.",
+        "",
+        "RULES:",
+        "- Answer based on the information provided about the position and its propositions.",
+        "- You have broad knowledge about Brazilian politics and legislation — USE IT.",
+        "- Explain how each proposition relates to the thematic position.",
+        "- Be neutral and impartial — present multiple sides.",
+        "- Use markdown: **bold**, lists, etc.",
+        "- Concise but complete answers. Maximum ~300 words.",
+        "- Answer in English.",
+    ],
+}
+
+
+def build_posicao_system_prompt(
+    posicao: object,
+    proposicoes: list[dict],
+    lang: str = "pt-BR",
+) -> str:
+    """Build system prompt for position-level chat."""
+    rules = POSICAO_PROMPT_RULES.get(lang, POSICAO_PROMPT_RULES["pt-BR"])
+    parts = [
+        *rules,
         "",
         f"=== POSIÇÃO TEMÁTICA: {posicao.titulo} ===",
         f"Descrição: {posicao.descricao}",
@@ -216,12 +266,19 @@ def build_posicao_system_prompt(
         "",
         "=== PROPOSIÇÕES RELACIONADAS ===",
     ]
+    direcao_labels = {
+        "pt-BR": {
+            "sim": "votar SIM nesta proposição apoia esta posição",
+            "nao": "votar NÃO nesta proposição apoia esta posição",
+        },
+        "en": {
+            "sim": "voting YES on this proposition supports this position",
+            "nao": "voting NO on this proposition supports this position",
+        },
+    }
+    labels = direcao_labels.get(lang, direcao_labels["pt-BR"])
     for p in proposicoes:
-        direcao_label = (
-            "votar SIM nesta proposição apoia esta posição"
-            if p["direcao"] == "sim"
-            else "votar NÃO nesta proposição apoia esta posição"
-        )
+        direcao_label = labels["sim"] if p["direcao"] == "sim" else labels["nao"]
         entry = f"- {p['tipo']} {p['numero']}/{p['ano']}: {p.get('ementa', '(sem ementa)')}"
         entry += f"\n  Direção: {direcao_label}"
         if p.get("resumo_cidadao"):
@@ -276,6 +333,7 @@ async def stream_chat(
     prop: Proposicao,
     message: str,
     history: list[dict],
+    lang: str = "pt-BR",
 ) -> AsyncGenerator[str, None]:
     """Stream chat response, handling tool calls transparently.
 
@@ -283,7 +341,7 @@ async def stream_chat(
     and re-submitted; the caller only sees final text output.
     """
     client = _get_client()
-    system = build_system_prompt(prop)
+    system = build_system_prompt(prop, lang=lang)
 
     messages: list[dict] = []
     for h in history[-MAX_HISTORY:]:
@@ -365,13 +423,14 @@ async def stream_posicao_chat(
     proposicoes: list[dict],
     message: str,
     history: list[dict],
+    lang: str = "pt-BR",
 ) -> AsyncGenerator[str, None]:
     """Stream chat response for a thematic position.
 
     Similar to stream_chat but uses position-specific system prompt and tools.
     """
     client = _get_client()
-    system = build_posicao_system_prompt(posicao, proposicoes)
+    system = build_posicao_system_prompt(posicao, proposicoes, lang=lang)
 
     messages: list[dict] = []
     for h in history[-MAX_HISTORY:]:

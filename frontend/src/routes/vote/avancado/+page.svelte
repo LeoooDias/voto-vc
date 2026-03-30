@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { _ } from 'svelte-i18n';
 	import { api } from '$lib/api';
 	import {
 		items,
@@ -18,13 +19,13 @@
 	import { get } from 'svelte/store';
 	import { UFS, TIER1, TIER2, TIER3, getTema } from '$lib/constants';
 
-	const TIPOS_LEGENDA: Record<string, string> = {
-		PL: 'Projeto de Lei',
-		PEC: 'Proposta de Emenda à Constituição',
-		MPV: 'Medida Provisória',
-		PLP: 'Projeto de Lei Complementar',
-		PDL: 'Projeto de Decreto Legislativo',
-		MIP: 'Medida de Implementação Provisória'
+	const TIPOS_LEGENDA_KEYS: Record<string, string> = {
+		PL: 'voteAvancado.tipoPL',
+		PEC: 'voteAvancado.tipoPEC',
+		MPV: 'voteAvancado.tipoMPV',
+		PLP: 'voteAvancado.tipoPLP',
+		PDL: 'voteAvancado.tipoPDL',
+		MIP: 'voteAvancado.tipoMIP'
 	};
 
 	let uf = $state(get(selectedUf));
@@ -44,9 +45,9 @@
 	let seg3 = $derived(answeredCount > TIER2 ? Math.min((answeredCount - TIER2) / (TIER3 - TIER2), 1) * 33.34 : 0);
 
 	let tierLabel = $derived(
-		reachedTier3 ? 'Expert' :
-		reachedTier2 ? 'Avançado' :
-		canFinish ? 'Básico' : ''
+		reachedTier3 ? $_('voteAvancado.tierExpert') :
+		reachedTier2 ? $_('voteAvancado.tierAvancado') :
+		canFinish ? $_('voteAvancado.tierBasico') : ''
 	);
 
 	function escolherUf(sigla: string) {
@@ -251,13 +252,13 @@
 </script>
 
 <svelte:head>
-	<title>Modo Avançado — voto.vc</title>
+	<title>{$_('voteAvancado.title')}</title>
 </svelte:head>
 
 <svelte:window onkeydown={handleGlobalKeydown} />
 
 <div class="top-bar">
-	<a href="/vote" class="back-link-a">&#8592; Modo por posições</a>
+	<a href="/vote" class="back-link-a">{$_('voteAvancado.voltarModoPosicoes')}</a>
 	{#if uf}
 		<div class="top-right">
 			<span class="uf-badge">
@@ -265,7 +266,7 @@
 				{uf}
 			</span>
 			<button class="votes-panel-btn" onclick={() => showVotesPanel = !showVotesPanel}>
-				Meus votos ({answeredCount})
+				{$_('voteAvancado.meusVotos', { values: { count: answeredCount } })}
 			</button>
 		</div>
 	{/if}
@@ -273,11 +274,11 @@
 
 {#if !uf}
 	<div class="uf-selector">
-		<h1>De qual estado você é?</h1>
-		<p class="uf-subtitle">Vamos mostrar parlamentares do seu estado</p>
+		<h1>{$_('voteAvancado.deQualEstado')}</h1>
+		<p class="uf-subtitle">{$_('voteAvancado.mostrarParlamentares')}</p>
 		<div class="uf-grid">
 			{#each UFS as estado}
-				<button class="uf-btn" aria-label="Selecionar {estado.sigla}" onclick={() => escolherUf(estado.sigla)}>
+				<button class="uf-btn" aria-label={$_('voteAvancado.selecionarEstado', { values: { sigla: estado.sigla } })} onclick={() => escolherUf(estado.sigla)}>
 					<span class="uf-sigla">{estado.sigla}</span>
 					<span class="uf-nome">{estado.nome}</span>
 				</button>
@@ -285,9 +286,9 @@
 		</div>
 	</div>
 {:else if !loaded}
-	<div class="loading">Carregando proposições...</div>
+	<div class="loading">{$_('voteAvancado.carregando')}</div>
 {:else if currentItems.length === 0}
-	<div class="empty">Nenhuma proposição disponível no momento.</div>
+	<div class="empty">{$_('voteAvancado.nenhumaProposicao')}</div>
 {:else}
 	<div class="questionario">
 		<div class="progress">
@@ -297,35 +298,35 @@
 		</div>
 		<div class="counter-row">
 			<p class="answered">
-				{answeredCount} voto{answeredCount !== 1 ? 's' : ''}
+				{answeredCount !== 1 ? $_('voteAvancado.votosPlural', { values: { count: answeredCount } }) : $_('voteAvancado.votos', { values: { count: answeredCount } })}
 				{#if tierLabel}
 					<span class="tier-badge">{tierLabel}</span>
 				{:else}
-					<span class="hint">· mínimo {TIER1}</span>
+					<span class="hint">{$_('voteAvancado.minimo', { values: { min: TIER1 } })}</span>
 				{/if}
 			</p>
 		</div>
 
 		{#if reachedTier3}
 			<div class="meta-banner expert">
-				Perfil expert! {answeredCount} respostas. Altíssima precisão.
-				<button class="btn-resultado" onclick={verResultado}>Ver meu perfil</button>
+				{$_('voteAvancado.bannerExpert', { values: { count: answeredCount } })}
+				<button class="btn-resultado" onclick={verResultado}>{$_('voteAvancado.verMeuPerfil')}</button>
 			</div>
 		{:else if reachedTier2}
 			<div class="meta-banner success">
-				Perfil avançado! Quanto mais você responder, mais preciso fica.
-				<button class="btn-resultado" onclick={verResultado}>Ver meu perfil</button>
+				{$_('voteAvancado.bannerAvancado')}
+				<button class="btn-resultado" onclick={verResultado}>{$_('voteAvancado.verMeuPerfil')}</button>
 			</div>
 		{:else if canFinish}
 			<div class="meta-banner ready">
-				Seu perfil Básico está pronto. Continue votando para aumentar a precisão.
-				<button class="btn-resultado" onclick={verResultado}>Ver perfil</button>
+				{$_('voteAvancado.bannerBasico')}
+				<button class="btn-resultado" onclick={verResultado}>{$_('voteAvancado.verPerfil')}</button>
 			</div>
 		{/if}
 
 		<div class="card">
 			<div class="card-header">
-				<span class="tipo" title={TIPOS_LEGENDA[currentItems[idx].tipo] ?? currentItems[idx].tipo}>{currentItems[idx].tipo} {currentItems[idx].numero}/{currentItems[idx].ano}</span>
+				<span class="tipo" title={TIPOS_LEGENDA_KEYS[currentItems[idx].tipo] ? $_(TIPOS_LEGENDA_KEYS[currentItems[idx].tipo]) : currentItems[idx].tipo}>{currentItems[idx].tipo} {currentItems[idx].numero}/{currentItems[idx].ano}</span>
 				{#if getTema(currentItems[idx].tema)}
 					<span class="tema-tag" style="background: {getTema(currentItems[idx].tema).cor}1a; color: {getTema(currentItems[idx].tema).cor}; border-color: {getTema(currentItems[idx].tema).cor}33">{getTema(currentItems[idx].tema).label}</span>
 				{:else}
@@ -340,9 +341,9 @@
 				<div class="casa-pills">
 					{#each currentItems[idx].casas as info}
 						{#if info.url}
-							<a href={info.url} target="_blank" rel="noopener" class="casa-pill" class:camara={info.casa === 'camara'} class:senado={info.casa === 'senado'}>{info.casa === 'camara' ? 'Câmara' : 'Senado'}</a>
+							<a href={info.url} target="_blank" rel="noopener" class="casa-pill" class:camara={info.casa === 'camara'} class:senado={info.casa === 'senado'}>{info.casa === 'camara' ? $_('voteAvancado.camara') : $_('voteAvancado.senado')}</a>
 						{:else}
-							<span class="casa-pill" class:camara={info.casa === 'camara'} class:senado={info.casa === 'senado'}>{info.casa === 'camara' ? 'Câmara' : 'Senado'}</span>
+							<span class="casa-pill" class:camara={info.casa === 'camara'} class:senado={info.casa === 'senado'}>{info.casa === 'camara' ? $_('voteAvancado.camara') : $_('voteAvancado.senado')}</span>
 						{/if}
 					{/each}
 				</div>
@@ -357,29 +358,29 @@
 		</div>
 
 		<div class="actions">
-			<button class="btn-nav" onclick={voltar} disabled={idx === 0} aria-label="Voltar">&#8592;</button>
-			<button class="btn-pular" onclick={() => votar('pular', 1.0)}>Pular</button>
-			<button class="btn-votar" class:active={selectedPos != null} onclick={confirmarVoto} disabled={selectedPos == null}>Votar</button>
-			<button class="btn-nav" onclick={avancar} disabled={!canAdvance} aria-label="Avançar">&#8594;</button>
+			<button class="btn-nav" onclick={voltar} disabled={idx === 0} aria-label={$_('voteAvancado.voltar')}>&#8592;</button>
+			<button class="btn-pular" onclick={() => votar('pular', 1.0)}>{$_('voteAvancado.pular')}</button>
+			<button class="btn-votar" class:active={selectedPos != null} onclick={confirmarVoto} disabled={selectedPos == null}>{$_('voteAvancado.votar')}</button>
+			<button class="btn-nav" onclick={avancar} disabled={!canAdvance} aria-label={$_('voteAvancado.avancar')}>&#8594;</button>
 		</div>
 		<ChatWidget
 			proposicaoId={currentItems[idx].proposicao_id}
 			proposicaoTitulo="{currentItems[idx].tipo} {currentItems[idx].numero}/{currentItems[idx].ano}"
 		/>
 
-		<p class="keyboard-hint">Atalhos: <kbd>1</kbd>-<kbd>5</kbd> posição · <kbd>Enter</kbd> votar · <kbd>Esc</kbd> pular · <kbd>&#8592;</kbd><kbd>&#8594;</kbd> navegar</p>
+		<p class="keyboard-hint">{$_('voteAvancado.atalhos')} <kbd>1</kbd>-<kbd>5</kbd> {$_('voteAvancado.atalhoPosicao')} · <kbd>Enter</kbd> {$_('voteAvancado.atalhoVotar')} · <kbd>Esc</kbd> {$_('voteAvancado.atalhoPular')} · <kbd>&#8592;</kbd><kbd>&#8594;</kbd> {$_('voteAvancado.atalhoNavegar')}</p>
 	</div>
 
 	{#if showVotesPanel}
-		<button class="votes-panel-backdrop" aria-label="Fechar painel de votos" onclick={() => showVotesPanel = false}></button>
-		<div class="votes-panel" role="dialog" aria-modal="true" aria-label="Meus votos">
+		<button class="votes-panel-backdrop" aria-label={$_('voteAvancado.fecharPainelVotos')} onclick={() => showVotesPanel = false}></button>
+		<div class="votes-panel" role="dialog" aria-modal="true" aria-label={$_('voteAvancado.meusVotos', { values: { count: answeredCount } })}>
 			<div class="votes-panel-header">
-				<h3>Meus votos ({answeredCount})</h3>
-				<button class="votes-panel-close" aria-label="Fechar painel de votos" onclick={() => showVotesPanel = false}>&times;</button>
+				<h3>{$_('voteAvancado.meusVotos', { values: { count: answeredCount } })}</h3>
+				<button class="votes-panel-close" aria-label={$_('voteAvancado.fecharPainelVotos')} onclick={() => showVotesPanel = false}>&times;</button>
 			</div>
 			<div class="votes-panel-list">
 				{#if answeredItems.length === 0}
-					<p class="votes-panel-empty">Nenhum voto registrado ainda.</p>
+					<p class="votes-panel-empty">{$_('voteAvancado.nenhumVoto')}</p>
 				{:else}
 					{#each answeredItems as v}
 						<div class="votes-panel-item">

@@ -10,6 +10,7 @@
 	 *   5 = A favor      (sim, peso 1.0)
 	 */
 
+	import { _ } from 'svelte-i18n';
 	import { colorForPos } from '$lib/constants';
 
 	interface Props {
@@ -19,15 +20,15 @@
 
 	interface Position {
 		pos: number;
-		label: string;
+		labelKey: string;
 	}
 
 	const POSITIONS: Position[] = [
-		{ pos: 1, label: 'Contra' },
-		{ pos: 2, label: 'Contra leve' },
-		{ pos: 3, label: 'Neutro' },
-		{ pos: 4, label: 'A favor leve' },
-		{ pos: 5, label: 'A favor' }
+		{ pos: 1, labelKey: 'positionSlider.contra' },
+		{ pos: 2, labelKey: 'positionSlider.contraLeve' },
+		{ pos: 3, labelKey: 'positionSlider.neutro' },
+		{ pos: 4, labelKey: 'positionSlider.aFavorLeve' },
+		{ pos: 5, labelKey: 'positionSlider.aFavor' }
 	];
 
 	let { value = null, onselect }: Props = $props();
@@ -54,9 +55,9 @@
 
 <div class="position-slider">
 	<div class="labels-row">
-		<span class="end-label left">Contra</span>
-		<span class="end-label center">Neutro</span>
-		<span class="end-label right">A favor</span>
+		<span class="end-label left">{$_('positionSlider.contra')}</span>
+		<span class="end-label center">{$_('positionSlider.neutro')}</span>
+		<span class="end-label right">{$_('positionSlider.aFavor')}</span>
 	</div>
 	<div class="slider-row">
 		<div class="track-bg">
@@ -69,8 +70,8 @@
 				class:endpoint={p.pos === 1 || p.pos === 3 || p.pos === 5}
 				onclick={() => handleClick(p.pos)}
 				onkeydown={(e) => handleKeydown(e, p.pos)}
-				title={p.label}
-				aria-label={p.label}
+				title={$_(p.labelKey)}
+				aria-label={$_(p.labelKey)}
 				style:--dot-color={colorForPos(p.pos)}
 			>
 				<span class="dot"></span>

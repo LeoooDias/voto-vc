@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { _, locale } from 'svelte-i18n';
 	import { authUser } from '$lib/stores/auth';
 	import { marked } from 'marked';
 
@@ -96,32 +97,32 @@
 				method: 'POST',
 				credentials: 'include',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ message: text, history })
+				body: JSON.stringify({ message: text, history, lang: $locale ?? 'pt-BR' })
 			});
 
 			if (res.status === 401) {
-				error = 'Faça login para usar o chat.';
+				error = $_('chat.erroLogin');
 				messages = messages.slice(0, -1); // Remove placeholder
 				isStreaming = false;
 				return;
 			}
 
 			if (res.status === 429) {
-				error = 'Limite de mensagens atingido. Tente mais tarde.';
+				error = $_('chat.erroLimite');
 				messages = messages.slice(0, -1);
 				isStreaming = false;
 				return;
 			}
 
 			if (res.status === 503) {
-				error = 'Chat indisponível no momento. Tente mais tarde.';
+				error = $_('chat.erroIndisponivel');
 				messages = messages.slice(0, -1);
 				isStreaming = false;
 				return;
 			}
 
 			if (!res.ok) {
-				error = 'Erro ao conectar ao chat.';
+				error = $_('chat.erroConexao');
 				messages = messages.slice(0, -1);
 				isStreaming = false;
 				return;
@@ -129,7 +130,7 @@
 
 			const reader = res.body?.getReader();
 			if (!reader) {
-				error = 'Erro de streaming.';
+				error = $_('chat.erroStreaming');
 				messages = messages.slice(0, -1);
 				isStreaming = false;
 				return;
@@ -175,7 +176,7 @@
 				}
 			}
 		} catch (e) {
-			error = 'Erro de conexão. Tente novamente.';
+			error = $_('chat.erroConexaoTentar');
 			// Remove empty assistant placeholder if no content was received
 			const last = messages[messages.length - 1];
 			if (last?.role === 'assistant' && !last.content) {
@@ -212,25 +213,25 @@
 </script>
 
 {#if inline}
-	<button class="chat-inline-btn" onclick={toggle} aria-label={posicaoId ? 'Pergunte sobre esta posição' : 'Pergunte sobre esta proposição'}>
+	<button class="chat-inline-btn" onclick={toggle} aria-label={posicaoId ? $_('chat.perguntePosicao') : $_('chat.pergunteProposicao')}>
 		<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-		<span>{posicaoId ? 'Pergunte sobre esta posição' : 'Pergunte sobre esta proposição'}</span>
+		<span>{posicaoId ? $_('chat.perguntePosicao') : $_('chat.pergunteProposicao')}</span>
 	</button>
 {:else}
-	<button class="chat-fab" class:open={isOpen} onclick={toggle} aria-label={isOpen ? 'Fechar chat' : 'Abrir chat'}>
+	<button class="chat-fab" class:open={isOpen} onclick={toggle} aria-label={isOpen ? $_('chat.fechar') : $_('chat.abrir')}>
 		{#if isOpen}
 			<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 		{:else}
 			<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-			<span class="fab-label">{posicaoId ? 'Pergunte sobre esta posição' : 'Pergunte sobre esta proposição'}</span>
+			<span class="fab-label">{posicaoId ? $_('chat.perguntePosicao') : $_('chat.pergunteProposicao')}</span>
 		{/if}
 	</button>
 {/if}
 
 <!-- Chat modal -->
 {#if isOpen}
-	<button class="chat-backdrop" onclick={close} aria-label="Fechar chat"></button>
-	<div class="chat-modal" class:expanded={isExpanded} role="dialog" aria-label="Chat sobre proposição">
+	<button class="chat-backdrop" onclick={close} aria-label={$_('chat.fechar')}></button>
+	<div class="chat-modal" class:expanded={isExpanded} role="dialog" aria-label={posicaoId ? $_('chat.chatSobrePosicao') : $_('chat.chatSobreProposicao')}>
 		<div class="chat-header">
 			<div class="chat-title">
 				<span class="chat-icon">
@@ -239,14 +240,14 @@
 				<span class="chat-prop-title">{proposicaoTitulo}</span>
 			</div>
 			<div class="chat-header-actions">
-				<button class="chat-expand" onclick={toggleExpand} aria-label={isExpanded ? 'Reduzir chat' : 'Expandir chat'}>
+				<button class="chat-expand" onclick={toggleExpand} aria-label={isExpanded ? $_('chat.reduzir') : $_('chat.expandir')}>
 					{#if isExpanded}
 						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
 					{:else}
 						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
 					{/if}
 				</button>
-				<button class="chat-close" onclick={close} aria-label="Fechar chat">
+				<button class="chat-close" onclick={close} aria-label={$_('chat.fechar')}>
 					<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 				</button>
 			</div>
@@ -254,23 +255,23 @@
 
 		{#if !$authUser}
 			<div class="chat-login-prompt">
-				<p>Faça login para tirar dúvidas sobre esta proposição com inteligência artificial.</p>
-				<a href="/login" class="chat-login-btn">Entrar com Google</a>
+				<p>{$_('chat.loginParaChat')}</p>
+				<a href="/login" class="chat-login-btn">{$_('chat.entrarComGoogle')}</a>
 			</div>
 		{:else}
 			<div class="chat-messages" bind:this={messagesEl} aria-live="polite">
 				{#if messages.length === 0}
 					<div class="chat-empty">
-						<p>{posicaoId ? 'Pergunte qualquer coisa sobre esta posição temática.' : 'Pergunte qualquer coisa sobre esta proposição.'}</p>
+						<p>{posicaoId ? $_('chat.pergunteQualquerPosicao') : $_('chat.pergunteQualquerProposicao')}</p>
 						<div class="suggestions">
 							{#if posicaoId}
-								<button class="suggestion" aria-label="Perguntar: Explique esta posição e as proposições relacionadas" onclick={() => { inputText = 'Explique esta posição e as proposições relacionadas.'; sendMessage(); }}>Explicar posição e proposições</button>
-								<button class="suggestion" aria-label="Perguntar: Quais os argumentos a favor e contra esta posição" onclick={() => { inputText = 'Quais os argumentos a favor e contra esta posição?'; sendMessage(); }}>Argumentos a favor e contra</button>
-								<button class="suggestion" aria-label="Perguntar: Como essa questão afeta o dia a dia do cidadão" onclick={() => { inputText = 'Como essa questão afeta o dia a dia do cidadão?'; sendMessage(); }}>Impacto no dia a dia</button>
+								<button class="suggestion" onclick={() => { inputText = $_('chat.sugestaoExplicar'); sendMessage(); }}>{$_('chat.sugestaoExplicar')}</button>
+								<button class="suggestion" onclick={() => { inputText = $_('chat.sugestaoArgumentos'); sendMessage(); }}>{$_('chat.sugestaoArgumentos')}</button>
+								<button class="suggestion" onclick={() => { inputText = $_('chat.sugestaoImpacto'); sendMessage(); }}>{$_('chat.sugestaoImpacto')}</button>
 							{:else}
-								<button class="suggestion" aria-label="Perguntar: Resuma os principais pontos desta proposição" onclick={() => { inputText = 'Resuma os principais pontos desta proposição.'; sendMessage(); }}>Resumo dos pontos principais</button>
-								<button class="suggestion" aria-label="Perguntar: Quais os argumentos a favor e contra" onclick={() => { inputText = 'Quais os argumentos a favor e contra?'; sendMessage(); }}>Argumentos a favor e contra</button>
-								<button class="suggestion" aria-label="Perguntar: Como isso pode afetar meu dia a dia" onclick={() => { inputText = 'Como isso pode afetar meu dia a dia?'; sendMessage(); }}>Impacto no dia a dia</button>
+								<button class="suggestion" onclick={() => { inputText = $_('chat.sugestaoResumo'); sendMessage(); }}>{$_('chat.sugestaoResumo')}</button>
+								<button class="suggestion" onclick={() => { inputText = $_('chat.sugestaoArgumentos'); sendMessage(); }}>{$_('chat.sugestaoArgumentos')}</button>
+								<button class="suggestion" onclick={() => { inputText = $_('chat.sugestaoImpacto'); sendMessage(); }}>{$_('chat.sugestaoImpacto')}</button>
 							{/if}
 						</div>
 					</div>
@@ -299,7 +300,7 @@
 				<input
 					class="chat-input"
 					type="text"
-					placeholder="Faça uma pergunta..."
+					placeholder={$_('chat.placeholder')}
 					bind:value={inputText}
 					onkeydown={handleKeydown}
 					disabled={isStreaming}
