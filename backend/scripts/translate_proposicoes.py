@@ -60,17 +60,25 @@ def parse_translation(text: str, has_descricao: bool) -> tuple[str | None, str |
         sections = text.split("## ")
         for section in sections:
             lower = section.lower()
-            if lower.startswith("resumo"):
+            is_resumo = lower.startswith("resumo") or lower.startswith("citizen")
+            is_desc = lower.startswith("descri") or lower.startswith("detail")
+            if is_resumo:
                 lines = section.split("\n", 1)
                 if len(lines) > 1:
                     resumo_en = lines[1].strip()
-            elif lower.startswith("descri") and has_descricao:
+            elif is_desc and has_descricao:
                 lines = section.split("\n", 1)
                 if len(lines) > 1:
                     descricao_en = lines[1].strip()
-    else:
+    if not resumo_en:
         # Model returned plain text without headers — use as resumo
-        resumo_en = text.strip()
+        clean = text.strip()
+        # Remove any leading ## header line if present
+        if clean.startswith("## "):
+            parts = clean.split("\n", 1)
+            clean = parts[1].strip() if len(parts) > 1 else parts[0]
+        if clean:
+            resumo_en = clean
 
     return resumo_en, descricao_en
 
