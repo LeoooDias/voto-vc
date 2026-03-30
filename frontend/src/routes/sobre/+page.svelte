@@ -64,7 +64,7 @@
 			ou baixo. Quanto mais votos em comum, mais confiável o alinhamento.
 		</p>
 		<p>
-			Os 5 pontos exibidos no resultado refletem esse resultado ajustado —
+			Os 5 pontos exibidos no seu perfil refletem esse resultado ajustado —
 			o mesmo valor usado para ordenar o ranking.
 		</p>
 

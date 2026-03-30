@@ -354,7 +354,7 @@
 					{#if remaining > 0}
 						<span class="remaining-hint"> · faltam {remaining} para ver seu perfil</span>
 					{:else}
-						<span class="ready-hint"> · pronto para ver resultados!</span>
+						<span class="ready-hint"> · {answeredCount >= 20 ? 'perfil completo!' : 'veja seu perfil!'}</span>
 				{/if}
 			</p>
 			</div>
