@@ -169,7 +169,12 @@
 		}
 	}
 
+	let headerHeight = $state(0);
+
 	onMount(() => {
+		const header = document.querySelector('header');
+		if (header) headerHeight = header.offsetHeight;
+
 		if (!get(authLoading)) {
 			initPage();
 			return;
@@ -339,7 +344,7 @@
 			</span>
 			<button class="uf-change-btn" onclick={() => { uf = ''; selectedUf.set(''); }}>Trocar estado</button>
 		</div>
-		<div class="progress-sticky">
+		<div class="progress-sticky" style="top: {headerHeight}px">
 			<div class="progress">
 				<div class="progress-fill" class:milestone={canFinish} style="width: {progressPct}%"></div>
 			</div>
@@ -524,7 +529,7 @@
 
 <style>
 	:global(main:has(.posicoes-page)) {
-		padding-top: 0;
+		padding-top: 0 !important;
 	}
 
 	.posicoes-page {
@@ -534,7 +539,6 @@
 
 	.progress-sticky {
 		position: sticky;
-		top: 90px;
 		z-index: 40;
 		background: var(--bg-page);
 		padding: 0 0 0.75rem;
@@ -1289,10 +1293,6 @@
 	}
 
 	@media (max-width: 768px) {
-		.progress-sticky {
-			top: 70px;
-		}
-
 		.cat-section {
 			scroll-margin-top: 150px;
 		}
