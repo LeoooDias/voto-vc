@@ -12,7 +12,6 @@ Usage:
 import argparse
 import asyncio
 import sys
-import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -74,7 +73,7 @@ def parse_translation(text: str, has_descricao: bool) -> tuple[str | None, str |
 
 
 async def translate_proposicao(
-    client: anthropic.Anthropic,
+    client: anthropic.AsyncAnthropic,
     prop_id: int,
     resumo: str,
     descricao: str | None,
@@ -82,7 +81,7 @@ async def translate_proposicao(
     """Call Claude to translate a single proposição."""
     user_msg = build_user_message(resumo, descricao)
 
-    response = client.messages.create(
+    response = await client.messages.create(
         model=MODEL,
         max_tokens=2048,
         system=SYSTEM_PROMPT,
@@ -110,7 +109,7 @@ async def main():
 
     # Init Anthropic client (reads ANTHROPIC_API_KEY from env)
     try:
-        client = anthropic.Anthropic()
+        client = anthropic.AsyncAnthropic()
     except anthropic.AuthenticationError:
         print("ERROR: ANTHROPIC_API_KEY not set or invalid.")
         sys.exit(1)
@@ -188,7 +187,7 @@ async def main():
             # Sleep between batches
             if i % BATCH_SIZE == 0 and i < total:
                 print(f"  -- batch pause ({SLEEP_BETWEEN_BATCHES}s) --")
-                time.sleep(SLEEP_BETWEEN_BATCHES)
+                await asyncio.sleep(SLEEP_BETWEEN_BATCHES)
 
         print(f"\nDone! Translated: {translated}, errors: {errors}, total: {total}")
 

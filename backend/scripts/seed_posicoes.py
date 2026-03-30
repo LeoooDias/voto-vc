@@ -440,7 +440,7 @@ async def seed():
 
         # Verify
         result = await db.execute(select(Posicao).order_by(Posicao.ordem))
-        for p in result.scalars().all():
+        for p in result.scalars().unique().all():
             n = len(p.proposicoes_rel)
             print(f"  {p.ordem:2d}. {p.titulo} ({p.tema}) — {n} proposições")
 
