@@ -624,7 +624,7 @@
 		.nav-right {
 			display: none;
 			position: absolute;
-			top: 70px;
+			top: 100%;
 			left: 0;
 			right: 0;
 			background: var(--bg-header);
@@ -679,7 +679,6 @@
 			display: block;
 			position: fixed;
 			inset: 0;
-			top: 70px;
 			background: rgba(0, 0, 0, 0.3);
 			z-index: 49;
 			border: none;
