@@ -131,16 +131,20 @@ export function userResponseToStance(voto: string, peso: number): { stance: stri
 	return { stance, score_pct };
 }
 
-export function stanceLabel(stance: string): string {
-	const labels: Record<string, string> = {
-		fortemente_favor: 'Fortemente a favor',
-		levemente_favor: 'Levemente a favor',
-		misto: 'Misto',
-		levemente_contra: 'Levemente contra',
-		fortemente_contra: 'Fortemente contra',
-		sem_dados: 'Sem dados'
+/**
+ * Returns an i18n key for the given stance.
+ * Use with $_() in Svelte templates: $_( stanceLabel(stance) )
+ */
+export function stanceLabelKey(stance: string): string {
+	const keys: Record<string, string> = {
+		fortemente_favor: 'stance.fortemente_favor',
+		levemente_favor: 'stance.levemente_favor',
+		misto: 'stance.misto',
+		levemente_contra: 'stance.levemente_contra',
+		fortemente_contra: 'stance.fortemente_contra',
+		sem_dados: 'stance.sem_dados'
 	};
-	return labels[stance] ?? stance;
+	return keys[stance] ?? 'stance.sem_dados';
 }
 
 /**

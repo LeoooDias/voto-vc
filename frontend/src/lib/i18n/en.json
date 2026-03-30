@@ -494,6 +494,14 @@
 		"aFavorLeveTooltip": "For (slight)",
 		"aFavorTooltip": "For"
 	},
+	"stance": {
+		"fortemente_favor": "Strongly for",
+		"levemente_favor": "Slightly for",
+		"misto": "Mixed",
+		"levemente_contra": "Slightly against",
+		"fortemente_contra": "Strongly against",
+		"sem_dados": "No data"
+	},
 	"positionSlider": {
 		"contra": "Against",
 		"contraLeve": "Slightly against",

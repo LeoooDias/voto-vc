@@ -5,7 +5,7 @@
 	import { api } from '$lib/api';
 	import { getTema, fmtPct, POSICAO_CATEGORIAS } from '$lib/constants';
 	import ScoreDots from '$lib/components/ScoreDots.svelte';
-	import { stanceLabel, stanceColor, stanceConcorda, userResponseToStance, expandPositions } from '$lib/utils/position';
+	import { stanceLabelKey, stanceColor, stanceConcorda, userResponseToStance, expandPositions } from '$lib/utils/position';
 	import type { PosicaoInferida, RespostaPosicaoItem } from '$lib/types/posicao';
 	import { respostas, carregarRespostas } from '$lib/stores/questionario';
 	import { respostasPosicoes, carregarRespostasPosicoes, posicaoItems, overridesPosicoes } from '$lib/stores/posicoes';
@@ -348,7 +348,7 @@
 											<div class="posicao-card">
 												<div class="posicao-info">
 													<span class="posicao-titulo">{pos.titulo}</span>
-													<span class="posicao-stance" style="color: {stanceColor(pos.stance)}">{stanceLabel(pos.stance)}</span>
+													<span class="posicao-stance" style="color: {stanceColor(pos.stance)}">{$_(stanceLabelKey(pos.stance))}</span>
 												</div>
 												{#if pos.score_pct != null}
 													<div class="posicao-bar">
@@ -358,7 +358,7 @@
 												{#if userStance}
 													<div class="posicao-user">
 														<span class="posicao-user-label">{$_('parlamentar.voce')}</span>
-														<span class="posicao-user-stance" style="color: {stanceColor(userStance.stance)}">{stanceLabel(userStance.stance)}</span>
+														<span class="posicao-user-stance" style="color: {stanceColor(userStance.stance)}">{$_(stanceLabelKey(userStance.stance))}</span>
 													</div>
 													<div class="posicao-bar user">
 														<div class="posicao-fill" style="width: {userStance.score_pct}%; background: {stanceColor(userStance.stance)}"></div>

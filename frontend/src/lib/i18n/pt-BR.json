@@ -494,6 +494,14 @@
 		"aFavorLeveTooltip": "A favor (leve)",
 		"aFavorTooltip": "A favor"
 	},
+	"stance": {
+		"fortemente_favor": "Fortemente a favor",
+		"levemente_favor": "Levemente a favor",
+		"misto": "Misto",
+		"levemente_contra": "Levemente contra",
+		"fortemente_contra": "Fortemente contra",
+		"sem_dados": "Sem dados"
+	},
 	"positionSlider": {
 		"contra": "Contra",
 		"contraLeve": "Contra leve",
