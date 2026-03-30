@@ -197,9 +197,10 @@ async def obter_partido(
 async def posicoes_partido(
     partido_id: int,
     uf: str | None = None,
+    lang: str = "pt-BR",
     db: AsyncSession = Depends(get_db),
 ):
-    return await inferir_posicoes_partido(db, partido_id, uf=uf)
+    return await inferir_posicoes_partido(db, partido_id, uf=uf, lang=lang)
 
 
 @router.post("/{partido_id}/comparacao")

@@ -18,6 +18,11 @@ export function setStoredLocale(locale: Locale): void {
 	}
 }
 
+/** Returns the current locale for API `lang` query params. */
+export function getLang(): string {
+	return getStoredLocale();
+}
+
 export function initI18n(): void {
 	const stored = getStoredLocale();
 	init({

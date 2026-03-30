@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { _ } from 'svelte-i18n';
+	import { getLang } from '$lib/i18n';
 	import { api } from '$lib/api';
 	import {
 		items,
@@ -82,7 +83,7 @@
 			// Pedir ao backend que exclua apenas proposições efetivamente votadas (sim/nao), não pular
 			const excludeIds = existing.filter((r) => r.voto !== 'pular').map((r) => r.proposicao_id);
 			const excludeParam = excludeIds.length > 0 ? `&exclude=${excludeIds.join(',')}` : '';
-			const data = await api.get<QuestionarioItem[]>(`/vote/items?n_items=50${excludeParam}`);
+			const data = await api.get<QuestionarioItem[]>(`/vote/items?n_items=50&lang=${getLang()}${excludeParam}`);
 
 			answeredCount = existing.filter((r) => r.voto !== 'pular').length;
 			items.set(data);

@@ -38,17 +38,22 @@ ANCHOR_IDS: set[int] = {
 }
 
 
-def _serialize(p: Proposicao, casas: list[str] | None = None) -> dict:
+def _serialize(p: Proposicao, casas: list[str] | None = None, lang: str = "pt-BR") -> dict:
     urls = urls_por_casa(p.id_externo, p.tipo, p.numero, p.ano)
     casas_list = [{"casa": c, "url": urls.get(c)} for c in (casas or [])]
+    resumo = p.resumo_cidadao
+    descricao = p.descricao_detalhada
+    if lang == "en":
+        resumo = p.resumo_cidadao_en or resumo
+        descricao = p.descricao_detalhada_en or descricao
     return {
         "proposicao_id": p.id,
         "tipo": p.tipo,
         "numero": p.numero,
         "ano": p.ano,
         "ementa": p.ementa,
-        "resumo": p.resumo_cidadao,
-        "descricao_detalhada": p.descricao_detalhada,
+        "resumo": resumo,
+        "descricao_detalhada": descricao,
         "tema": p.tema or "geral",
         "casas": casas_list,
     }
@@ -58,6 +63,7 @@ async def montar_questionario(
     db: AsyncSession,
     n_items: int = 50,
     exclude_ids: set[int] | None = None,
+    lang: str = "pt-BR",
 ) -> list[dict]:
     """Select proposições for the questionnaire.
 
@@ -111,7 +117,7 @@ async def montar_questionario(
     selected_ids: set[int] = {p.id for p in anchors}
 
     if len(selected) >= n_items:
-        return [_serialize(p, casas_by_prop.get(p.id)) for p in selected[:n_items]]
+        return [_serialize(p, casas_by_prop.get(p.id), lang=lang) for p in selected[:n_items]]
 
     # Phase 2: round-robin by tema
     # Within each tema, bicameral proposições come first (sorted by relevancia_score DESC),
@@ -144,4 +150,4 @@ async def montar_questionario(
         if not added_any:
             break
 
-    return [_serialize(p, casas_by_prop.get(p.id)) for p in selected]
+    return [_serialize(p, casas_by_prop.get(p.id), lang=lang) for p in selected]

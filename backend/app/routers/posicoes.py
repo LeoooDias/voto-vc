@@ -15,8 +15,8 @@ router = APIRouter()
 
 
 @router.get("/items")
-async def obter_posicoes(db: AsyncSession = Depends(get_db)):
-    return await listar_posicoes(db)
+async def obter_posicoes(lang: str = "pt-BR", db: AsyncSession = Depends(get_db)):
+    return await listar_posicoes(db, lang=lang)
 
 
 class ResponderPosicaoRequest(BaseModel):

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { _ } from 'svelte-i18n';
+	import { getLang } from '$lib/i18n';
 	import { api } from '$lib/api';
 	import { TEMAS, getTema } from '$lib/constants';
 
@@ -71,6 +72,7 @@
 			if (filtroAno) params.set('ano', filtroAno);
 			if (soSubstantivas) params.set('substantiva', 'true');
 			if (buscaDebounced) params.set('busca', buscaDebounced);
+			params.set('lang', getLang());
 			const res = await api.get<ProposicoesResponse>(`/proposicoes/?${params}`);
 			proposicoes = res.items;
 			totalPaginas = res.paginas;

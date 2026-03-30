@@ -11,7 +11,16 @@ from app.models.proposicao import Proposicao
 from app.models.votacao import Votacao, VotoParlamentar
 
 
-async def listar_posicoes(db: AsyncSession) -> list[dict]:
+def _t(obj: object, field: str, lang: str) -> str:
+    """Return translated field if lang=en and translation exists, else original."""
+    if lang == "en":
+        val = getattr(obj, f"{field}_en", None)
+        if val:
+            return val
+    return getattr(obj, field)
+
+
+async def listar_posicoes(db: AsyncSession, lang: str = "pt-BR") -> list[dict]:
     """Lista posições ativas com suas proposições."""
     result = await db.execute(
         select(Posicao)
@@ -39,13 +48,14 @@ async def listar_posicoes(db: AsyncSession) -> list[dict]:
         for pp in pos.proposicoes_rel:
             prop = props_map.get(pp.proposicao_id)
             if prop:
+                resumo = _t(prop, "resumo_cidadao", lang) if prop.resumo_cidadao else prop.ementa
                 props.append(
                     {
                         "proposicao_id": prop.id,
                         "tipo": prop.tipo,
                         "numero": prop.numero,
                         "ano": prop.ano,
-                        "resumo": prop.resumo_cidadao or prop.ementa,
+                        "resumo": resumo,
                         "direcao": pp.direcao.value,
                         "casa_origem": prop.casa_origem.value.lower(),
                     }
@@ -54,8 +64,8 @@ async def listar_posicoes(db: AsyncSession) -> list[dict]:
             {
                 "id": pos.id,
                 "slug": pos.slug,
-                "titulo": pos.titulo,
-                "descricao": pos.descricao,
+                "titulo": _t(pos, "titulo", lang),
+                "descricao": _t(pos, "descricao", lang),
                 "tema": pos.tema,
                 "ordem": pos.ordem,
                 "proposicoes": props,
@@ -141,7 +151,9 @@ async def _load_posicoes_map(db: AsyncSession) -> dict[int, list[dict]]:
     }
 
 
-async def inferir_posicoes_parlamentar(db: AsyncSession, parlamentar_id: int) -> list[dict]:
+async def inferir_posicoes_parlamentar(
+    db: AsyncSession, parlamentar_id: int, lang: str = "pt-BR"
+) -> list[dict]:
     """Infer a parlamentar's stance on each position based on their votes."""
     posicoes_map = await _load_posicoes_map(db)
 
@@ -232,7 +244,7 @@ async def inferir_posicoes_parlamentar(db: AsyncSession, parlamentar_id: int) ->
             {
                 "posicao_id": pos.id,
                 "slug": pos.slug,
-                "titulo": pos.titulo,
+                "titulo": _t(pos, "titulo", lang),
                 "tema": pos.tema,
                 "ordem": pos.ordem,
                 "stance": stance,
@@ -246,7 +258,7 @@ async def inferir_posicoes_parlamentar(db: AsyncSession, parlamentar_id: int) ->
 
 
 async def inferir_posicoes_partido(
-    db: AsyncSession, partido_id: int, uf: str | None = None
+    db: AsyncSession, partido_id: int, uf: str | None = None, lang: str = "pt-BR"
 ) -> list[dict]:
     """Infer a partido's stance on each position based on majority votes."""
     posicoes_map = await _load_posicoes_map(db)
@@ -268,7 +280,7 @@ async def inferir_posicoes_partido(
             {
                 "posicao_id": pos.id,
                 "slug": pos.slug,
-                "titulo": pos.titulo,
+                "titulo": _t(pos, "titulo", lang),
                 "tema": pos.tema,
                 "ordem": pos.ordem,
                 "stance": "sem_dados",
@@ -363,7 +375,7 @@ async def inferir_posicoes_partido(
             {
                 "posicao_id": pos.id,
                 "slug": pos.slug,
-                "titulo": pos.titulo,
+                "titulo": _t(pos, "titulo", lang),
                 "tema": pos.tema,
                 "ordem": pos.ordem,
                 "stance": stance,

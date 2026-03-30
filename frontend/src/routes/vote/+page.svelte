@@ -23,6 +23,7 @@
 	import { addToast } from '$lib/stores/toast';
 	import { browser } from '$app/environment';
 	import { _ } from 'svelte-i18n';
+	import { getLang } from '$lib/i18n';
 
 	const TIPOS_LEGENDA_KEYS: Record<string, string> = {
 		PL: 'vote.tipoPL',
@@ -138,7 +139,7 @@
 				}
 			}
 
-			const data = await api.get<PosicaoItem[]>('/posicoes/items');
+			const data = await api.get<PosicaoItem[]>(`/posicoes/items?lang=${getLang()}`);
 			items = data;
 			posicaoItems.set(data);
 			loaded = true;

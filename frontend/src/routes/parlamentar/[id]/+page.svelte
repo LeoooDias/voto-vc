@@ -11,6 +11,7 @@
 	import { respostasPosicoes, carregarRespostasPosicoes, posicaoItems, overridesPosicoes } from '$lib/stores/posicoes';
 	import { authUser, authLoading } from '$lib/stores/auth';
 	import { _ } from 'svelte-i18n';
+	import { getLang } from '$lib/i18n';
 
 	interface ParlamentarDetail {
 		id: number;
@@ -139,7 +140,7 @@
 			let items = get(posicaoItems);
 			if (items.length === 0) {
 				try {
-					items = await api.get('/posicoes/items');
+					items = await api.get(`/posicoes/items?lang=${getLang()}`);
 					posicaoItems.set(items);
 				} catch { /* ignore */ }
 			}
@@ -179,7 +180,7 @@
 			}
 
 			try {
-				posicoes = await api.get<PosicaoInferida[]>(`/parlamentares/${page.params.id}/posicoes`);
+				posicoes = await api.get<PosicaoInferida[]>(`/parlamentares/${page.params.id}/posicoes?lang=${getLang()}`);
 			} catch (e) {
 				console.error('Failed to load posições:', e);
 			}
@@ -337,7 +338,7 @@
 								<button class="posicao-cat-toggle" onclick={() => toggleCat(cat.id)}>
 									<h3 class="posicao-cat-label" style="color: {cat.cor}">
 										<span class="posicao-cat-dot" style="background: {cat.cor}"></span>
-										{cat.label}
+										{$_(cat.labelKey)}
 									</h3>
 									<svg class="cat-chevron" class:open={openCatIds.has(cat.id)} style="color: {cat.cor}" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
 								</button>

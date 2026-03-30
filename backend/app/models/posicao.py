@@ -12,7 +12,9 @@ class Posicao(Base, TimestampMixin):
     id: Mapped[int] = mapped_column(primary_key=True)
     slug: Mapped[str] = mapped_column(String(100), unique=True, index=True)
     titulo: Mapped[str] = mapped_column(String(200))
+    titulo_en: Mapped[str | None] = mapped_column(String(200))
     descricao: Mapped[str] = mapped_column(Text)
+    descricao_en: Mapped[str | None] = mapped_column(Text)
     tema: Mapped[str] = mapped_column(String(50))
     ordem: Mapped[int]
     ativo: Mapped[bool] = mapped_column(default=True)

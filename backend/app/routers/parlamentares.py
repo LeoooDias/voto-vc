@@ -145,8 +145,10 @@ async def obter_parlamentar(parlamentar_id: int, db: AsyncSession = Depends(get_
 
 
 @router.get("/{parlamentar_id}/posicoes")
-async def posicoes_parlamentar(parlamentar_id: int, db: AsyncSession = Depends(get_db)):
-    return await inferir_posicoes_parlamentar(db, parlamentar_id)
+async def posicoes_parlamentar(
+    parlamentar_id: int, lang: str = "pt-BR", db: AsyncSession = Depends(get_db)
+):
+    return await inferir_posicoes_parlamentar(db, parlamentar_id, lang=lang)
 
 
 @router.post("/{parlamentar_id}/comparacao")

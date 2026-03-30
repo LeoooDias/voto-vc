@@ -46,6 +46,7 @@ async def listar_proposicoes(
     ano: int | None = None,
     substantiva: bool | None = None,
     busca: str | None = None,
+    lang: str = "pt-BR",
     pagina: int = 1,
     itens: int = 50,
     db: AsyncSession = Depends(get_db),
@@ -87,6 +88,13 @@ async def listar_proposicoes(
         for k in casas_by_prop:
             casas_by_prop[k] = sorted(set(casas_by_prop[k]))
 
+    def _tfield(p: Proposicao, field: str) -> str | None:
+        if lang == "en":
+            val = getattr(p, f"{field}_en", None)
+            if val:
+                return val
+        return getattr(p, field)
+
     items = []
     for p in props:
         prop_urls = urls_por_casa(p.id_externo, p.tipo, p.numero, p.ano)
@@ -101,8 +109,8 @@ async def listar_proposicoes(
                 "ementa": (
                     (p.ementa[:150] + "...") if p.ementa and len(p.ementa) > 150 else p.ementa
                 ),
-                "resumo_cidadao": p.resumo_cidadao,
-                "descricao_detalhada": p.descricao_detalhada,
+                "resumo_cidadao": _tfield(p, "resumo_cidadao"),
+                "descricao_detalhada": _tfield(p, "descricao_detalhada"),
                 "tema": p.tema,
                 "substantiva": p.tipo in SUBSTANTIVE_TYPES,
                 "casas": casas,
@@ -123,11 +131,19 @@ class BatchRequest(BaseModel):
 @router.post("/batch")
 async def batch_proposicoes(
     body: BatchRequest,
+    lang: str = "pt-BR",
     db: AsyncSession = Depends(get_db),
 ):
     """Return proposição details for a list of IDs."""
     if not body.ids or len(body.ids) > 500:
         return []
+
+    def _tfield(p: Proposicao, field: str) -> str | None:
+        if lang == "en":
+            val = getattr(p, f"{field}_en", None)
+            if val:
+                return val
+        return getattr(p, field)
 
     query = select(Proposicao).where(Proposicao.id.in_(body.ids))
     result = await db.execute(query)
@@ -143,8 +159,8 @@ async def batch_proposicoes(
                 "tipo": p.tipo,
                 "numero": p.numero,
                 "ano": p.ano,
-                "resumo": p.resumo_cidadao,
-                "descricao_detalhada": p.descricao_detalhada,
+                "resumo": _tfield(p, "resumo_cidadao"),
+                "descricao_detalhada": _tfield(p, "descricao_detalhada"),
                 "tema": p.tema or "geral",
                 "casas": casas,
             }

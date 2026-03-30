@@ -57,7 +57,7 @@ export function getTema(slug: string | null | undefined) {
 
 export interface PosicaoCategoria {
 	id: string;
-	label: string;
+	labelKey: string;
 	cor: string;
 	ordens: number[];
 }
@@ -65,25 +65,25 @@ export interface PosicaoCategoria {
 export const POSICAO_CATEGORIAS: PosicaoCategoria[] = [
 	{
 		id: 'economia',
-		label: 'Economia & Tributação',
+		labelKey: 'posicaoCategoria.economia',
 		cor: '#CA8A04',
 		ordens: [1, 2, 3, 4, 5]
 	},
 	{
 		id: 'seguranca',
-		label: 'Segurança & Direitos Humanos',
+		labelKey: 'posicaoCategoria.seguranca',
 		cor: '#2563EB',
 		ordens: [6, 7, 11, 12, 13]
 	},
 	{
 		id: 'social',
-		label: 'Educação, Saúde & Meio Ambiente',
+		labelKey: 'posicaoCategoria.social',
 		cor: '#16A34A',
 		ordens: [9, 10, 17, 18, 19]
 	},
 	{
 		id: 'outros',
-		label: 'Outros temas',
+		labelKey: 'posicaoCategoria.outros',
 		cor: '#6B7280',
 		ordens: [8, 14, 15, 16, 20]
 	}

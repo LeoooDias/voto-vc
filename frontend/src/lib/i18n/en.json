@@ -502,6 +502,12 @@
 		"fortemente_contra": "Strongly against",
 		"sem_dados": "No data"
 	},
+	"posicaoCategoria": {
+		"economia": "Economy & Taxation",
+		"seguranca": "Security & Human Rights",
+		"social": "Education, Health & Environment",
+		"outros": "Other topics"
+	},
 	"positionSlider": {
 		"contra": "Against",
 		"contraLeve": "Slightly against",

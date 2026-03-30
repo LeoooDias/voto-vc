@@ -502,6 +502,12 @@
 		"fortemente_contra": "Fortemente contra",
 		"sem_dados": "Sem dados"
 	},
+	"posicaoCategoria": {
+		"economia": "Economia & Tributação",
+		"seguranca": "Segurança & Direitos Humanos",
+		"social": "Educação, Saúde & Meio Ambiente",
+		"outros": "Outros temas"
+	},
 	"positionSlider": {
 		"contra": "Contra",
 		"contraLeve": "Contra leve",
