@@ -210,7 +210,14 @@
 	}
 
 	function toggleExpand(posicaoId: number) {
-		expandedId = expandedId === posicaoId ? null : posicaoId;
+		const wasExpanded = expandedId === posicaoId;
+		expandedId = wasExpanded ? null : posicaoId;
+		if (!wasExpanded) {
+			tick().then(() => {
+				const el = document.querySelector(`[data-pos-id="${posicaoId}"]`);
+				if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+			});
+		}
 	}
 
 	function getOverridePos(proposicaoId: number): number | null {
@@ -381,7 +388,7 @@
 								{@const currentPos = getRespostaPos(pos.id)}
 								{@const isExpanded = expandedId === pos.id}
 								{@const temaInfo = getTema(pos.tema)}
-								<div class="pos-card" class:answered={currentPos != null}>
+								<div class="pos-card" class:answered={currentPos != null} data-pos-id={pos.id}>
 									<div class="pos-header">
 										<div class="pos-title-row">
 											<span class="pos-check" class:done={currentPos != null} style="border-color: {cat.cor}; background: {currentPos != null ? cat.cor : ''}">
@@ -516,6 +523,10 @@
 {/if}
 
 <style>
+	:global(main:has(.posicoes-page)) {
+		padding-top: 1rem;
+	}
+
 	.posicoes-page {
 		max-width: 650px;
 		margin: 0 auto;
@@ -670,6 +681,7 @@
 		border-radius: 0;
 		padding: 1.5rem;
 		transition: border-color 0.15s;
+		scroll-margin-top: 170px;
 	}
 
 	.pos-card.answered {
@@ -1282,6 +1294,10 @@
 		}
 
 		.cat-section {
+			scroll-margin-top: 150px;
+		}
+
+		.pos-card {
 			scroll-margin-top: 150px;
 		}
 	}

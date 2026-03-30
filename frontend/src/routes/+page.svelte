@@ -285,7 +285,7 @@
 		}
 
 		.hero {
-			padding: 5rem 0 3rem;
+			padding: 2rem 0 3rem;
 		}
 
 		.subtitle {
