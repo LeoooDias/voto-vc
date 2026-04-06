@@ -1066,24 +1066,25 @@
 	.onboarding-steps {
 		display: flex;
 		flex-direction: column;
-		gap: 1rem;
+		gap: 1.25rem;
 		margin-bottom: 1.5rem;
 	}
 
 	.onboarding-step {
 		display: flex;
-		align-items: flex-start;
-		gap: 0.75rem;
+		align-items: center;
+		gap: 1rem;
 	}
 
 	.onboarding-num {
-		width: 28px;
-		height: 28px;
+		width: 32px;
+		height: 32px;
+		min-width: 32px;
 		border-radius: 0;
 		background: var(--text-primary);
 		color: var(--bg-page);
 		font-weight: 900;
-		font-size: 0.75rem;
+		font-size: 0.813rem;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -1095,7 +1096,6 @@
 		color: var(--text-secondary);
 		font-size: 0.9rem;
 		line-height: 1.5;
-		padding-top: 0.15rem;
 	}
 
 	.onboarding-btn {
