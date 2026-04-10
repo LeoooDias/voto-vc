@@ -2,11 +2,10 @@
 	import { onMount } from 'svelte';
 	import { _, isLoading as i18nLoading } from 'svelte-i18n';
 	import { initI18n } from '$lib/i18n';
-	import { authUser, authLoading, checkAuth, logout } from '$lib/stores/auth';
 	import { initTheme } from '$lib/stores/theme';
 	import { initColorTheme } from '$lib/stores/colorTheme';
-	import { respostas, carregarRespostas } from '$lib/stores/questionario';
-	import { respostasPosicoes, carregarRespostasPosicoes } from '$lib/stores/posicoes';
+	import { respostas } from '$lib/stores/questionario';
+	import { respostasPosicoes } from '$lib/stores/posicoes';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
 	import Toast from '$lib/components/Toast.svelte';
 
@@ -27,20 +26,9 @@
 		menuOpen = false;
 	}
 
-	onMount(async () => {
+	onMount(() => {
 		initTheme();
 		initColorTheme();
-		const user = await checkAuth();
-		if (user) {
-			const saved = await carregarRespostas();
-			if (saved.length > 0) {
-				respostas.set(saved);
-			}
-			const savedPos = await carregarRespostasPosicoes();
-			if (savedPos.length > 0) {
-				respostasPosicoes.set(savedPos);
-			}
-		}
 	});
 </script>
 
@@ -77,18 +65,11 @@
 					{/if}
 					<a href="/vote" class="nav-vote" onclick={closeMenu}>{$_('nav.vote')}</a>
 				</div>
-				{#if !$authLoading}
 					<div class="nav-auth">
-						{#if $authUser}
-							<button class="nav-btn" onclick={() => { logout(); closeMenu(); }}>{$_('nav.sair')}</button>
-						{:else}
-							<a href="/login" class="nav-btn-login" onclick={closeMenu}>{$_('nav.entrar')}</a>
-						{/if}
 						<button class="nav-btn-icon" onclick={() => { settingsOpen = true; closeMenu(); }} title={$_('nav.configuracoes')} aria-label={$_('nav.abrirConfiguracoes')}>
 							<svg width="27" height="27" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
 						</button>
 					</div>
-				{/if}
 			</div>
 		</nav>
 	</header>
@@ -503,21 +484,6 @@
 		border-left: 1px solid var(--border);
 	}
 
-	.nav-btn {
-		background: none;
-		border: 1px solid var(--border);
-		border-radius: 6px;
-		padding: 0.375rem 0.75rem;
-		color: var(--text-secondary);
-		font-weight: 500;
-		cursor: pointer;
-		font-size: inherit;
-	}
-
-	.nav-btn:hover {
-		background: var(--bg-page);
-	}
-
 	.nav-btn-icon {
 		background: none;
 		border: none;
@@ -541,24 +507,6 @@
 		color: var(--border);
 		font-weight: 500;
 		cursor: default;
-	}
-
-	.nav-btn-login {
-		background: none;
-		color: var(--text-primary) !important;
-		text-decoration: none;
-		border-radius: 0;
-		padding: 0.375rem 0;
-		font-weight: 600;
-		font-size: 0.875rem;
-		border-bottom: 1.5px solid var(--text-primary);
-		transition: opacity 0.15s;
-	}
-
-	.nav-btn-login:hover {
-		background: none;
-		color: var(--text-primary) !important;
-		opacity: 0.6;
 	}
 
 	/* Menu overlay — only visible on mobile when menu is open */

@@ -2,9 +2,8 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { api } from '$lib/api';
-	import { authUser, authLoading } from '$lib/stores/auth';
-	import { selectedUf, respostas, carregarRespostas } from '$lib/stores/questionario';
-	import { respostasPosicoes, carregarRespostasPosicoes, posicaoItems, overridesPosicoes } from '$lib/stores/posicoes';
+	import { selectedUf, respostas } from '$lib/stores/questionario';
+	import { respostasPosicoes, posicaoItems, overridesPosicoes } from '$lib/stores/posicoes';
 	import { get } from 'svelte/store';
 	import { UF_SIGLAS, getTema, fmtPct, POSICAO_CATEGORIAS } from '$lib/constants';
 	import ScoreDots from '$lib/components/ScoreDots.svelte';
@@ -186,19 +185,7 @@
 
 	async function loadAllUserRespostas(): Promise<Array<{ proposicao_id: number; voto: string; peso: number }>> {
 		let directResps = get(respostas);
-		if (directResps.length === 0 && get(authUser)) {
-			const r = await carregarRespostas();
-			if (r.length > 0) {
-				respostas.set(r);
-				directResps = r;
-			}
-		}
-
 		let posResps = get(respostasPosicoes);
-		if (posResps.length === 0 && get(authUser)) {
-			posResps = await carregarRespostasPosicoes();
-			if (posResps.length > 0) respostasPosicoes.set(posResps);
-		}
 		userPosRespostas = new Map(posResps.map((r) => [r.posicao_id, r]));
 
 		if (posResps.length > 0) {
@@ -226,36 +213,18 @@
 		return directResps;
 	}
 
-	onMount(() => {
-		async function init() {
-			const user = get(authUser);
-			if (user?.uf) {
-				ufSelecionada = user.uf;
-			} else {
-				const storeUf = get(selectedUf);
-				if (storeUf) ufSelecionada = storeUf;
-			}
-			if (ufSelecionada) escopo = 'estado';
+	onMount(async () => {
+		const storeUf = get(selectedUf);
+		if (storeUf) ufSelecionada = storeUf;
+		if (ufSelecionada) escopo = 'estado';
 
-			const allRespostas = await loadAllUserRespostas();
-			if (allRespostas.length > 0) {
-				buildUserVotoMap(allRespostas);
-				userRespostas = allRespostas;
-			}
-
-			loadPartido();
+		const allRespostas = await loadAllUserRespostas();
+		if (allRespostas.length > 0) {
+			buildUserVotoMap(allRespostas);
+			userRespostas = allRespostas;
 		}
 
-		if (!get(authLoading)) {
-			init();
-			return;
-		}
-		const unsub = authLoading.subscribe((loading) => {
-			if (!loading) {
-				unsub();
-				init();
-			}
-		});
+		loadPartido();
 	});
 
 	function toggleExpand(idx: number) {

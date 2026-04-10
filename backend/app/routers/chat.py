@@ -11,19 +11,17 @@ from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
-from app.core.deps import get_current_user
 from app.database import get_db
 from app.models.posicao import Posicao, PosicaoProposicao
 from app.models.proposicao import Proposicao
-from app.models.usuario import Usuario
 from app.services.chat import stream_chat, stream_posicao_chat
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-# Simple in-memory rate limiter per user
-_user_timestamps: dict[int, list[float]] = defaultdict(list)
+# Simple in-memory rate limiter per IP
+_ip_timestamps: dict[str, list[float]] = defaultdict(list)
 
 
 def _parse_rate_limit(limit_str: str) -> tuple[int, int]:
@@ -35,18 +33,18 @@ def _parse_rate_limit(limit_str: str) -> tuple[int, int]:
     return count, seconds
 
 
-def _check_rate_limit(user_id: int) -> None:
+def _check_rate_limit(ip: str) -> None:
     max_count, window = _parse_rate_limit(settings.chat_rate_limit)
     now = time.time()
     cutoff = now - window
-    timestamps = _user_timestamps[user_id]
-    _user_timestamps[user_id] = [t for t in timestamps if t > cutoff]
-    if len(_user_timestamps[user_id]) >= max_count:
+    timestamps = _ip_timestamps[ip]
+    _ip_timestamps[ip] = [t for t in timestamps if t > cutoff]
+    if len(_ip_timestamps[ip]) >= max_count:
         raise HTTPException(
             status_code=429,
             detail=f"Limite de {max_count} mensagens/hora atingido.",
         )
-    _user_timestamps[user_id].append(now)
+    _ip_timestamps[ip].append(now)
 
 
 class ChatMessage(BaseModel):
@@ -65,13 +63,13 @@ async def chat_proposicao(
     proposicao_id: int,
     body: ChatRequest,
     request: Request,
-    usuario: Usuario = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     if not settings.anthropic_api_key:
         raise HTTPException(status_code=503, detail="Chat não configurado.")
 
-    _check_rate_limit(usuario.id)
+    client_ip = request.client.host if request.client else "unknown"
+    _check_rate_limit(client_ip)
 
     prop = await db.get(Proposicao, proposicao_id)
     if not prop:
@@ -103,13 +101,13 @@ async def chat_posicao(
     posicao_id: int,
     body: ChatRequest,
     request: Request,
-    usuario: Usuario = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     if not settings.anthropic_api_key:
         raise HTTPException(status_code=503, detail="Chat não configurado.")
 
-    _check_rate_limit(usuario.id)
+    client_ip = request.client.host if request.client else "unknown"
+    _check_rate_limit(client_ip)
 
     posicao = await db.get(Posicao, posicao_id)
     if not posicao:

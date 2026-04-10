@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { _, locale } from 'svelte-i18n';
 	import { getStoredLocale, setStoredLocale, type Locale } from '$lib/i18n';
-	import { authUser, checkAuth } from '$lib/stores/auth';
 	import { theme, setTheme, type Theme } from '$lib/stores/theme';
 	import { colorTheme, setColorTheme, COLOR_THEMES, type ColorTheme } from '$lib/stores/colorTheme';
 
@@ -18,18 +17,10 @@
 	import { get } from 'svelte/store';
 
 	let { open = $bindable(false) } = $props();
-	let selectedUf = $state(get(authUser)?.uf ?? '');
+	let selectedUf = $state(get(selectedUfStore));
 	let currentTheme: Theme = $state(get(theme));
 	let currentColorTheme: ColorTheme = $state(get(colorTheme));
-	let saving = $state(false);
 	let currentLocale: Locale = $state(getStoredLocale());
-
-	$effect(() => {
-		const user = $authUser;
-		if (user) {
-			selectedUf = user.uf ?? '';
-		}
-	});
 
 	$effect(() => {
 		currentTheme = $theme;
@@ -55,23 +46,8 @@
 		locale.set(l);
 	}
 
-	async function saveUf() {
-		if (!get(authUser)) return;
-		saving = true;
-		try {
-			const res = await fetch('/api/auth/me', {
-				method: 'PATCH',
-				credentials: 'include',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ uf: selectedUf || null })
-			});
-			if (res.ok) {
-				selectedUfStore.set(selectedUf);
-				await checkAuth();
-			}
-		} finally {
-			saving = false;
-		}
+	function saveUf() {
+		selectedUfStore.set(selectedUf);
 	}
 
 	function close() {
@@ -135,21 +111,14 @@
 
 		<div class="setting">
 			<span class="setting-label" id="settings-uf-label">{$_('settings.estado')}</span>
-			{#if $authUser}
-				<div class="uf-row">
-					<select bind:value={selectedUf} onchange={saveUf} aria-labelledby="settings-uf-label">
-						<option value="">{$_('settings.selecione')}</option>
-						{#each UF_SIGLAS as uf}
-							<option value={uf}>{uf}</option>
-						{/each}
-					</select>
-					{#if saving}
-						<span class="saving">{$_('settings.salvando')}</span>
-					{/if}
-				</div>
-			{:else}
-				<p class="hint">{$_('settings.entrarParaSalvar')}</p>
-			{/if}
+			<div class="uf-row">
+				<select bind:value={selectedUf} onchange={saveUf} aria-labelledby="settings-uf-label">
+					<option value="">{$_('settings.selecione')}</option>
+					{#each UF_SIGLAS as uf}
+						<option value={uf}>{uf}</option>
+					{/each}
+				</select>
+			</div>
 		</div>
 
 		<div class="setting">
@@ -296,17 +265,6 @@
 		color: var(--text-primary);
 		font-size: 0.938rem;
 		cursor: pointer;
-	}
-
-	.saving {
-		color: var(--text-secondary);
-		font-size: 0.813rem;
-	}
-
-	.hint {
-		color: var(--text-secondary);
-		font-size: 0.875rem;
-		margin: 0;
 	}
 
 	.theme-options {

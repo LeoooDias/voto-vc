@@ -7,11 +7,8 @@
 		items,
 		respostas,
 		currentIndex,
-		selectedUf,
-		salvarResposta,
-		carregarRespostas
+		selectedUf
 	} from '$lib/stores/questionario';
-	import { authUser, authLoading } from '$lib/stores/auth';
 	import VoteSlider from '$lib/components/VoteSlider.svelte';
 	import ChatWidget from '$lib/components/ChatWidget.svelte';
 	import { voteToPosition, positionToVote, voteLabel } from '$lib/utils/vote';
@@ -55,30 +52,11 @@
 		uf = sigla;
 		selectedUf.set(sigla);
 		loadQuestions();
-
-		// Persistir UF no perfil se logado
-		if (get(authUser)) {
-			fetch('/api/auth/me', {
-				method: 'PATCH',
-				credentials: 'include',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ uf: sigla })
-			});
-		}
 	}
 
 	async function loadQuestions() {
 		try {
-			// Coletar IDs já respondidos (do DB para logado, ou do store/localStorage)
-			const user = get(authUser);
 			let existing = get(respostas);
-			if (user) {
-				const saved = await carregarRespostas();
-				if (saved.length > 0) {
-					respostas.set(saved);
-					existing = saved;
-				}
-			}
 
 			// Pedir ao backend que exclua apenas proposições efetivamente votadas (sim/nao), não pular
 			const excludeIds = existing.filter((r) => r.voto !== 'pular').map((r) => r.proposicao_id);
@@ -96,31 +74,13 @@
 	}
 
 	async function initPage() {
-		if (!uf) {
-			const user = get(authUser);
-			if (user?.uf) {
-				uf = user.uf;
-				selectedUf.set(user.uf);
-			}
-		}
 		if (uf) {
 			await loadQuestions();
 		}
 	}
 
 	onMount(() => {
-		// Se auth já resolveu, iniciar direto
-		if (!get(authLoading)) {
-			initPage();
-			return;
-		}
-		// Senão, esperar auth resolver
-		const unsub = authLoading.subscribe((loading) => {
-			if (!loading) {
-				unsub();
-				initPage();
-			}
-		});
+		initPage();
 	});
 
 	items.subscribe((v) => (currentItems = v));
@@ -194,11 +154,6 @@
 			if (voto !== 'pular') answeredCount++;
 			return [...r, resposta];
 		});
-
-		// Salvar no backend se logado (fire-and-forget)
-		if (get(authUser)) {
-			salvarResposta(resposta);
-		}
 
 		if (idx + 1 >= currentItems.length) {
 			goto('/perfil');

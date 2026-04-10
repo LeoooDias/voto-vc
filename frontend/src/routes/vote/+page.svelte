@@ -2,13 +2,10 @@
 	import { onMount, tick } from 'svelte';
 	import { api } from '$lib/api';
 	import { selectedUf, respostas as respostasAvancado } from '$lib/stores/questionario';
-	import { authUser, authLoading } from '$lib/stores/auth';
 	import {
 		posicaoItems,
 		respostasPosicoes,
-		overridesPosicoes,
-		salvarRespostaPosicao,
-		carregarRespostasPosicoes
+		overridesPosicoes
 	} from '$lib/stores/posicoes';
 	import PositionSlider from '$lib/components/PositionSlider.svelte';
 	import VoteSlider from '$lib/components/VoteSlider.svelte';
@@ -117,28 +114,10 @@
 		uf = sigla;
 		selectedUf.set(sigla);
 		loadPositions();
-
-		if (get(authUser)) {
-			fetch('/api/auth/me', {
-				method: 'PATCH',
-				credentials: 'include',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ uf: sigla })
-			});
-		}
 	}
 
 	async function loadPositions() {
 		try {
-			const user = get(authUser);
-			if (user) {
-				const saved = await carregarRespostasPosicoes();
-				if (saved.length > 0) {
-					respostas = saved;
-					respostasPosicoes.set(saved);
-				}
-			}
-
 			const data = await api.get<PosicaoItem[]>(`/posicoes/items?lang=${getLang()}`);
 			items = data;
 			posicaoItems.set(data);
@@ -159,13 +138,6 @@
 	}
 
 	async function initPage() {
-		if (!uf) {
-			const user = get(authUser);
-			if (user?.uf) {
-				uf = user.uf;
-				selectedUf.set(user.uf);
-			}
-		}
 		if (uf) {
 			await loadPositions();
 		}
@@ -176,17 +148,7 @@
 	onMount(() => {
 		const header = document.querySelector('header');
 		if (header) headerHeight = header.offsetHeight;
-
-		if (!get(authLoading)) {
-			initPage();
-			return;
-		}
-		const unsub = authLoading.subscribe((loading) => {
-			if (!loading) {
-				unsub();
-				initPage();
-			}
-		});
+		initPage();
 	});
 
 	function getRespostaPos(posicaoId: number): number | null {
@@ -210,10 +172,6 @@
 		// Show brief "saved" feedback
 		savedFeedback = posicaoId;
 		setTimeout(() => { if (savedFeedback === posicaoId) savedFeedback = null; }, 1200);
-
-		if (get(authUser)) {
-			salvarRespostaPosicao(resposta);
-		}
 	}
 
 	function toggleExpand(posicaoId: number) {
@@ -274,13 +232,6 @@
 	async function resetarVotos() {
 		resetting = true;
 		try {
-			const user = get(authUser);
-			if (user) {
-				await Promise.all([
-					fetch('/api/posicoes/respostas', { method: 'DELETE', credentials: 'include' }),
-					fetch('/api/vote/respostas', { method: 'DELETE', credentials: 'include' })
-				]);
-			}
 			respostas = [];
 			overrides = [];
 			respostasPosicoes.set([]);

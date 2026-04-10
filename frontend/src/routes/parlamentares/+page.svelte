@@ -2,9 +2,8 @@
 	import { onMount } from 'svelte';
 	import { _ } from 'svelte-i18n';
 	import { api } from '$lib/api';
-	import { respostas, selectedUf, carregarRespostas } from '$lib/stores/questionario';
-	import { respostasPosicoes, carregarRespostasPosicoes } from '$lib/stores/posicoes';
-	import { authUser, authLoading } from '$lib/stores/auth';
+	import { respostas, selectedUf } from '$lib/stores/questionario';
+	import { respostasPosicoes } from '$lib/stores/posicoes';
 	import type { MatchResult, MatchResponse } from '$lib/types';
 	import { goto } from '$app/navigation';
 	import { get } from 'svelte/store';
@@ -120,42 +119,18 @@
 	async function init() {
 		userRespostas = get(respostas) as typeof userRespostas;
 		userPosRespostas = get(respostasPosicoes) as typeof userPosRespostas;
-		if (get(authUser)) {
-			if (userRespostas.length === 0) {
-				const saved = await carregarRespostas();
-				if (saved.length > 0) {
-					respostas.set(saved);
-					userRespostas = saved;
-				}
-			}
-			if (userPosRespostas.length === 0) {
-				const savedPos = await carregarRespostasPosicoes();
-				if (savedPos.length > 0) {
-					respostasPosicoes.set(savedPos);
-					userPosRespostas = savedPos;
-				}
-			}
-		}
 		if (userRespostas.length === 0 && userPosRespostas.length === 0) {
 			goto('/vote');
 			return;
 		}
-		const user = get(authUser);
-		if (user?.uf) {
-			ufSelecionada = user.uf;
-		} else {
-			const storeUf = get(selectedUf);
-			if (storeUf) ufSelecionada = storeUf;
-		}
+		const storeUf = get(selectedUf);
+		if (storeUf) ufSelecionada = storeUf;
 		if (ufSelecionada) escopo = 'estado';
 		await loadData();
 	}
 
 	onMount(() => {
-		if (!get(authLoading)) { init(); return; }
-		const unsub = authLoading.subscribe((l) => {
-			if (!l) { unsub(); init(); }
-		});
+		init();
 	});
 </script>
 

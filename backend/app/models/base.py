@@ -49,12 +49,6 @@ class DirecaoPosicao(enum.StrEnum):
     NAO = "nao"
 
 
-class ProvedorAuth(enum.StrEnum):
-    EMAIL = "email"
-    GOOGLE = "google"
-    MAGIC_LINK = "magic_link"
-
-
 # Mapeamento de valores brutos do CSV/API para orientação normalizada
 ORIENTACAO_NORMALIZADA: dict[str, str] = {
     "Sim": "sim",

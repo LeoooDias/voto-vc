@@ -17,7 +17,6 @@ from app.core.exceptions import generic_exception_handler, http_exception_handle
 from app.database import engine
 from app.middleware import RequestIdMiddleware
 from app.routers import (
-    auth,
     chat,
     matching,
     parlamentares,
@@ -100,7 +99,6 @@ app.include_router(proposicoes.router, prefix="/api/proposicoes", tags=["proposi
 app.include_router(questionario.router, prefix="/api/vote", tags=["vote"])
 app.include_router(matching.router, prefix="/api/matching", tags=["matching"])
 app.include_router(posicoes.router, prefix="/api/posicoes", tags=["posicoes"])
-app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(chat.router, prefix="/api/chat", tags=["chat"])
 
 

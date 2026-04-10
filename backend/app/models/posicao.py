@@ -1,9 +1,7 @@
-import uuid
-
 from sqlalchemy import ForeignKey, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import Base, DirecaoPosicao, TimestampMixin, VotoUsuario
+from app.models.base import Base, DirecaoPosicao, TimestampMixin
 
 
 class Posicao(Base, TimestampMixin):
@@ -37,14 +35,3 @@ class PosicaoProposicao(Base):
 
     posicao: Mapped[Posicao] = relationship(back_populates="proposicoes_rel")
     proposicao: Mapped["Proposicao"] = relationship(lazy="select")  # noqa: F821
-
-
-class RespostaPosicao(Base, TimestampMixin):
-    __tablename__ = "respostas_posicoes"
-    __table_args__ = (UniqueConstraint("usuario_id", "posicao_id", name="uq_resposta_posicao"),)
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    usuario_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("usuarios.id"), index=True)
-    posicao_id: Mapped[int] = mapped_column(ForeignKey("posicoes.id"))
-    voto: Mapped[VotoUsuario]
-    peso: Mapped[float] = mapped_column(default=1.0)

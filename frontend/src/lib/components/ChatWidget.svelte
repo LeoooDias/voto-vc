@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { _, locale } from 'svelte-i18n';
-	import { authUser } from '$lib/stores/auth';
 	import { marked } from 'marked';
 
 	interface Props {
@@ -95,17 +94,9 @@
 		try {
 			const res = await fetch(chatEndpoint, {
 				method: 'POST',
-				credentials: 'include',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ message: text, history, lang: $locale ?? 'pt-BR' })
 			});
-
-			if (res.status === 401) {
-				error = $_('chat.erroLogin');
-				messages = messages.slice(0, -1); // Remove placeholder
-				isStreaming = false;
-				return;
-			}
 
 			if (res.status === 429) {
 				error = $_('chat.erroLimite');
@@ -253,13 +244,7 @@
 			</div>
 		</div>
 
-		{#if !$authUser}
-			<div class="chat-login-prompt">
-				<p>{$_('chat.loginParaChat')}</p>
-				<a href="/login" class="chat-login-btn">{$_('chat.entrarComGoogle')}</a>
-			</div>
-		{:else}
-			<div class="chat-messages" bind:this={messagesEl} aria-live="polite">
+		<div class="chat-messages" bind:this={messagesEl} aria-live="polite">
 				{#if messages.length === 0}
 					<div class="chat-empty">
 						<p>{posicaoId ? $_('chat.pergunteQualquerPosicao') : $_('chat.pergunteQualquerProposicao')}</p>
@@ -313,8 +298,7 @@
 				>
 					<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
 				</button>
-			</div>
-		{/if}
+		</div>
 	</div>
 {/if}
 
@@ -666,40 +650,6 @@
 		color: var(--color-contra);
 		text-align: center;
 		padding: 0.5rem;
-	}
-
-	.chat-login-prompt {
-		padding: 2rem 1.5rem;
-		text-align: center;
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		gap: 1rem;
-	}
-
-	.chat-login-prompt p {
-		color: var(--text-secondary);
-		font-size: 0.9rem;
-		line-height: 1.5;
-		margin: 0;
-	}
-
-	.chat-login-btn {
-		display: inline-block;
-		background: var(--link);
-		color: white;
-		padding: 0.6rem 1.5rem;
-		border-radius: 8px;
-		text-decoration: none;
-		font-weight: 600;
-		font-size: 0.875rem;
-		transition: background 0.2s;
-	}
-
-	.chat-login-btn:hover {
-		background: var(--link-hover);
 	}
 
 	/* Typing indicator */

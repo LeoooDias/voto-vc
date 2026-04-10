@@ -7,9 +7,8 @@
 	import ScoreDots from '$lib/components/ScoreDots.svelte';
 	import { stanceLabelKey, stanceColor, stanceConcorda, userResponseToStance, expandPositions } from '$lib/utils/position';
 	import type { PosicaoInferida, RespostaPosicaoItem } from '$lib/types/posicao';
-	import { respostas, carregarRespostas } from '$lib/stores/questionario';
-	import { respostasPosicoes, carregarRespostasPosicoes, posicaoItems, overridesPosicoes } from '$lib/stores/posicoes';
-	import { authUser, authLoading } from '$lib/stores/auth';
+	import { respostas } from '$lib/stores/questionario';
+	import { respostasPosicoes, posicaoItems, overridesPosicoes } from '$lib/stores/posicoes';
 	import { _ } from 'svelte-i18n';
 	import { getLang } from '$lib/i18n';
 
@@ -117,22 +116,8 @@
 	}
 
 	async function loadAllUserRespostas(): Promise<Array<{ proposicao_id: number; voto: string; peso: number }>> {
-		// Direct respostas
 		let directResps = get(respostas);
-		if (directResps.length === 0 && get(authUser)) {
-			const r = await carregarRespostas();
-			if (r.length > 0) {
-				respostas.set(r);
-				directResps = r;
-			}
-		}
-
-		// Position respostas
 		let posResps = get(respostasPosicoes);
-		if (posResps.length === 0 && get(authUser)) {
-			posResps = await carregarRespostasPosicoes();
-			if (posResps.length > 0) respostasPosicoes.set(posResps);
-		}
 		userPosRespostas = new Map(posResps.map((r) => [r.posicao_id, r]));
 
 		// Expand position respostas into proposition-level
@@ -186,16 +171,7 @@
 			}
 		}
 
-		if (!get(authLoading)) {
-			await init();
-		} else {
-			const unsub = authLoading.subscribe((loading) => {
-				if (!loading) {
-					unsub();
-					init();
-				}
-			});
-		}
+		await init();
 	});
 
 	function toggleExpand(idx: number) {

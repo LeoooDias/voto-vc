@@ -35,7 +35,7 @@ pnpm check        # svelte-check
 - **Frontend**: SvelteKit 5, TypeScript, adapter-node, Svelte 5 runes (`$state`, `$derived`)
 - **Infra**: AWS us-east-1, Terraform, EC2 t4g.small (ARM64), CloudFront, Route 53
 - **CI/CD**: GitHub Actions on push to main → rsync → docker build → compose up
-- **Auth**: JWT (python-jose) + bcrypt (passlib) + Google OAuth 2.0
+- **Auth**: None — all features available anonymously, data stored in localStorage
 - **Chat**: Anthropic Claude Haiku 4.5 (proposição Q&A with tool use)
 
 ## Key conventions
@@ -58,8 +58,6 @@ pnpm check        # svelte-check
 - `votacoes` — roll call votes linked to proposições
 - `votos_parlamentares` — individual votes (enum: SIM, NAO, ABSTENCAO, AUSENTE, OBSTRUCAO, PRESENTE_SEM_VOTO)
 - `partidos` — parties with `sigla`
-- `usuarios` — user accounts (Google OAuth or email/password), `uf`, `provedor_auth`
-- `respostas_usuarios` — user answers to proposições (`usuario_id`, `proposicao_id`, `voto`, `peso`)
 
 ## Important files
 
@@ -69,8 +67,7 @@ pnpm check        # svelte-check
 - `backend/app/ingestion/normalize.py` — API data normalization
 - `backend/app/routers/parlamentares.py` — parlamentar detail + voting history
 - `backend/app/routers/partidos.py` — partido detail + aggregated voting + disciplina
-- `backend/app/routers/auth.py` — Google OAuth + JWT auth + user profile
-- `backend/app/routers/questionario.py` — vote endpoints (items, responder, respostas)
+- `backend/app/routers/questionario.py` — vote endpoint (items)
 - `backend/app/services/chat.py` — proposição chatbot (Claude Haiku 4.5 with tool use)
 - `backend/app/routers/chat.py` — SSE streaming chat endpoint
 - `backend/app/utils.py` — URL generation (`url_proposicao`, `urls_por_casa`)
@@ -84,8 +81,6 @@ pnpm check        # svelte-check
 - `frontend/src/routes/parlamentar/[id]/+page.svelte` — parlamentar profile with expandable votes
 - `frontend/src/routes/partido/[id]/+page.svelte` — partido profile with aggregated votes + disciplina
 - `frontend/src/lib/stores/questionario.ts` — respostas/UF stores with localStorage persistence
-- `frontend/src/lib/stores/auth.ts` — auth state (authUser, checkAuth, logout)
-- `frontend/src/routes/auth/callback/+page.svelte` — OAuth callback + anonymous data migration
 - `infra/cloudfront.tf` — CDN + SSL config
 - `.github/workflows/deploy.yml` — CI/CD pipeline
 
@@ -100,11 +95,11 @@ pnpm check        # svelte-check
 
 ## Key patterns
 
-- Anonymous users: respostas + UF persisted in localStorage, migrated to DB on login
+- All users anonymous: respostas + UF persisted in localStorage only
 - Questionnaire: backend accepts `exclude` param with already-answered IDs to always serve fresh questions
 - Casa pills: proposições link to both Câmara and Senado pages via `urls_por_casa()` (direct URL or search fallback)
 - Vote endpoints mounted at `/api/vote/` (router in `questionario.py`)
-- Chat endpoint at `/api/chat/proposicao/{id}` — SSE streaming, auth required, rate limited (30/hour)
+- Chat endpoint at `/api/chat/proposicao/{id}` — SSE streaming, rate limited per IP (30/hour)
 - Vote slider: 5 positions map to voto (sim/nao) + peso (0.0–1.0 in 0.5 steps); Neutro = sim with peso=0
 - Score display: 5 dots (empty/half/full) using Bayesian confidence-adjusted score (K=5); raw score not shown
 - Matching: Neutro (peso=0) treated same as Pular — excluded from all calculations
@@ -117,7 +112,7 @@ pnpm check        # svelte-check
 
 - Don't use `pip install` — use `uv` for backend deps
 - Don't use Svelte legacy reactive syntax (`$:`, `export let`) — use runes
-- Don't commit `terraform.tfvars` or `.env` (contain secrets)
+- Don't commit `terraform.tfvars` or `.env`
 - Don't push force to main
 - Don't run `uv run` inside docker exec (hangs) — use `/app/.venv/bin/python` directly
 

@@ -2,10 +2,9 @@
 	import { _ } from 'svelte-i18n';
 	import { onMount } from 'svelte';
 	import { api } from '$lib/api';
-	import { respostas, selectedUf, carregarRespostas } from '$lib/stores/questionario';
-	import { respostasPosicoes, carregarRespostasPosicoes } from '$lib/stores/posicoes';
+	import { respostas, selectedUf } from '$lib/stores/questionario';
+	import { respostasPosicoes } from '$lib/stores/posicoes';
 	import type { RespostaPosicaoItem } from '$lib/types/posicao';
-	import { authUser, authLoading } from '$lib/stores/auth';
 	import { resultados, resultadosPartidos, loading } from '$lib/stores/resultado';
 	import type { MatchResult, PartidoMatchResult, MatchResponse, RespostaItem } from '$lib/types';
 	import { goto } from '$app/navigation';
@@ -94,53 +93,24 @@
 		loadMatching();
 	}
 
-	onMount(() => {
-		async function init() {
-			userRespostas = get(respostas);
-			userPosicaoRespostas = get(respostasPosicoes);
+	onMount(async () => {
+		userRespostas = get(respostas);
+		userPosicaoRespostas = get(respostasPosicoes);
 
-			if (userRespostas.length === 0 && get(authUser)) {
-				const saved = await carregarRespostas();
-				if (saved.length > 0) {
-					respostas.set(saved);
-					userRespostas = saved;
-				}
-			}
+		if (userRespostas.length === 0 && userPosicaoRespostas.length === 0) {
+			goto('/vote');
+			return;
+		}
 
-			// Load posicao respostas from DB if logged in
-			if (userPosicaoRespostas.length === 0 && get(authUser)) {
-				const savedPos = await carregarRespostasPosicoes();
-				if (savedPos.length > 0) {
-					respostasPosicoes.set(savedPos);
-					userPosicaoRespostas = savedPos;
-				}
-			}
-
-			if (userRespostas.length === 0 && userPosicaoRespostas.length === 0) {
-				goto('/vote');
-				return;
-			}
-
-			const directCount = userRespostas.filter((r) => r.voto !== 'pular').length;
+		const directCount = userRespostas.filter((r) => r.voto !== 'pular').length;
 		const posCount = userPosicaoRespostas.filter((r) => r.voto !== 'pular').length;
 		totalRespostas = directCount + posCount;
 
-			const user = get(authUser);
-			if (user?.uf) {
-				ufSelecionada = user.uf;
-			} else {
-				const storeUf = get(selectedUf);
-				if (storeUf) ufSelecionada = storeUf;
-			}
-			if (ufSelecionada) escopo = 'estado';
+		const storeUf = get(selectedUf);
+		if (storeUf) ufSelecionada = storeUf;
+		if (ufSelecionada) escopo = 'estado';
 
-			await loadMatching();
-		}
-
-		if (!get(authLoading)) { init(); return; }
-		const unsub = authLoading.subscribe((l) => {
-			if (!l) { unsub(); init(); }
-		});
+		await loadMatching();
 	});
 </script>
 
@@ -270,12 +240,6 @@
 			</div>
 		{/if}
 
-		{#if !$authUser}
-			<div class="cta-section">
-				<p>{$_('perfil.salvarRespostas')}</p>
-				<a href="/login" class="cta">{$_('perfil.entrarComGoogle')}</a>
-			</div>
-		{/if}
 	</div>
 {/if}
 
@@ -539,43 +503,6 @@
 	.score {
 		display: flex;
 		align-items: center;
-	}
-
-	/* CTA */
-	.cta-section {
-		text-align: center;
-		margin-top: 4rem;
-		padding: 3rem 2rem;
-		background: transparent;
-		border: none;
-		border-top: 1px solid var(--border);
-		border-radius: 0;
-	}
-
-	.cta-section p {
-		color: var(--text-secondary);
-		margin-bottom: 1.5rem;
-		font-size: 0.875rem;
-	}
-
-	.cta {
-		display: inline-block;
-		background: var(--text-primary);
-		color: var(--bg-page);
-		padding: 0.875rem 2.5rem;
-		border-radius: 0;
-		text-decoration: none;
-		font-family: var(--font-heading);
-		font-weight: 800;
-		font-size: 0.75rem;
-		text-transform: uppercase;
-		letter-spacing: 0.08em;
-		transition: opacity 0.2s;
-	}
-
-	.cta:hover {
-		background: var(--text-primary);
-		opacity: 0.85;
 	}
 
 	.loading, .empty {

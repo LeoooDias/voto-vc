@@ -2,15 +2,11 @@ from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
 from slowapi import Limiter
 from slowapi.util import get_remote_address
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
-from app.core.deps import get_optional_user
 from app.database import get_db
 from app.models.base import VotoUsuario
-from app.models.posicao import RespostaPosicao
-from app.models.usuario import RespostaUsuario, Usuario
 from app.services.matching import calcular_matching
 from app.services.posicoes import _load_posicoes_map, expandir_posicoes_para_respostas
 
@@ -46,39 +42,9 @@ async def calcular(
     request: Request,
     body: CalcularRequest,
     db: AsyncSession = Depends(get_db),
-    usuario: Usuario | None = Depends(get_optional_user),
 ):
     respostas = list(body.respostas)
     posicao_respostas = list(body.posicao_respostas)
-
-    # Se user logado e não mandou respostas, buscar do DB
-    if not respostas and not posicao_respostas and usuario:
-        result = await db.execute(
-            select(RespostaUsuario).where(RespostaUsuario.usuario_id == usuario.id)
-        )
-        db_respostas = result.scalars().all()
-        respostas = [
-            RespostaItem(
-                proposicao_id=r.proposicao_id,
-                voto=r.voto,
-                peso=r.peso,
-            )
-            for r in db_respostas
-        ]
-
-        # Also load posicao respostas from DB
-        pos_result = await db.execute(
-            select(RespostaPosicao).where(RespostaPosicao.usuario_id == usuario.id)
-        )
-        db_pos = pos_result.scalars().all()
-        posicao_respostas = [
-            PosicaoRespostaItem(
-                posicao_id=r.posicao_id,
-                voto=r.voto,
-                peso=r.peso,
-            )
-            for r in db_pos
-        ]
 
     # Expand posicao_respostas into per-proposition respostas
     if posicao_respostas:
