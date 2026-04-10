@@ -51,6 +51,25 @@ export interface MatchResponse {
 	partidos: PartidoMatchResult[];
 }
 
+export interface VotoDetalhado {
+	proposicao_id: number;
+	tipo: string;
+	numero: number;
+	ano: number;
+	resumo: string;
+	voto: 'sim' | 'nao';
+	peso: number;
+}
+
+export interface PerfilCompartilhado {
+	slug: string;
+	created_at: string;
+	total_respostas: number;
+	parlamentares: MatchResult[];
+	partidos: PartidoMatchResult[];
+	votos_detalhados: VotoDetalhado[];
+}
+
 export interface Parlamentar {
 	id: number;
 	nome_parlamentar: string;

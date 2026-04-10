@@ -11,6 +11,8 @@
 	import { get } from 'svelte/store';
 	import { UF_SIGLAS, getTema } from '$lib/constants';
 	import ScoreDots from '$lib/components/ScoreDots.svelte';
+	import ShareModal from '$lib/components/ShareModal.svelte';
+	import { addToast } from '$lib/stores/toast';
 
 	let parlResults: MatchResult[] = $state([]);
 	let partidoResults: PartidoMatchResult[] = $state([]);
@@ -46,6 +48,33 @@
 
 	let userRespostas: RespostaItem[] = $state([]);
 	let userPosicaoRespostas: RespostaPosicaoItem[] = $state([]);
+	let sharing = $state(false);
+	let shareModalOpen = $state(false);
+	let shareUrl = $state('');
+	let cachedSlug = $state('');
+
+	async function compartilhar() {
+		if (cachedSlug) {
+			shareUrl = `${window.location.origin}/p/${cachedSlug}`;
+			shareModalOpen = true;
+			return;
+		}
+		sharing = true;
+		try {
+			const body: Record<string, unknown> = { respostas: userRespostas };
+			if (userPosicaoRespostas.length > 0) {
+				body.posicao_respostas = userPosicaoRespostas;
+			}
+			const data = await api.post<{ slug: string; url: string }>('/perfil/compartilhar', body);
+			cachedSlug = data.slug;
+			shareUrl = data.url;
+			shareModalOpen = true;
+		} catch {
+			addToast($_('compartilhar.erro'), 'error');
+		} finally {
+			sharing = false;
+		}
+	}
 
 	resultados.subscribe((v) => (parlResults = v));
 	resultadosPartidos.subscribe((v) => (partidoResults = v));
@@ -147,6 +176,14 @@
 		<p class="result-eyebrow">{$_('perfil.resultado')}</p>
 		<h1>{$_('perfil.seuAlinhamento')}</h1>
 		<p class="subtitle">{$_('perfil.baseadoNos', { values: { count: totalRespostas } })} · <a href="/sobre#metodologia" class="methodology-link">{$_('perfil.comoCalculado')}</a></p>
+
+		<div class="share-row">
+			<button class="share-btn" onclick={compartilhar} disabled={sharing}>
+				{sharing ? $_('compartilhar.gerando') : $_('compartilhar.botao')}
+			</button>
+		</div>
+
+		<ShareModal bind:open={shareModalOpen} url={shareUrl} />
 
 		<div class="tabs" role="tablist">
 			<button class="tab" class:active={tab === 'partidos'} role="tab" aria-selected={tab === 'partidos'} onclick={() => tab = 'partidos'}>
@@ -285,6 +322,36 @@
 
 	.methodology-link:hover {
 		text-decoration: underline;
+	}
+
+	/* Share button */
+	.share-row {
+		text-align: center;
+		margin-bottom: 2rem;
+	}
+
+	.share-btn {
+		padding: 0.75rem 2rem;
+		border: 1.5px solid var(--text-primary);
+		border-radius: 0;
+		background: var(--text-primary);
+		color: var(--bg-page);
+		font-family: var(--font-heading);
+		font-size: 0.75rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		cursor: pointer;
+		transition: opacity 0.15s;
+	}
+
+	.share-btn:hover:not(:disabled) {
+		opacity: 0.85;
+	}
+
+	.share-btn:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
 	}
 
 	/* Escopo toggle */

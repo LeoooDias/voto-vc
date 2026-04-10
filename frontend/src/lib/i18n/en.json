@@ -568,6 +568,34 @@
 		"substantiva": "Substantive",
 		"semDescricao": "No description"
 	},
+	"compartilhar": {
+		"botao": "Share profile",
+		"gerando": "Generating link...",
+		"titulo": "Share your profile",
+		"copiar": "Copy link",
+		"copiado": "Copied!",
+		"whatsapp": "Share on WhatsApp",
+		"mensagem": "Check out my political alignment! 🗳️",
+		"erro": "Error generating link. Try again."
+	},
+	"perfilCompartilhado": {
+		"title": "Political alignment — voto.vc",
+		"seuAlinhamento": "Political alignment",
+		"baseadoNos": "Based on {count} votes",
+		"partidos": "Parties",
+		"parlamentares": "Representatives",
+		"votos": "Votes",
+		"cta": "Discover your alignment",
+		"ctaRodape": "Create your profile",
+		"sim": "YES",
+		"nao": "NO",
+		"semPartido": "No party",
+		"deputada": "Deputy (F)",
+		"deputado": "Deputy",
+		"senadora": "Senator (F)",
+		"senador": "Senator",
+		"votosEmComum": "{concordou}/{total} votes in common"
+	},
 	"common": {
 		"carregando": "Loading...",
 		"erro": "Error",

@@ -14,6 +14,7 @@ class Settings(BaseSettings):
 
     rate_limit_default: str = "60/minute"
     rate_limit_matching: str = "20/minute"
+    rate_limit_share: str = "5/minute"
 
     frontend_url: str = "http://localhost:5173"
 

@@ -1,5 +1,6 @@
 from app.models.parlamentar import Parlamentar
 from app.models.partido import BlocoParlamentar, OrientacaoBancada, Partido, bloco_partido
+from app.models.perfil import PerfilCompartilhado
 from app.models.posicao import Posicao, PosicaoProposicao
 from app.models.proposicao import Proposicao
 from app.models.topico import ProposicaoTopico, Topico
@@ -10,6 +11,7 @@ __all__ = [
     "OrientacaoBancada",
     "Parlamentar",
     "Partido",
+    "PerfilCompartilhado",
     "Posicao",
     "PosicaoProposicao",
     "Proposicao",

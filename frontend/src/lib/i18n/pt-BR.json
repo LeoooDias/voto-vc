@@ -580,6 +580,34 @@
 		"paginaInicial": "Página inicial",
 		"comeceAVotar": "Comece a votar"
 	},
+	"compartilhar": {
+		"botao": "Compartilhar perfil",
+		"gerando": "Gerando link...",
+		"titulo": "Compartilhe seu perfil",
+		"copiar": "Copiar link",
+		"copiado": "Copiado!",
+		"whatsapp": "Compartilhar no WhatsApp",
+		"mensagem": "Descubra meu alinhamento político! 🗳️",
+		"erro": "Erro ao gerar link. Tente novamente."
+	},
+	"perfilCompartilhado": {
+		"title": "Alinhamento político — voto.vc",
+		"seuAlinhamento": "Alinhamento político",
+		"baseadoNos": "Baseado em {count} votos",
+		"partidos": "Partidos",
+		"parlamentares": "Parlamentares",
+		"votos": "Votos",
+		"cta": "Descubra seu alinhamento",
+		"ctaRodape": "Faça o seu perfil",
+		"sim": "SIM",
+		"nao": "NÃO",
+		"semPartido": "Sem partido",
+		"deputada": "Deputada",
+		"deputado": "Deputado",
+		"senadora": "Senadora",
+		"senador": "Senador",
+		"votosEmComum": "{concordou}/{total} votos em comum"
+	},
 	"common": {
 		"carregando": "Carregando...",
 		"erro": "Erro",
