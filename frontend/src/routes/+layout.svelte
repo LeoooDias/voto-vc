@@ -84,6 +84,7 @@
 
 	<footer>
 		<p>{$_('footer.slogan')}</p>
+		<p class="footer-links"><a href="/privacidade">{$_('footer.privacidade')}</a></p>
 		<p class="footer-company"><a href="https://clearworks.ca" target="_blank" rel="noopener noreferrer">© 2026 ClearWorks Foundry Inc.</a></p>
 	</footer>
 </div>
@@ -538,7 +539,22 @@
 		margin: 0;
 	}
 
-.footer-company {
+.footer-links {
+		margin: 0.5rem 0 0;
+		font-size: 0.75rem;
+	}
+
+	.footer-links a {
+		color: var(--text-footer);
+		text-decoration: none;
+	}
+
+	.footer-links a:hover {
+		color: var(--text-footer-hover);
+		text-decoration: underline;
+	}
+
+	.footer-company {
 		margin: 0.5rem 0 0;
 		font-size: 0.688rem;
 		letter-spacing: 0.08em;

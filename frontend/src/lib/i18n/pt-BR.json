@@ -13,7 +13,8 @@
 		"desbloquear": "Responda ao menos 10 proposições para desbloquear"
 	},
 	"footer": {
-		"slogan": "voto.vc — seja representado"
+		"slogan": "voto.vc — seja representado",
+		"privacidade": "Política de Privacidade"
 	},
 	"settings": {
 		"titulo": "Configurações",
@@ -607,6 +608,42 @@
 		"senadora": "Senadora",
 		"senador": "Senador",
 		"votosEmComum": "{concordou}/{total} votos em comum"
+	},
+	"privacidade": {
+		"title": "Política de Privacidade — voto.vc",
+		"h1": "Política de Privacidade",
+		"ultimaAtualizacao": "Última atualização: 9 de abril de 2026",
+		"resumoTitulo": "Resumo",
+		"resumoDesc": "O voto.vc foi projetado para funcionar sem coletar dados pessoais. Não exigimos cadastro, não usamos cookies de rastreamento e não armazenamos suas respostas em nossos servidores — a menos que você escolha compartilhar seu perfil.",
+		"quaisColetamosTitulo": "Quais dados coletamos",
+		"naoColetamos": "O voto.vc não coleta:",
+		"naoColetamos1": "Nome, e-mail ou qualquer informação de identificação pessoal",
+		"naoColetamos2": "Cookies de rastreamento ou publicidade",
+		"naoColetamos3": "Dados de geolocalização",
+		"naoColetamos4": "Dados de navegação entre páginas",
+		"armazenamentoLocalTitulo": "Armazenamento local",
+		"armazenamentoLocalDesc": "Suas respostas ao questionário e estado (UF) selecionado são armazenados exclusivamente no seu navegador (localStorage). Esses dados nunca são enviados para nossos servidores automaticamente. Você pode apagá-los a qualquer momento limpando os dados do navegador.",
+		"perfilCompartilhadoTitulo": "Perfis compartilhados",
+		"perfilCompartilhadoDesc": "Quando você clica em \"Compartilhar perfil\", um snapshot das suas respostas e resultados é salvo em nosso servidor para gerar uma URL pública. Este snapshot inclui:",
+		"perfilCompartilhado1": "Suas respostas às proposições (voto e peso)",
+		"perfilCompartilhado2": "O ranking de parlamentares e partidos calculado",
+		"perfilCompartilhado3": "Um hash anonimizado do seu endereço IP (para prevenção de abuso)",
+		"perfilCompartilhadoNota": "Perfis compartilhados são públicos — qualquer pessoa com o link pode vê-los. Não é possível associar um perfil compartilhado a uma pessoa específica.",
+		"calculoAlinhamentoTitulo": "Cálculo de alinhamento",
+		"calculoAlinhamentoDesc": "Quando você visualiza seu perfil, suas respostas são enviadas temporariamente ao servidor para calcular o alinhamento com parlamentares e partidos. Esses dados são processados em memória e não são armazenados.",
+		"chatTitulo": "Chat sobre proposições",
+		"chatDesc": "O recurso de chat usa inteligência artificial (Claude, da Anthropic) para responder perguntas sobre proposições. As mensagens são processadas pela API da Anthropic e não são armazenadas por nós. O rate limiting é feito por endereço IP, mas o IP não é armazenado permanentemente.",
+		"terceirosTitulo": "Serviços de terceiros",
+		"terceirosDesc": "O voto.vc utiliza:",
+		"terceiros1": "AWS CloudFront como CDN (pode registrar logs de acesso padrão)",
+		"terceiros2": "Anthropic Claude API para o chat (política de privacidade da Anthropic se aplica às interações de chat)",
+		"terceirosNota": "Não utilizamos Google Analytics, Facebook Pixel ou qualquer serviço de rastreamento de terceiros.",
+		"direitosTitulo": "Seus direitos",
+		"direitosDesc": "Como não coletamos dados pessoais identificáveis, não há dados pessoais para acessar, corrigir ou excluir. Se você compartilhou um perfil e deseja removê-lo, entre em contato conosco.",
+		"contatoTitulo": "Contato",
+		"contatoDesc": "Para questões sobre privacidade, entre em contato através do repositório do projeto no GitHub.",
+		"alteracoesTitulo": "Alterações nesta política",
+		"alteracoesDesc": "Esta política pode ser atualizada periodicamente. Alterações significativas serão comunicadas na página principal do site."
 	},
 	"common": {
 		"carregando": "Carregando...",

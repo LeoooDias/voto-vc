@@ -24,6 +24,17 @@ export function getLang(): string {
 }
 
 export function initI18n(): void {
+	// Check URL ?lang= parameter
+	if (typeof window !== 'undefined') {
+		const params = new URLSearchParams(window.location.search);
+		const lang = params.get('lang')?.toUpperCase();
+		if (lang === 'EN') {
+			setStoredLocale('en');
+		} else if (lang === 'PT') {
+			setStoredLocale('pt-BR');
+		}
+	}
+
 	const stored = getStoredLocale();
 	init({
 		fallbackLocale: 'pt-BR',

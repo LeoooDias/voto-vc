@@ -13,7 +13,8 @@
 		"desbloquear": "Answer at least 10 propositions to unlock"
 	},
 	"footer": {
-		"slogan": "voto.vc — be represented"
+		"slogan": "voto.vc — be represented",
+		"privacidade": "Privacy Policy"
 	},
 	"settings": {
 		"titulo": "Settings",
@@ -595,6 +596,42 @@
 		"senadora": "Senator (F)",
 		"senador": "Senator",
 		"votosEmComum": "{concordou}/{total} votes in common"
+	},
+	"privacidade": {
+		"title": "Privacy Policy — voto.vc",
+		"h1": "Privacy Policy",
+		"ultimaAtualizacao": "Last updated: April 9, 2026",
+		"resumoTitulo": "Summary",
+		"resumoDesc": "voto.vc is designed to work without collecting personal data. We don't require registration, don't use tracking cookies, and don't store your answers on our servers — unless you choose to share your profile.",
+		"quaisColetamosTitulo": "What data we collect",
+		"naoColetamos": "voto.vc does not collect:",
+		"naoColetamos1": "Name, email, or any personally identifiable information",
+		"naoColetamos2": "Tracking or advertising cookies",
+		"naoColetamos3": "Geolocation data",
+		"naoColetamos4": "Cross-page browsing data",
+		"armazenamentoLocalTitulo": "Local storage",
+		"armazenamentoLocalDesc": "Your questionnaire answers and selected state (UF) are stored exclusively in your browser (localStorage). This data is never automatically sent to our servers. You can delete it at any time by clearing your browser data.",
+		"perfilCompartilhadoTitulo": "Shared profiles",
+		"perfilCompartilhadoDesc": "When you click \"Share profile\", a snapshot of your answers and results is saved on our server to generate a public URL. This snapshot includes:",
+		"perfilCompartilhado1": "Your answers to propositions (vote and weight)",
+		"perfilCompartilhado2": "The calculated representative and party ranking",
+		"perfilCompartilhado3": "An anonymized hash of your IP address (for abuse prevention)",
+		"perfilCompartilhadoNota": "Shared profiles are public — anyone with the link can view them. It is not possible to associate a shared profile with a specific person.",
+		"calculoAlinhamentoTitulo": "Alignment calculation",
+		"calculoAlinhamentoDesc": "When you view your profile, your answers are temporarily sent to the server to calculate alignment with representatives and parties. This data is processed in memory and is not stored.",
+		"chatTitulo": "Proposition chat",
+		"chatDesc": "The chat feature uses artificial intelligence (Claude, by Anthropic) to answer questions about propositions. Messages are processed by the Anthropic API and are not stored by us. Rate limiting is done by IP address, but the IP is not permanently stored.",
+		"terceirosTitulo": "Third-party services",
+		"terceirosDesc": "voto.vc uses:",
+		"terceiros1": "AWS CloudFront as a CDN (may log standard access logs)",
+		"terceiros2": "Anthropic Claude API for chat (Anthropic's privacy policy applies to chat interactions)",
+		"terceirosNota": "We do not use Google Analytics, Facebook Pixel, or any third-party tracking service.",
+		"direitosTitulo": "Your rights",
+		"direitosDesc": "Since we do not collect identifiable personal data, there is no personal data to access, correct, or delete. If you shared a profile and wish to remove it, please contact us.",
+		"contatoTitulo": "Contact",
+		"contatoDesc": "For privacy questions, please reach out through the project's GitHub repository.",
+		"alteracoesTitulo": "Changes to this policy",
+		"alteracoesDesc": "This policy may be updated periodically. Significant changes will be communicated on the site's main page."
 	},
 	"common": {
 		"carregando": "Loading...",
