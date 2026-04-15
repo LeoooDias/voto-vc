@@ -16,20 +16,24 @@
 
 	<section class="quem-somos">
 		<h2>{$_('sobre.quemSomos')}</h2>
-		<div class="headshots">
-			<figure>
-				<img src="/headshot-fabio.jpg" alt="Fabio Minati" width="120" height="120" />
-				<figcaption>Fabio Minati</figcaption>
-			</figure>
-			<figure>
-				<img src="/headshot-leo.jpg" alt="Leo Dias" width="120" height="120" />
-				<figcaption>Leo Dias</figcaption>
-			</figure>
+		<div class="quem-somos-body">
+			<div class="quem-somos-text">
+				<p>{$_('sobre.quemSomosP1')}</p>
+				<p>{$_('sobre.quemSomosP2')}</p>
+				<p>{$_('sobre.quemSomosP3')}</p>
+				<p>{$_('sobre.quemSomosP4')}</p>
+			</div>
+			<div class="headshots">
+				<figure>
+					<img src="/headshot-fabio.jpg" alt="Fabio Minati" width="120" height="120" />
+					<figcaption>Fabio Minati</figcaption>
+				</figure>
+				<figure>
+					<img src="/headshot-leo.jpg" alt="Leo Dias" width="120" height="120" />
+					<figcaption>Leo Dias</figcaption>
+				</figure>
+			</div>
 		</div>
-		<p>{$_('sobre.quemSomosP1')}</p>
-		<p>{$_('sobre.quemSomosP2')}</p>
-		<p>{$_('sobre.quemSomosP3')}</p>
-		<p>{$_('sobre.quemSomosP4')}</p>
 	</section>
 
 	<section>
@@ -109,11 +113,21 @@
 		scroll-margin-top: 2rem;
 	}
 
+	.quem-somos-body {
+		display: grid;
+		grid-template-columns: 1fr auto;
+		gap: 2rem;
+		align-items: start;
+	}
+
+	.quem-somos-text > p:first-child {
+		margin-top: 0;
+	}
+
 	.headshots {
 		display: flex;
-		gap: 2rem;
-		margin: 1.5rem 0;
-		flex-wrap: wrap;
+		flex-direction: column;
+		gap: 1.25rem;
 	}
 
 	.headshots figure {
@@ -129,6 +143,16 @@
 		height: 120px;
 		object-fit: cover;
 		display: block;
+	}
+
+	@media (max-width: 560px) {
+		.quem-somos-body {
+			grid-template-columns: 1fr;
+		}
+		.headshots {
+			flex-direction: row;
+			justify-content: center;
+		}
 	}
 
 	.headshots figcaption {

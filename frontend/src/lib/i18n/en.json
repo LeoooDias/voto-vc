@@ -87,10 +87,10 @@
 		"compromisso": "Commitment to neutrality",
 		"compromissoDesc": "voto.vc has no party affiliation. The selection of propositions for the questionnaire seeks thematic diversity and relevance, not favoritism of any position.",
 		"quemSomos": "Who we are",
-		"quemSomosP1": "We are Fabio Minati and Leo Dias, two Brazilian electrical engineers, friends since university, who decided to leave Brazil to pursue careers in different countries — but without ever leaving Brazil behind.",
-		"quemSomosP2": "Even from afar, we remain deeply concerned about the country's future. For us, a better Brazil inevitably depends on a better-represented parliament, with informed voters who are aware of the real impact of the decisions made in Brasília.",
-		"quemSomosP3": "That's how this project was born: a free website, based on official data, with no ideological bias, built to help Brazilians understand how deputies and senators actually vote — not just what they say.",
-		"quemSomosP4": "If this site helps even one person reflect more carefully before voting in the next elections, then all of this effort will already have been worth it."
+		"quemSomosP1": "We are Fabio Minati and Leo Dias, Brazilian engineers and friends since university. We chose to pursue our careers in different countries — but without ever leaving Brazil behind.",
+		"quemSomosP2": "Even from afar, we remain deeply concerned about the country’s future. We believe a better Brazil depends on a more representative parliament and on voters who are informed and aware of the real impact of decisions made in Brasília.",
+		"quemSomosP3": "This is how this project was born: a free, non-partisan website built on official data, designed to help Brazilians understand how members of Congress actually vote — not just what they say.",
+		"quemSomosP4": "If this site helps even one person think more carefully before voting in the next elections, then all this effort will have been worthwhile."
 	},
 	"vote": {
 		"title": "Vote — voto.vc",
