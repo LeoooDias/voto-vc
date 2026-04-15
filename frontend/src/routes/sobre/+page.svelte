@@ -56,6 +56,14 @@
 		<h2>{$_('sobre.compromisso')}</h2>
 		<p>{$_('sobre.compromissoDesc')}</p>
 	</section>
+
+	<section>
+		<h2>{$_('sobre.quemSomos')}</h2>
+		<p>{$_('sobre.quemSomosP1')}</p>
+		<p>{$_('sobre.quemSomosP2')}</p>
+		<p>{$_('sobre.quemSomosP3')}</p>
+		<p>{$_('sobre.quemSomosP4')}</p>
+	</section>
 </div>
 
 <style>
