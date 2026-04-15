@@ -402,48 +402,6 @@
 		"tooltipBancadaDivergiu": "A maioria dos parlamentares votou diferente da orientação oficial",
 		"tooltipSubstantivas": "Proposições com impacto legislativo direto: PL, PEC, MPV, PLP, PDL"
 	},
-	"parlamentares": {
-		"title": "Parlamentares — voto.vc",
-		"h1": "Parlamentares",
-		"porPagina": "parlamentares por página",
-		"brasil": "Brasil",
-		"meuEstado": "Meu estado",
-		"filtrarPorEstado": "Filtrar por estado",
-		"carregando": "Carregando...",
-		"nome": "Nome",
-		"score": "Score",
-		"partido": "Partido",
-		"uf": "UF",
-		"votosComparados": "Votos comparados",
-		"todos": "Todos",
-		"camara": "Câmara",
-		"senado": "Senado",
-		"buscar": "Buscar por nome ou partido..."
-	},
-	"partidos": {
-		"title": "Partidos — voto.vc",
-		"h1": "Partidos",
-		"porPagina": "partidos por página",
-		"carregando": "Carregando...",
-		"nome": "Nome",
-		"sigla": "Sigla",
-		"score": "Score",
-		"membros": "Membros",
-		"votosComparados": "Votos comparados",
-		"buscar": "Buscar por nome ou sigla..."
-	},
-	"proposicoes": {
-		"title": "Proposições — voto.vc",
-		"h1": "Proposições",
-		"porPagina": "proposições por página",
-		"carregando": "Carregando...",
-		"buscar": "Buscar por título ou tema...",
-		"tema": "Tema",
-		"todos": "Todos",
-		"camara": "Câmara",
-		"senado": "Senado",
-		"relevancia": "Relevância"
-	},
 	"chat": {
 		"perguntePosicao": "Pergunte sobre esta posição",
 		"pergunteProposicao": "Pergunte sobre esta proposição",
@@ -466,12 +424,6 @@
 		"erroConexao": "Erro ao conectar ao chat.",
 		"erroStreaming": "Erro de streaming.",
 		"erroConexaoTentar": "Erro de conexão. Tente novamente."
-	},
-	"error": {
-		"title": "Erro — voto.vc",
-		"voltarInicio": "Voltar ao início",
-		"paginaNaoEncontrada": "Página não encontrada",
-		"erroGenerico": "Algo deu errado"
 	},
 	"slider": {
 		"contra": "Contra",
