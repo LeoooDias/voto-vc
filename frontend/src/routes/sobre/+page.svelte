@@ -14,6 +14,24 @@
 		<p>{$_('sobre.oQueEDesc')}</p>
 	</section>
 
+	<section class="quem-somos">
+		<h2>{$_('sobre.quemSomos')}</h2>
+		<div class="headshots">
+			<figure>
+				<img src="/headshot-fabio.jpg" alt="Fabio Minati" width="120" height="120" />
+				<figcaption>Fabio Minati</figcaption>
+			</figure>
+			<figure>
+				<img src="/headshot-leo.jpg" alt="Leo Dias" width="120" height="120" />
+				<figcaption>Leo Dias</figcaption>
+			</figure>
+		</div>
+		<p>{$_('sobre.quemSomosP1')}</p>
+		<p>{$_('sobre.quemSomosP2')}</p>
+		<p>{$_('sobre.quemSomosP3')}</p>
+		<p>{$_('sobre.quemSomosP4')}</p>
+	</section>
+
 	<section>
 		<h2>{$_('sobre.comoFunciona')}</h2>
 		<ol>
@@ -56,14 +74,6 @@
 		<h2>{$_('sobre.compromisso')}</h2>
 		<p>{$_('sobre.compromissoDesc')}</p>
 	</section>
-
-	<section>
-		<h2>{$_('sobre.quemSomos')}</h2>
-		<p>{$_('sobre.quemSomosP1')}</p>
-		<p>{$_('sobre.quemSomosP2')}</p>
-		<p>{$_('sobre.quemSomosP3')}</p>
-		<p>{$_('sobre.quemSomosP4')}</p>
-	</section>
 </div>
 
 <style>
@@ -97,5 +107,34 @@
 	section {
 		margin-bottom: 1.5rem;
 		scroll-margin-top: 2rem;
+	}
+
+	.headshots {
+		display: flex;
+		gap: 2rem;
+		margin: 1.5rem 0;
+		flex-wrap: wrap;
+	}
+
+	.headshots figure {
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.headshots img {
+		width: 120px;
+		height: 120px;
+		object-fit: cover;
+		display: block;
+	}
+
+	.headshots figcaption {
+		color: var(--text-primary);
+		font-size: 0.875rem;
+		font-weight: 600;
+		letter-spacing: -0.01em;
 	}
 </style>
