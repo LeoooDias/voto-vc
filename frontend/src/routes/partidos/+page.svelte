@@ -449,7 +449,7 @@
 			min-width: 7rem;
 		}
 		td.col-rank { display: none; }
-		td.col-name::before { content: ''; }
+		td.col-name::before { content: none; }
 		td.col-name { font-size: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); margin-bottom: 0.25rem; }
 		td.col-num:nth-of-type(3)::before { content: 'Parlamentares'; }
 		td.col-num:nth-of-type(4)::before { content: 'Comparadas'; }
