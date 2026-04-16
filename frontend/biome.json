@@ -1,0 +1,36 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.4.5/schema.json",
+	"linter": {
+		"enabled": true
+	},
+	"assist": {
+		"actions": {
+			"source": {
+				"organizeImports": "on"
+			}
+		}
+	},
+	"overrides": [
+		{
+			"includes": ["**/*.svelte"],
+			"linter": {
+				"rules": {
+					"correctness": {
+						"noUnusedImports": "off",
+						"noUnusedVariables": "off"
+					},
+					"style": {
+						"useImportType": "off"
+					}
+				}
+			},
+			"assist": {
+				"actions": {
+					"source": {
+						"organizeImports": "off"
+					}
+				}
+			}
+		}
+	]
+}
