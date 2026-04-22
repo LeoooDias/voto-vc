@@ -51,6 +51,8 @@ services:
       - "5173:5173"
     depends_on:
       - backend
+    environment:
+      VITE_BACKEND_URL: http://backend:8000
     volumes:
       - ./frontend:/app
       - /app/node_modules

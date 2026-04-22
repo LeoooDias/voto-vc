@@ -629,7 +629,20 @@
 		"larCasaBelaP2": "Através do programa de famílias acolhedoras, as crianças recebem moradia, alimentação e cuidado em ambiente familiar enquanto suas famílias de origem passam por acompanhamento especializado — com o objetivo de reintegração ou encaminhamento para adoção.",
 		"larCasaBelaP3": "Ao contribuir com o voto.vc, você apoia diretamente o trabalho do Lar Casa Bela.",
 		"visitarSite": "Conhecer o Lar Casa Bela",
-		"logoAlt": "Logo do Lar Casa Bela"
+		"logoAlt": "Logo do Lar Casa Bela",
+		"iofIncluso": "Pagamento internacional — sua instituição financeira adiciona IOF (~2,4% cartão, ~3,5% Pix) sobre o valor da doação. Aceitamos cartão e Pix.",
+		"processando": "Processando…",
+		"erroIniciar": "Erro ao iniciar doação. Tente novamente.",
+		"obrigadoTitle": "Obrigado — voto.vc",
+		"obrigadoH1": "Obrigado pela contribuição",
+		"obrigadoVerificando": "Verificando o status do pagamento…",
+		"obrigadoPago": "Pagamento confirmado. Sua contribuição foi registrada. Obrigado por seu apoio!",
+		"obrigadoPendente": "Estamos aguardando a confirmação do seu pagamento. Se você pagou via Pix, isso pode levar alguns segundos a minutos. Você não precisa fazer nada — quando o banco compensar, fica registrado automaticamente.",
+		"obrigadoExpirado": "Esta sessão de pagamento expirou. Se você ainda quiser contribuir, basta voltar e tentar de novo.",
+		"obrigadoErro": "Não conseguimos verificar o status agora, mas se o pagamento foi concluído, ele será registrado normalmente.",
+		"obrigadoValor": "Valor cobrado: R$ {valor}",
+		"obrigadoVoltar": "Voltar para o início",
+		"obrigadoNovaDoacao": "Fazer outra contribuição"
 	},
 	"common": {
 		"carregando": "Carregando...",

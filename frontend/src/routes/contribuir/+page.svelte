@@ -1,10 +1,13 @@
 <script lang="ts">
 	import { _ } from 'svelte-i18n';
+	import { api, ApiError } from '$lib/api';
+	import { addToast } from '$lib/stores/toast';
 
 	const amounts = [5, 20, 100];
 	let selectedAmount: number | null = $state(20);
 	let customAmount = $state('');
 	let isCustom = $state(false);
+	let loading = $state(false);
 
 	function selectAmount(value: number) {
 		selectedAmount = value;
@@ -21,9 +24,22 @@
 		isCustom ? parseFloat(customAmount.replace(',', '.')) || 0 : (selectedAmount ?? 0)
 	);
 
-	function handleDonate() {
-		if (donationAmount <= 0) return;
-		// TODO: redirect to payment (Pix / Stripe)
+	async function handleDonate() {
+		if (donationAmount <= 0 || loading) return;
+		loading = true;
+		try {
+			const res = await api.post<{ url: string }>('/contribuir/checkout', {
+				amount_brl: donationAmount
+			});
+			window.location.href = res.url;
+		} catch (e) {
+			loading = false;
+			if (e instanceof ApiError) {
+				addToast(e.message, 'error');
+			} else {
+				addToast($_('contribuir.erroIniciar'), 'error');
+			}
+		}
 	}
 </script>
 
@@ -70,12 +86,13 @@
 
 		<button
 			class="doar-btn"
-			disabled={donationAmount <= 0}
+			disabled={donationAmount <= 0 || loading}
 			onclick={handleDonate}
 		>
-			{$_('contribuir.doar')}
+			{loading ? $_('contribuir.processando') : $_('contribuir.doar')}
 		</button>
 		<p class="doar-sub">{$_('contribuir.doarSub')}</p>
+		<p class="iof-note">{$_('contribuir.iofIncluso')}</p>
 	</section>
 
 	<section>
@@ -306,6 +323,15 @@
 		color: var(--text-secondary);
 		font-size: 0.75rem;
 		margin-top: 0.75rem;
+	}
+
+	.iof-note {
+		text-align: center;
+		color: var(--text-secondary);
+		font-size: 0.688rem;
+		line-height: 1.5;
+		margin-top: 0.5rem;
+		opacity: 0.8;
 	}
 
 	/* How it works */

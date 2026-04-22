@@ -21,6 +21,12 @@ class Settings(BaseSettings):
     anthropic_api_key: str = ""
     chat_rate_limit: str = "30/hour"
 
+    # Stripe / contribuir
+    stripe_secret_key: str = ""
+    stripe_product_id: str = ""
+    stripe_webhook_secret: str = ""
+    contribuir_rate_limit: str = "10/hour"
+
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
 

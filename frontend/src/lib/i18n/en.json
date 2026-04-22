@@ -665,7 +665,20 @@
 		"larCasaBelaP2": "Through its foster family program, children receive housing, meals, and care in a family environment while their biological families receive specialized support — with the goal of reunification or adoption.",
 		"larCasaBelaP3": "By contributing to voto.vc, you directly support Lar Casa Bela's work.",
 		"visitarSite": "Learn about Lar Casa Bela",
-		"logoAlt": "Lar Casa Bela logo"
+		"logoAlt": "Lar Casa Bela logo",
+		"iofIncluso": "International payment — your financial institution adds IOF tax (~2.4% card, ~3.5% Pix) on top of the donation amount. We accept card and Pix.",
+		"processando": "Processing…",
+		"erroIniciar": "Could not start the donation. Please try again.",
+		"obrigadoTitle": "Thank you — voto.vc",
+		"obrigadoH1": "Thank you for your contribution",
+		"obrigadoVerificando": "Checking payment status…",
+		"obrigadoPago": "Payment confirmed. Your contribution has been recorded. Thank you for your support!",
+		"obrigadoPendente": "We're waiting for your payment to clear. If you paid via Pix, this can take seconds to minutes. You don't need to do anything — once the bank confirms, it will be recorded automatically.",
+		"obrigadoExpirado": "This payment session expired. If you'd still like to contribute, just go back and try again.",
+		"obrigadoErro": "We couldn't verify the status right now, but if the payment went through it will be recorded normally.",
+		"obrigadoValor": "Amount charged: R$ {valor}",
+		"obrigadoVoltar": "Back to home",
+		"obrigadoNovaDoacao": "Make another contribution"
 	},
 	"common": {
 		"carregando": "Loading...",

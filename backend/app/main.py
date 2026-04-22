@@ -18,6 +18,7 @@ from app.database import engine
 from app.middleware import RequestIdMiddleware
 from app.routers import (
     chat,
+    contribuir,
     matching,
     parlamentares,
     partidos,
@@ -102,6 +103,7 @@ app.include_router(matching.router, prefix="/api/matching", tags=["matching"])
 app.include_router(posicoes.router, prefix="/api/posicoes", tags=["posicoes"])
 app.include_router(perfil.router, prefix="/api/perfil", tags=["perfil"])
 app.include_router(chat.router, prefix="/api/chat", tags=["chat"])
+app.include_router(contribuir.router, prefix="/api/contribuir", tags=["contribuir"])
 
 
 @app.get("/api/health")
