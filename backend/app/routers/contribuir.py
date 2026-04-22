@@ -82,8 +82,7 @@ async def create_checkout(body: CheckoutRequest, request: Request):
             ],
             payment_method_types=["card", "pix"],
             success_url=(
-                f"{settings.frontend_url}/contribuir/obrigado"
-                "?session_id={CHECKOUT_SESSION_ID}"
+                f"{settings.frontend_url}/contribuir/obrigado?session_id={{CHECKOUT_SESSION_ID}}"
             ),
             cancel_url=f"{settings.frontend_url}/contribuir",
         )
