@@ -181,16 +181,6 @@
 		color: #2dd665;
 	}
 
-	/* Canarinho — special accents: nav-vote uses blue */
-	:global([data-color-theme='canarinho']) :global(.nav-vote) {
-		background: #1a4fc9 !important;
-		color: white !important;
-	}
-	:global([data-color-theme='canarinho']) :global(.nav-vote:hover) {
-		background: #1a4fc9 !important;
-		opacity: 0.8;
-	}
-
 	/* Oceano — claro */
 	:global([data-color-theme='oceano'][data-theme='claro']),
 	:global([data-color-theme='oceano'] [data-theme='claro']) {
