@@ -64,6 +64,7 @@
 						<span class="nav-disabled" title={$_('nav.desbloquear')} aria-disabled="true" role="link">{$_('nav.meuPerfil')}</span>
 					{/if}
 					<a href="/vote" class="nav-vote" onclick={closeMenu}>{$_('nav.vote')}</a>
+					<a href="/contribuir" class="nav-contribuir" onclick={closeMenu}>{$_('nav.contribuir')}</a>
 				</div>
 					<div class="nav-auth">
 						<button class="nav-btn-icon" onclick={() => { settingsOpen = true; closeMenu(); }} title={$_('nav.configuracoes')} aria-label={$_('nav.abrirConfiguracoes')}>
@@ -466,6 +467,30 @@
 		opacity: 0.8;
 	}
 
+	.nav-contribuir {
+		background: var(--accent);
+		color: #ffffff !important;
+		border-radius: 0;
+		padding: 0.5rem 1.25rem;
+		font-weight: 800;
+		font-family: var(--font-heading);
+		letter-spacing: -0.02em;
+		font-size: 0.813rem;
+		text-transform: uppercase;
+		transition: opacity 0.15s;
+	}
+
+	.nav-contribuir:hover {
+		background: var(--accent);
+		color: #ffffff !important;
+		opacity: 0.8;
+	}
+
+	:global([data-color-theme='alto-contraste'][data-theme='escuro']) .nav-contribuir,
+	:global([data-color-theme='alto-contraste'] [data-theme='escuro']) .nav-contribuir {
+		color: #000000 !important;
+	}
+
 	.nav-perfil {
 		color: var(--text-primary) !important;
 		font-weight: 700 !important;
@@ -619,6 +644,13 @@
 		}
 
 		.nav-links .nav-vote {
+			text-align: center;
+			margin-top: 0.5rem;
+			border-bottom: none;
+			padding: 0.625rem 0;
+		}
+
+		.nav-links .nav-contribuir {
 			text-align: center;
 			margin-top: 0.5rem;
 			border-bottom: none;
