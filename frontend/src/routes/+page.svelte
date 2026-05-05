@@ -12,10 +12,16 @@
 	<p class="subtitle">
 		{$_('home.subtitle')}
 	</p>
-	<a href="/vote" class="cta">
-		{$_('home.cta')}
-		<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-	</a>
+	<div class="cta-group">
+		<a href="/vote" class="cta">
+			{$_('home.cta')}
+			<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+		</a>
+		<a href="/contribuir" class="cta cta-contribuir">
+			{$_('home.ctaContribuir')}
+			<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+		</a>
+	</div>
 	<p class="cta-sub">{$_('home.ctaSub')}</p>
 
 	<section class="como-funciona">
@@ -107,6 +113,13 @@
 		font-weight: 400;
 	}
 
+	.cta-group {
+		display: inline-flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 0.75rem;
+	}
+
 	.cta {
 		display: inline-flex;
 		align-items: center;
@@ -131,6 +144,20 @@
 
 	.cta:active {
 		opacity: 0.7;
+	}
+
+	.cta-contribuir {
+		background: var(--accent);
+		color: #ffffff;
+	}
+
+	.cta-contribuir:hover {
+		background: var(--accent);
+	}
+
+	:global([data-color-theme='alto-contraste'][data-theme='escuro']) .cta-contribuir,
+	:global([data-color-theme='alto-contraste'] [data-theme='escuro']) .cta-contribuir {
+		color: #000000;
 	}
 
 	.cta-sub {
@@ -293,6 +320,17 @@
 
 		.subtitle {
 			font-size: 1rem;
+		}
+
+		.cta-group {
+			display: flex;
+			flex-direction: column;
+			align-items: stretch;
+			gap: 0.75rem;
+		}
+
+		.cta {
+			justify-content: center;
 		}
 	}
 </style>

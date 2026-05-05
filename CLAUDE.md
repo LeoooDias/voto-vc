@@ -35,6 +35,7 @@ pnpm check        # svelte-check
 - **Frontend**: SvelteKit 5, TypeScript, adapter-node, Svelte 5 runes (`$state`, `$derived`)
 - **Infra**: AWS us-east-1, Terraform, EC2 t4g.small (ARM64), CloudFront, Route 53
 - **CI/CD**: GitHub Actions on push to main → rsync → docker build → compose up
+- **Git workflow**: commit directly to `main` (no PRs, no feature branches) — push to main triggers deploy
 - **Auth**: None — all features available anonymously, data stored in localStorage
 - **Chat**: Anthropic Claude Haiku 4.5 (proposição Q&A with tool use)
 
